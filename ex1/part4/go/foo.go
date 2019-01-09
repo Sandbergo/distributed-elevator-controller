@@ -23,7 +23,7 @@ func decrementing() {
 }
 
 func main() {
-    //runtime.GOMAXPROCS(runtime.NumCPU() - 1)    // I guess this is a hint to what GOMAXPROCS does...
+    runtime.GOMAXPROCS(2)    // I guess this is a hint to what GOMAXPROCS does...
 	                                    // Try doing the exercise both with and without it!
     go incrementing()
     go decrementing()
