@@ -12,13 +12,13 @@ var i = 0
 
 func incrementing() {
     for j := 0; j < 100000; j++ {
-		    i++
-	  } 
+        i++
+    } 
 }
 
 func decrementing() {
     for j := 0; j < 100000; j++ {
-		    i++
+        i--
     } 
 }
 
