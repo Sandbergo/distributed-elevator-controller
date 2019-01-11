@@ -1,1 +1,1 @@
-Scheduling by OS does not guarantee all processes to be executed.
+Because the two threads execute non-atomic processes (increment and decrement), problems with reading the value of i and executing the operation at the same time will lead to the result begin a random number between -100000 and 100000.
