@@ -23,8 +23,8 @@ Binary semaphore are useful for synchronization problems.
 
 ### List some advantages of using message passing over lock-based synchronization primitives.
 > * it is easier to do right, less room for programmer error
-* complexity does not increase exponentially with more threads
+> * complexity does not increase exponentially with more threads
 
 ### List some advantages of using lock-based synchronization primitives over message passing.
 > * better performance
-* does not need to allocate message objects
+> * does not need to allocate message objects
