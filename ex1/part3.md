@@ -21,7 +21,7 @@ When answering the questions, remember to use all the resources at your disposal
  > Easier for some classes of problems (e.g. seperately executable processes, real-time processes), however it introduces a new set of possible issues, making the programmers life harder.
  
  ### What are the differences between processes, threads, green threads, and coroutines?
- > Process: OS-managed (scheduler) with own address space
+ > Process: OS-managed (scheduler) execution instance with own address space
  Threads: Independently executed processes (/part of a process) within the same (virtual) adress space. Multiple threads can be executed in parallel, or the threads can be managed by the scheduler on one CPU concurrently.    
  Green threads: user-managed threads with own (virtual) adress space, not OS-managed.
  Coroutines: "collaborative" thread. Only one coroutine is executed at any one time instance. It is a form of sequential, not concurrent, processing. 
