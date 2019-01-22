@@ -19,12 +19,12 @@ func number_server(add_number <-chan int, control <-chan int, number chan<- int)
 		select {
 			case num:= <-add_number:
 				i += num
-			case ctrl:= <-control:
-				if control_value == GetNumber {
+			case ctrl:= <-control: 
+				if (ctrl == GetNumber) {
 					number<-i
-				} else if control_value == Exit {
+				} else if (ctrl == Exit) {
 					return
-				}
+				
 			}
 			// TODO: receive different messages and handle them correctly
 			// You will at least need to update the number and handle control signals.
@@ -58,9 +58,9 @@ func main() {
 	number := make(chan int)
 
 	// TODO: Spawn the required goroutines
-	go number_server()
-	go incrementing()
-	go decrementing()
+	go number_server(add_number, control , number)
+	go incrementing(add_number, finished)
+	go decrementing(add_number, finished)
 	
 	<-finished
 	<-finished
