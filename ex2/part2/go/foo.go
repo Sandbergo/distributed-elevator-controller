@@ -53,8 +53,8 @@ func main() {
 
 	// TODO: Construct the required channels
 	control := make(chan int)
-	finished := make(chan bool,2)
-	add_number := make(chan int,1)
+	finished := make(chan bool)
+	add_number := make(chan int)
 	number := make(chan int)
 
 	// TODO: Spawn the required goroutines
