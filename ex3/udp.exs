@@ -1,8 +1,6 @@
 # Group 25
 
 
-
-
 defmodule Receiver do
   require Logger
 
