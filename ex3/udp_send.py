@@ -13,8 +13,6 @@ print("UDP target IP", UDP_IP)
 print("UDP target port", UDP_PORT)
 print("Message: ", MESSAGE)
 
-
-
 sock=socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #internet, UDP
 
 while True:
