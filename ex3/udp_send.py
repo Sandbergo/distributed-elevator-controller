@@ -8,7 +8,6 @@ UDP_PORT = 20007
 MESSAGE= "Hello! This is UDP server, IP: " + UDP_IP + " on port: " + str(UDP_PORT) + \
 "\n\n please approve group 26, Lars Sandberg, Sjur Wroldsen, Magnus Ramsfjell"
 
-
 print("UDP target IP", UDP_IP)
 print("UDP target port", UDP_PORT)
 print("Message: ", MESSAGE)
