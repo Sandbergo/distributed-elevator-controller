@@ -15,7 +15,6 @@ defmodule NetworkModule do
         {:ok, queue}
     end
 
-
     def start_link() do
         GenServer.start_link(__MODULE__, :queue.new())
     end
