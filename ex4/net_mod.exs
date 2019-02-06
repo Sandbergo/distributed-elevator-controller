@@ -26,4 +26,18 @@ defmodule NetworkModule do
         IO.puts "Alive: ", Node.alive?(), "; List: ", Node.list() 
     end
     
+    get_IP() do
+	{ok, Network_interfaces} = inet:getifaddrs(),
+	case proplists:get_value("eno1", Network_interfaces, undefined) do
+		undefined ->  # Non-Linux (personal computers)
+			{ok, Addresses} = inet:getif() 			    # Undocumented function returning all local IPs
+			inet_parse:ntoa(element(1, hd(Addresses)))  # Chooses the first IP and parses it to a string
+
+		Interface do  % Linux (at realtime lab computers)
+			IP_address = proplists:get_value(addr, Interface)
+			inet_parse:ntoa(IP_address)
+	end
+    
+
+
 end
