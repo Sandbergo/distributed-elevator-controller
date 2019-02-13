@@ -2,13 +2,15 @@ defmodule NetworkModule do
     @modeludoc """
     Peer-to-peer communication using elixir Node
     
-        1. ssh into remote 
-        2. ies --name nodename@10.100.23.000 local and remote
+        (1). ssh into remote 
+            ssh student@IP
+        2. iex --name nodename@10.100.23.000 local and remote
         2. Node.set_cookie :yeet local and remote
         3. Node.ping :"nodename@10.100.23.000"
-        4. PID = Node.spawn_link :"nodename@10.100.23.000", fn -> NetworkModule ?????
-        5. send pid, {string} ???
-    
+            import_file "Documents/gr25/TTK4145/ex4/net_mod.exs"
+
+        4. pid = Node.spawn(Node.self(), fn -> NetworkModule.main() end)
+        5. send pid, "string"
     """
 
     def init(queue) do
@@ -19,37 +21,25 @@ defmodule NetworkModule do
         GenServer.start_link(__MODULE__, :queue.new())
     end
 
-
-    def send() do
-
-    end
-
     
-    def receive() do
+    def receive_fun() do
+        IO.puts "receive initiated"
         receive do
-            {string} ->        # something sent matches this datatype 
-                IO.puts string
+            string ->        # something sent matches this datatype 
+                IO.puts "gotcha: #{string}"
+                #receive_fun()
             end
-        IO.puts "received something else"
-
+        IO.puts "receive ended"
     end
     
     def main() do
-        IO.puts "Alive: ", Node.alive?(), "; List: ", Node.list() 
+        pid = self()
+        IO.puts "online " #, Node.alive?(), "; List: ", Node.list() 
 
-        receive()
+        receive_fun()
+        IO.puts "exiting"
     end
     
-
-
-
-
-
-
-
-
-
-
 
 
 
