@@ -99,7 +99,7 @@ defmodule Driver do
   def handle_call {:get_order_button_state, floor, order_type}, _from, socket do
     :gen_tcp.send socket, [6, @button_map[order_type], floor, 0]
     {:ok, [6, state, 0, 0]} = :gen_tcp.recv(socket, 4, @call_timeout)
-    {:reply, state, socket}
+    {:reply, state, socket} 
   end
 
 
