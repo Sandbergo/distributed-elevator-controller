@@ -1,4 +1,4 @@
-defmodule Driver do
+defmodule DriverInterface do
   use GenServer
   @call_timeout 1000
   @button_map %{:hall_up => 0, :hall_down => 1, :cab => 2}
