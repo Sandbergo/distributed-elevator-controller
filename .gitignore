@@ -1,67 +1,24 @@
-## Go
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+# The directory Mix will write compiled artifacts to.
+/_build/
 
-# Test binary, build with `go test -c`
-*.test
+# If you run "mix test --cover", coverage assets end up here.
+/cover/
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+# The directory Mix downloads your dependencies sources to.
+/deps/
 
-## C
-# Prerequisites
-*.d
+# Where third-party dependencies like ExDoc output generated docs.
+/doc/
 
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+# Ignore .fetch files in case you like to edit your project deps locally.
+/.fetch
 
-# Linker output
-*.ilk
-*.map
-*.exp
+# If the VM crashes, it generates a dump, let's ignore it too.
+erl_crash.dump
 
-# Precompiled Headers
-*.gch
-*.pch
+# Also ignore archive artifacts (built via "mix archive.build").
+*.ez
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
+# Ignore package tarball (built via "mix hex.build").
+elevator-*.tar
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
-
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
