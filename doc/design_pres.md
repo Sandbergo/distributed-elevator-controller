@@ -26,6 +26,16 @@ Under oppstart brukes NetworkHandler.init_nodes() der UDP-broadcast av IP-addres
 Deretter 
 
 ### 3. Feilhåndtering
+Til ettertanke:
+- PC krasjer/mister strøm
+- Heis henger (timeout)
+- Melding blir tapt mellom maskiner
+- Node mister nettverk
+- Brukeren "troller"
+- Om ordre:
+    - Må alle noder akseptere en ordre for at den skal være gyldig? Hvordan blir en "faulty" node oppdaget isåfall? 
+    - Hvordan kan vi være sikre på at et minimum antall noder er enige i ordren?
+    - Deler vi hele staten til ordrene(hele tabellen) eller bare endringene underveis? Hva vi gjør vi hvis en heis kommer på nettverket etter å ha vært offline?
 !!!!merging error modes!!!!
 backups
 
