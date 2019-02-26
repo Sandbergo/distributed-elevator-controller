@@ -1,8 +1,9 @@
 # Design Review Handout
 
 
-### 1. Moduler
+### 1. Klassediagram
 
+![](class_diag1.png)
 
 ### 2. Happy path
 
