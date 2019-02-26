@@ -33,6 +33,18 @@ Til ettertanke:
     - Må alle noder akseptere en ordre for at den skal være gyldig? Hvordan blir en "faulty" node oppdaget isåfall? 
     - Hvordan kan vi være sikre på at et minimum antall noder er enige i ordren?
     - Deler vi hele staten til ordrene(hele tabellen) eller bare endringene underveis? Hva vi gjør vi hvis en heis kommer på nettverket etter å ha vært offline?
+
+Mer generelle spørsmål:
+- Kan vi håndtere dette?
+    - Node krasjer før den rekker å broadcaste melding
+    - Krasj etter pakketap
+- Hvordan håndterer vi dette?
+    - Restarte node (mtp ordre og state - skal den settes i idle eller tilbake til gamle state. Skal den fortsette med ordren, eller tar en ny heis den?)
+    - Pakketap (ack? funker dette med broadcast? multi_call i Genserver?)
+    - Node kobles av nettverk (Restarte? Kjøre i single-elevator mode eller nekte å ta imot ordre?)
+    - Strøm kobles ut (Restart?)
+
+
 !!!!merging error modes!!!!
 backups
 
