@@ -1,0 +1,13 @@
+title Motor Malfunction
+participant StateMachine
+participant DriverInterface
+participant WatchDog
+
+StateMachine->DriverInterface: set_motor_direction()
+
+StateMachine->WatchDog:start_timer()
+activate WatchDog
+WatchDog->WatchDog:timer()
+WatchDog->StateMachine:timed_out()
+deactivate WatchDog
+WatchDog->WatchDog:restart_node()

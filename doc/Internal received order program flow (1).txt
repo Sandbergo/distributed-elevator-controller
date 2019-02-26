@@ -1,0 +1,33 @@
+title Internal received order program flow
+participant Poller
+participant DriverInterface
+participant StateMachine
+
+Poller<-DriverInterface: int_order
+Poller->OrderHandler: order_msg
+NetworkHandler<-OrderHandler:multi_call_order()
+loop not_ack()
+NetworkHandler->>NetworkHandler: multi_call()
+activate NetworkHandler
+NetworkHandler<<--]:ack
+deactivate NetworkHandler
+end
+OrderHandler->NetworkHandler:cost_func()
+
+]->>NetworkHandler: set_button_light(on)
+activate NetworkHandler
+
+NetworkHandler->OrderHandler: set_button_light(on)
+OrderHandler->DriverInterface:set_button_light(on)
+NetworkHandler-->>]: button_light_set
+deactivate NetworkHandler
+
+NetworkHandler<<-]: multi_call_delete_order()
+activate NetworkHandler
+NetworkHandler->OrderHandler: delete_order()
+OrderHandler->DriverInterface:set_button_light(off)
+NetworkHandler-->>]:order_deleted
+deactivate NetworkHandler
+
+
+

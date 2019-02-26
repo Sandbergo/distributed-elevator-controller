@@ -1,0 +1,38 @@
+title External received order handle flow
+
+[->>NetworkHandler: ext_order
+activate NetworkHandler
+[<<--NetworkHandler: ack
+deactivate NetworkHandler
+NetworkHandler->OrderHandler:order_msg
+OrderHandler->>NetworkHandler:cost_func()
+activate NetworkHandler
+NetworkHandler-->>OrderHandler: ack
+deactivate NetworkHandler
+OrderHandler->NetworkHandler:set_button_light(on)
+NetworkHandler->>[:set_button_light(on)
+activate NetworkHandler
+OrderHandler->DriverInterface:set_button_light(on)
+[-->>NetworkHandler:button_light_set
+deactivate NetworkHandler
+OrderHandler->StateMachine: send_order()
+StateMachine->DriverInterface: set_motor_dir()
+
+loop floor!=ordered_floor
+DriverInterface<<-Poller:get_floor_sensor()
+activate Poller
+DriverInterface-->>Poller: current_floor
+deactivate Poller
+Poller->StateMachine: current_floor
+end
+
+StateMachine->OrderHandler: order_completed()
+
+OrderHandler->NetworkHandler: delete_order()
+
+[<<-NetworkHandler: multi_call_delete_order()
+activate NetworkHandler
+[-->>NetworkHandler:ack
+deactivate NetworkHandler
+
+
