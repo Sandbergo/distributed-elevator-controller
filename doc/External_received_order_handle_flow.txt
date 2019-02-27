@@ -27,12 +27,15 @@ Poller->StateMachine: current_floor
 end
 
 StateMachine->OrderHandler: order_completed()
-
+OrderHandler->NetworkHandler:set_button_light(off)
+NetworkHandler->>[:set_button_light(off)
+activate NetworkHandler
+OrderHandler->DriverInterface:set_button_light(off)
+[-->>NetworkHandler:button_light_off
+deactivate NetworkHandler
 OrderHandler->NetworkHandler: delete_order()
 
 [<<-NetworkHandler: multi_call_delete_order()
 activate NetworkHandler
 [-->>NetworkHandler:ack
 deactivate NetworkHandler
-
-
