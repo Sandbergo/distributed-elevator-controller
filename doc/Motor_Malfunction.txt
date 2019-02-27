@@ -8,6 +8,6 @@ StateMachine->DriverInterface: set_motor_direction()
 StateMachine->WatchDog:start_timer()
 activate WatchDog
 WatchDog->WatchDog:timer()
-WatchDog->StateMachine:timed_out()
+WatchDog->NetworkHandler:timed_out()
 deactivate WatchDog
-WatchDog->WatchDog:restart_node()
+NetworkHandler->NetworkHandler:restart_node()
