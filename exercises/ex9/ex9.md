@@ -11,7 +11,7 @@
  2. Priority inheritance does not avoid deadlocks, but shortens its timespan by making the resource available as fast as possible.
 
 ## Task 4
- 1. - The application is assumed to consist of a ~[HG set of tasks.
+ 1. - The application is assumed to consist of a fixed set of tasks.
     - All tasks are periodic, with known periods.
       - Real-time systems must be able to handle sporadic events, therefore this is not realistic
     - The tasks are completely independent of each other.

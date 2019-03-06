@@ -7,13 +7,14 @@ defmodule StateMachine do
   def init do
     {:ok, pid} = DriverInterface.start
     DriverInterface.set_motor_direction pid, :up
+    IO.puts("Initialized")
     pid
     #receive_loop pid
   end
 
 
   def receive_loop pid do
-
+    IO.puts("Waiting for message")
     receive do
       {:at_floor, 1}->
         DriverInterface.set_motor_direction pid, :up
@@ -25,8 +26,8 @@ defmodule StateMachine do
 
   def temp_main do
     elevator_pid = init
-    receive_pid = receive_loop(elevator_pid)
-    spawn(Poller, :floor_poller, [receive_pid])
+    receive_pid = spawn(StateMachine, :receive_loop, [elevator_pid])
+    _poller_pid = spawn(Poller, :floor_poller, [elevator_pid, receive_pid])
   end
 """
   def drivin_loop pid do
