@@ -8,6 +8,7 @@ procedure exercise8 is
 
     protected type Transaction_Manager (N : Positive) is
         entry Finished;
+        entry Wait_Until_Aborted;
         function Commit return Boolean;
         procedure Signal_Abort;
     private
@@ -16,39 +17,37 @@ procedure exercise8 is
         Should_Commit       : Boolean := True;
     end Transaction_Manager;
     protected body Transaction_Manager is
+        ------------------------------------------
+        -- PART 3: Modify the Finished entry
         entry Finished when Finished_Gate_Open or Finished'Count = N is
         begin
-	   
-	   ------------------------------------------
-	   -- PART 3: Modify the Finished entry
-          Finished_Gate_Open := Finished'Count /=0;
-           if not Finished_Gate_Open then
-              Aborted := False;
-           end if;
-	   ------------------------------------------
-	   
+            Finished_Gate_Open := Finished'Count /=0;
+            if not Finished_Gate_Open then
+                Aborted := False;
+            end if;
         end Finished;
-
+        ------------------------------------------
+        
         procedure Signal_Abort is
         begin
             Aborted := True;
-        end Signal_Abort;
+        end Signal_Abort; 
 
         function Commit return Boolean is
         begin
-	    return Should_Commit; 
-	end Commit;
-	
-	------------------------------------------
-	-- PART 2: Create the Wait_Until_Aborted entry
-    entry Wait_Until_Aborted when Aborted is
+            return Should_Commit; 
+        end Commit;
+    
+        ------------------------------------------
+        -- PART 2: Create the Wait_Until_Aborted entry
+        entry Wait_Until_Aborted when Aborted is
         begin
             if Wait_Until_Aborted'Count = 0 then
                 Aborted := False;
             end if;
-        end;
-	------------------------------------------
-        
+        end Wait_Until_Aborted;
+        ------------------------------------------
+            
     end Transaction_Manager;
 
     
@@ -81,41 +80,21 @@ procedure exercise8 is
             -- PART 1: Select-Then-Abort statement
             select
 				Manager.Wait_Until_Aborted;
-				Next := Num + 5;
+				Num := Prev + 5;
                 Put_Line ("  Worker" & Integer'Image(Initial) & " comitting" & Integer'Image(Num));
 			then abort
 	    		begin
-					Next := Unreliable_Slow_Add(Num);
-                     Put_Line ("  Worker" & Integer'Image(Initial) & " comitting" & Integer'Image(Num));
+				    Num := Unreliable_Slow_Add(Num);
+                    Put_Line ("  Worker" & Integer'Image(Initial) & " comitting" & Integer'Image(Num));
 				exception
 					when Count_Failed =>
 						Put_Line ("Oh no! Worker" & Integer'Image(Initial) & " failed! Oh no! ");
 						Manager.Signal_Abort;
 				end;
+
+            Manager.Finished;      
 			end select;
-			
-			Manager.Finished;            
             ------------------------------------------
-	    
-	    begin
-	       Num := Unreliable_Slow_Add(Num);
-	    exception
-	       when Count_Failed =>
-		  Manager.Signal_Abort;
-	    end;
-	    
-	    Manager.Finished;
-            
-            if Manager.Commit = True then
-                Put_Line ("  Worker" & Integer'Image(Initial) & " comitting" & Integer'Image(Num));
-            else
-                Put_Line ("  Worker" & Integer'Image(Initial) &
-                             " reverting from" & Integer'Image(Num) &
-			    " to" & Integer'Image(Prev));
-		
-		Num := Prev;
-		
-            end if;
 
             Prev := Num;
             delay 0.5;

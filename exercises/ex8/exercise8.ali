@@ -18,16 +18,18 @@ RV NO_LOCAL_PROTECTED_OBJECTS
 RV NO_NESTED_FINALIZATION
 RV NO_PROTECTED_TYPES
 RV NO_RELATIVE_DELAY
+RV NO_SELECT_STATEMENTS
 RV NO_STANDARD_STORAGE_POOLS
 RV NO_TASK_HIERARCHY
 RV NO_TASKING
 RV NO_DEFAULT_INITIALIZATION
 RV SPARK_05
-RV MAX_PROTECTED_ENTRIES=1
+RV MAX_PROTECTED_ENTRIES=2
 RV MAX_TASKS=1+
+RV MAX_ASYNCHRONOUS_SELECT_NESTING=1+
 RV MAX_ENTRY_QUEUE_LENGTH=1+
 
-U exercise7%b		exercise7.adb		bcc53633 NE OO SU IL
+U exercise8%b		exercise8.adb		892886c4 NE OO SU IL
 W ada%s			ada.ads			ada.ali
 W ada.calendar.delays%s	a-caldel.adb		a-caldel.ali
 W ada.exceptions%s	a-except.adb		a-except.ali
@@ -40,7 +42,6 @@ W ada.text_io%s		a-textio.adb		a-textio.ali
 W system%s		system.ads		system.ali
 W system.concat_3%s	s-conca3.adb		s-conca3.ali
 W system.concat_4%s	s-conca4.adb		s-conca4.ali
-W system.concat_6%s	s-conca6.adb		s-conca6.ali
 W system.exception_table%s  s-exctab.adb	s-exctab.ali
 W system.img_int%s	s-imgint.adb		s-imgint.ali
 W system.parameters%s	s-parame.adb		s-parame.ali
@@ -68,7 +69,7 @@ D a-tags.ads		20111212115430 6c0509d0
 D a-textio.ads		20140129155348 386df5d4
 D a-tiinio.ads		20090409150019 aa04e5d6
 D a-unccon.ads		20070406091342 f9eb8f06
-D exercise7.adb		20190306073750 3b264448
+D exercise8.adb		20190306084741 0ecbf4bf
 D interfac.ads		20140225151838 69adb1b9
 D i-c.ads		20110801143639 5421119b
 D i-cstrea.ads		20130412125801 8128536b
@@ -76,7 +77,6 @@ D system.ads		20160213141829 90249111
 D s-atacco.ads		20120515093410 4c36d12f
 D s-conca3.ads		20140225151544 0b705ca5
 D s-conca4.ads		20140225151544 7e642b20
-D s-conca6.ads		20140225151544 d2c72db2
 D s-crtl.ads		20140225151544 840e6817
 D s-exctab.ads		20140225151139 54135002
 D s-ficobl.ads		20120709130952 55a71d43
@@ -116,40 +116,41 @@ X 8 a-numeri.ads
 16K13*Numerics 32e17 16|1r44 2r44
 X 9 a-nuflra.ads
 41K22*Float_Random 72e30 16|1w53 2r53
-45R9*Generator<37|58R9> 16|7r23
+45R9*Generator<36|58R9> 16|7r23
 47F12*Uniformly_Distributed{float}
-49V13*Random{47F12}<37|66p13> 16|57s13 58s34 61s34
-51U14*Reset<37|95p14> 16|119s5
+49V13*Random{47F12}<36|66p13> 16|57s12 58s28 61s28
+51U14*Reset<36|95p14> 16|112s5
 X 13 a-textio.ads
 49K13*Text_IO 471e16 16|1w10 2r10
-263U14*Put_Line 16|74s9 77s13 86s41 95s17 97s17
-X 16 exercise7.adb
-4U11*exercise7 4b11 120l5 120t14
-6X5 Count_Failed 62r19 85r38
-7r5 Gen{9|45R9} 57r20 58r41 61r41 119r11
-9W20 Transaction_Manager 9d41 14E9 17l9 17e28 18b20 49l9 49t28 68r71 112r23
-9i41 N{positive} 19r68 29r45
-10Y15 Finished 19b15 19r51 29r28 31r31 37l13 37t21 90s33
-11V18 Commit{boolean} 44b18 47l13 47t19 94s24
-12U19 Signal_Abort 39b19 42l13 42t25 87s49
-14b9 Finished_Gate_Open{boolean} 19r29 30r33 33r33
-15b9 Aborted{boolean} 23r16 32r33 41r13
-16b9 Should_Commit{boolean} 24r33 26r33 46r20
-52V14 Unreliable_Slow_Add{integer} 52b14 52>35 65l9 65t28 83s40
-52i35 x{integer} 59r20
-53N5 Error_Rate 57r28
-68T15 Transaction_Worker 68d35 68d54 69b15 110l9 110t27 114r16 115r16 116r16
-68i35 Initial{integer} 70r36 74r44 77r48 86r83 95r54 97r54
-70i9 Num{integer} 71r36 83m33 83r60 95r94 98r64 102m17 106r21
-71i9 Prev{integer} 99r52 102r24 106m13
-72i9 Round_Num{integer} 77r92 78m13 78r26
-112w5 Manager{9W20} 114m39 114r39 115m39 115r39 116m39 116r39
-114t5 Worker_1{68T15}
-115t5 Worker_2{68T15}
-116t5 Worker_3{68T15}
-X 37 s-rannum.ads
+263U14*Put_Line 16|73s9 76s13 84s17 88s21 91s49
+X 16 exercise8.adb
+4U11*exercise8 4b11 113l5 113t14
+6X5 Count_Failed 62r19 90r46
+7r5 Gen{9|45R9} 57r19 58r35 61r35 112r11
+9W20 Transaction_Manager 9d41 15E9 18l9 18e28 19b20 51l9 51t28 67r71 105r23
+9i41 N{positive} 22r68
+10Y15 Finished 22b15 22r51 24r35 28l13 28t21 95s21
+11Y15 Wait_Until_Aborted 43b15 45r16 48l13 48t31 82s41
+12V18 Commit{boolean} 36b18 39l13 39t19
+13U19 Signal_Abort 31b19 34l13 34t25 92s57
+15b9 Finished_Gate_Open{boolean} 22r29 24r13 25r20
+16b9 Aborted{boolean} 26r17 33r13 43r39 46r17
+17b9 Should_Commit{boolean} 38r20
+54V14 Unreliable_Slow_Add{integer} 54b14 54>35 64l9 64t28 87s44
+54i35 x{integer} 59r20
+55N9 Error_Rate 57r26
+67T15 Transaction_Worker 67d35 67d54 68b15 103l9 103t27 107r16 108r16 109r16
+67i35 Initial{integer} 69r36 73r44 76r48 84r54 88r58 91r91
+69i9 Num{integer} 70r36 83m33 84r94 87m37 87r64 88r98 99r21
+70i9 Prev{integer} 83r40 99m13
+71i9 Round_Num{integer} 76r92 77m13 77r26
+105w5 Manager{9W20} 107m39 107r39 108m39 108r39 109m39 109r39
+107t5 Worker_1{67T15}
+108t5 Worker_2{67T15}
+109t5 Worker_3{67T15}
+X 36 s-rannum.ads
 58R9*Generator
-X 40 s-stausa.ads
+X 39 s-stausa.ads
 203U14*Initialize 204i<c,__gnat_stack_usage_initialize>22
 268U14*Output_Results 272i<c,__gnat_stack_usage_output_results>22
 
