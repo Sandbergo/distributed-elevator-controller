@@ -7,10 +7,29 @@ defmodule StateMachine do
   def init do
     {:ok, pid} = DriverInterface.start
     DriverInterface.set_motor_direction pid, :up
-    fsm_loop pid
+    pid
+    #receive_loop pid
   end
 
-  def fsm_loop pid do
+
+  def receive_loop pid do
+
+    receive do
+      {:at_floor, 1}->
+        DriverInterface.set_motor_direction pid, :up
+      {:at_floor, 3}->
+        DriverInterface.set_motor_direction pid, :down
+    end
+    receive_loop pid 
+  end
+
+  def temp_main do
+    elevator_pid = init
+    receive_pid = receive_loop(elevator_pid)
+    spawn(Poller, :floor_poller, [receive_pid])
+  end
+"""
+  def drivin_loop pid do
     case DriverInterface.get_floor_sensor_state(pid) do
       0->
       DriverInterface.set_motor_direction pid, :up
@@ -21,4 +40,5 @@ defmodule StateMachine do
     end
     fsm_loop pid 
   end
+"""
 end
