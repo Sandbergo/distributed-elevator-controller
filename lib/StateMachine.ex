@@ -16,7 +16,7 @@ defmodule StateMachine do
   def receive_loop pid do
     IO.puts("Waiting for message")
     receive do
-      {:at_floor, 1}->
+      {:at_floor, 0}->
         DriverInterface.set_motor_direction pid, :up
       {:at_floor, 3}->
         DriverInterface.set_motor_direction pid, :down

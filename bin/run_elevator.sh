@@ -2,13 +2,12 @@
 
 # start server
 pkill ElevatorServer
-cd ~/Documents/gr25/TTK4145/ex5
-ElevatorServer & disown
+cd ~/Documents/gr25/TTK4145
+gnome-terminal -x ElevatorServer & disown
 
 # compile
-cd elevator 
 mix compile
 
 # run boy
-#gnome-terminal -x 
-mix run -e StateMachine.init
+
+iex -S mix 
