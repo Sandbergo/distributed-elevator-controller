@@ -2,11 +2,14 @@
 
 ### List of checkpoints
 * [ ] Implement Poller.button_polling and receive in OrderHandler
-* [ ] Make OrderHandler.orders matrix/struct 
-* [ ] Implement Agent for states in StateMachine
+* [ ] OrderHandler sends order to elevator
+* [ ] ~~Implement Agent for states in StateMachine~~
+* [ ] implement states in elevator
+* [ ] Open/Close Doors on reached floor
 * [ ] One elevator can perform orders
 
+
 ### Check out
-* Agent
-* GenServer
-* Supervisor
+* Agent: Som GenServer men litt mer crappy
+* GenServer: I bruk
+* Supervisor: Vi får se
