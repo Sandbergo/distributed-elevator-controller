@@ -1,15 +1,20 @@
 # TODO
 
-### List of checkpoints
-* [ ] Implement Poller.button_polling and receive in OrderHandler
-* [ ] OrderHandler sends order to elevator
-* [ ] ~~Implement Agent for states in StateMachine~~
-* [ ] implement states in elevator
+### List of short term checkpoints
+* [x] Implement Poller.button_polling and receive in OrderHandler
+* [x] OrderHandler sends order to elevator
+* [x] implement states in StateMachine
+* [ ] Stop on ordered floor
+* [ ] Implement order matrix
 * [ ] Open/Close Doors on reached floor
-* [ ] One elevator can perform orders
+* [ ] StateMachine tells OrderHandler to delete order
 
 
-### Check out
-* Agent: Som GenServer men litt mer crappy
-* GenServer: I bruk
-* Supervisor: Vi får se
+### List of long term checkpoints
+* [ ] One elevator can perform one order
+* [ ] Network setup nodes
+* [ ] communication of data between nodes
+* [ ] FAT
+
+
+### Check out 

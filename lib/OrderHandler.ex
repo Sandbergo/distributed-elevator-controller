@@ -2,36 +2,34 @@ defmodule OrderHandler do
     @moduledoc """
     OrderHandler module yayeet
     """
+    #@order_matrix %{}
     use GenServer
     def start_link do
-      GenServer.start_link(OrderHandler, [], [{:name, OrderHandler}])
+      GenServer.start_link(__MODULE__, [], [{:name, __MODULE__}])
     end
     
-    def init all_orders do
-      {:ok, all_orders}
+    def init _mock do
+      _top_floor = length(Order.get_all_floors)-1
+      _valid_orders = Order.get_valid_order
+      order_matrix = {}
+      {:ok, order_matrix}
     end
 
-    defp register_order(order_message) do
-    end
-
-    def handle_cast {:register_order, floor, button_type}, all_orders do
-      all_orders = all_orders++{floor,button_type}
-      IO.puts "I am running"
-      {:noreply, all_orders}
+    def handle_cast {:register_order, floor, button_type}, _order_matrix do
+      order_matrix = %Order{type: button_type, floor: floor}
+      distribute_order(order_matrix)
+      {:noreply, order_matrix}
     end
 
     def test do
-      {:ok, elev_pid} = DriverInterface.start
-      poller_pid = spawn(Poller, :button_poller, [elev_pid])
-      start_link
-      test(0, [])
-      #spawn(OrderHandler, :test, [1, []])
+      DriverInterface.start()
+      start_link()
+      Poller.start_link()
+      StateMachine.start_link()
     end
-    def test n, all_orders do
-      IO.puts Enum.join(all_orders)
-      all_orders = all_orders
-      :timer.sleep(1000)
-      test n+1, all_orders
+
+    def distribute_order(order) do
+      GenServer.cast StateMachine, {:gotofloor, order}
     end
   end
   

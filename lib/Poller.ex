@@ -3,35 +3,47 @@ defmodule Poller do
     Poller module periodically checks buttons and floor sensors
     Sends messages to OrderHandler and StateMachine
     """
+  use GenServer
+
   @floors Order.get_all_floors
   @button_types Order.get_valid_order
-  def floor_poller elevator_pid, state_machine_pid do
-    case DriverInterface.get_floor_sensor_state elevator_pid do
-      :between_floors ->
-        :timer.sleep(100)
-        floor_poller elevator_pid, state_machine_pid
-      floor -> 
-        floor_msg = {:at_floor, floor}
-        send(state_machine_pid, floor_msg)
-        :timer.sleep(100)
-        floor_poller elevator_pid, state_machine_pid
-    end
+  
+  def start_link do
+    GenServer.start_link(__MODULE__, [], [{:name, __MODULE__}])
   end
 
-  def button_poller elevator_pid do
+  def init _mock do
+    IO.puts "Leggo"
+    Process.spawn(Poller, :floor_poller, [], [:link])
+    Process.spawn(Poller, :button_poller, [], [:link])
+    {:ok, _mock}
+  end
+  
+  def floor_poller do
+    case DriverInterface.get_floor_sensor_state DriverInterface do
+      :between_floors ->
+        :timer.sleep(100)
+      floor -> 
+        send_floor(floor)
+        :timer.sleep(100)
+    end
+    floor_poller
+  end
+
+  def button_poller do
     Enum.each(@floors, fn(floor) ->
       Enum.each(@button_types, fn(button_type)->
-        case DriverInterface.get_order_button_state(elevator_pid, floor, button_type) do
+        case DriverInterface.get_order_button_state(DriverInterface, floor, button_type) do
           1 ->
             set_order(floor, button_type)
             IO.puts "Noticed press: #{button_type} on floor: #{floor}"#Pass received message to OrderHandler
-            :timer.sleep(100)
+            :timer.sleep(1000)
           0 ->
             {:no_orders}
         end
       end)
     end)
-    button_poller(elevator_pid)
+    button_poller
   end
 
   def register_button_press state, floor, button_type do
@@ -50,8 +62,13 @@ defmodule Poller do
     GenServer.cast OrderHandler, {:register_order, floor, button_type}
   end
 
+  def send_floor floor do
+    GenServer.cast StateMachine, {:at_floor, floor}
+  end
+
   def test do
-    {:ok, pid} = DriverInterface.start();
-    button_poller(pid)
+    DriverInterface.start()
+    init([])
+    StateMachine.start_link()
   end
 end

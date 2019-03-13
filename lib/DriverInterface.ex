@@ -10,7 +10,7 @@ defmodule DriverInterface do
   end
 
   def start address, port do
-    GenServer.start_link(__MODULE__, [address, port], [])
+    GenServer.start_link(__MODULE__, [address, port], [{:name, __MODULE__}])
   end
 
   def stop pid do
