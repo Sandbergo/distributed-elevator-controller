@@ -60,7 +60,6 @@ defmodule StateMachine do
   end
 
 
-
   def execute_order(state) do
     order = List.first(state.active_orders)
     if order != nil  do
