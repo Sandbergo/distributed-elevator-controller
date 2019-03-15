@@ -29,7 +29,7 @@ defmodule OrderHandler do
     end
 
     def distribute_order(order) do
-      GenServer.cast StateMachine, {:gotofloor, order}
+      GenServer.cast StateMachine, {:neworder, order}
     end
   end
   

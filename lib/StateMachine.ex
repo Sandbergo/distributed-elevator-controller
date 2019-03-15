@@ -11,9 +11,9 @@ defmodule StateMachine do
     DriverInterface.set_motor_direction(DriverInterface, direction)
     floor = initialized?()
     DriverInterface.set_motor_direction(DriverInterface, :stop)
-    state = %State{floor: floor, direction: :stop}
-    active_orders = {}
-    {:ok, {state, active_orders}}
+    state = %State{floor: floor, direction: :stop, active_orders: {}}
+    #active_orders = {}
+    {:ok, state}
   end
 
   def initialized? do
@@ -25,30 +25,38 @@ defmodule StateMachine do
     end
   end
 
-  def handle_cast {:gotofloor, order}, state do 
+  def handle_cast {:neworder, order}, state do 
+    state = %{state | active_orders: order}
+
     direction = cond do
       order.floor > state.floor ->
-        direction = :up
+        :up
       order.floor < state.floor -> 
-        direction = :down
+        :down
       order.floor == state.floor ->
-        direction = :stop
+        :stop
     end
     state = %{state | direction: direction}
-    execute_order(state, order)
+    #state = %{state | active_orders: Tuple.append(active_orders, order)}
+    execute_order(state)
     {:noreply, state}
   end
 
   def handle_cast {:at_floor, floor}, state do
     state = %{state | floor: floor}
-    
+    execute_order(state)
     {:noreply, state}
   end
 
-  def execute_order(state, order) do
+  def execute_order(state) do
     DriverInterface.set_motor_direction DriverInterface, state.direction
-    if order.floor == state.floor do
-      DriverInterface.set_motor_direction DriverInterface, :stop
+    if state.active_orders != {} do
+      cond do
+        elem(state.active_orders,0).floor == state.floor ->
+          DriverInterface.set_motor_direction DriverInterface, :stop
+      end
+    else
+      {:nothing}
     end
   end
 
