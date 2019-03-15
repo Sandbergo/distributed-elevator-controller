@@ -14,20 +14,18 @@ defmodule Poller do
 
   def init _mock do
     IO.puts "Leggo"
-    Process.spawn(Poller, :floor_poller, [], [:link])
+    Process.spawn(Poller, :floor_poller, [:between_floors], [:link])
     Process.spawn(Poller, :button_poller, [], [:link])
     {:ok, _mock}
   end
   
-  def floor_poller do
-    case DriverInterface.get_floor_sensor_state DriverInterface do
-      :between_floors ->
-        :timer.sleep(100)
-      floor -> 
-        send_floor(floor)
-        :timer.sleep(100)
+  def floor_poller floor do
+    new_floor = DriverInterface.get_floor_sensor_state(DriverInterface)
+    if new_floor != floor 
+    && new_floor != :between_floors do
+        send_floor(new_floor)
     end
-    floor_poller
+    floor_poller(new_floor)
   end
 
   def button_poller do

@@ -1,6 +1,6 @@
 defmodule State do
     @valid_dirns [:up, :stop, :down]
-    defstruct floor: 0, direction: :stop, active_orders: {}
+    defstruct floor: 0, direction: :stop, active_orders: []
     
     def state_machine(direction, floor, active_orders) when direction in @valid_dirns do
         %State{floor: floor, direction: direction, active_orders: active_orders}

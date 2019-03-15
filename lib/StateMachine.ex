@@ -11,7 +11,7 @@ defmodule StateMachine do
     DriverInterface.set_motor_direction(DriverInterface, direction)
     floor = initialized?()
     DriverInterface.set_motor_direction(DriverInterface, :stop)
-    state = %State{floor: floor, direction: :stop, active_orders: {}}
+    state = %State{floor: floor, direction: :stop, active_orders: []}
     {:ok, state}
   end
 
@@ -25,21 +25,24 @@ defmodule StateMachine do
   end
 
   def handle_cast {:neworder, order}, state do 
-    state = %{state | active_orders: Tuple.append(state.active_orders, order)}
-    execute_order(state)
+    state = %{state | active_orders: state.active_orders ++ [order]}
+      if length(state.active_orders)==1 do
+        execute_order(state)
+      end
     {:noreply, state}
   end
 
   def handle_cast {:at_floor, floor}, state do
     state = %{state | floor: floor}
+    IO.puts "Floor Change"
+      
     {:noreply, state}
   end
 
-  def handle_cast {:executed_order}, state do
+  def handle_cast {:executed_order,order}, state do
     IO.puts "Order deleted"
-    state = %{state | active_orders: Tuple.delete_at(state.active_orders, 0)}
+    state = %{state | active_orders: state.active_orders -- [order]}
     IO.inspect state
-    execute_order(state)
     {:noreply, state}
   end
   
@@ -48,8 +51,8 @@ defmodule StateMachine do
     {:noreply, state}
   end
 
-  def delete_active_order do
-    GenServer.cast(StateMachine, {:executed_order})
+  def delete_active_order(order) do
+    GenServer.cast(StateMachine, {:executed_order, order})
   end
 
   def update_state_direction(direction) do
@@ -59,9 +62,8 @@ defmodule StateMachine do
 
 
   def execute_order(state) do
-    if state.active_orders != {} do
-      order = elem(state.active_orders,0)
-      #IO.inspect order
+    order = List.first(state.active_orders)
+    if order != nil  do
       direction = cond do
         order.floor == state.floor ->
           :stop
@@ -84,7 +86,7 @@ defmodule StateMachine do
     if order.floor == DriverInterface.get_floor_sensor_state(DriverInterface) do
       DriverInterface.set_motor_direction(DriverInterface, :stop)
       DriverInterface.set_door_open_light(DriverInterface, :on)
-      delete_active_order()
+      delete_active_order(order)
     else 
       executed?(state, order)
     end
