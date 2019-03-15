@@ -21,6 +21,12 @@ defmodule OrderHandler do
       {:noreply, order_matrix}
     end
 
+
+    def handle_cast {:order_executed, floor, button_type}, _order_matrix do
+      
+      #{:noreply}
+    end
+
     def test do
       DriverInterface.start()
       start_link()
