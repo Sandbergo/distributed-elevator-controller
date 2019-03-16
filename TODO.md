@@ -10,10 +10,12 @@
 * [x] Open/Close Doors on reached floor
 * [x] Order lights
 * [ ] Floor lights
+* [ ] Fix OrderList in OrderHandler
 
 ### Short term checkpoints network
-* [ ] Minimum working Network Module
-* [ ] Network module starts everything
+* [x] Minimum working Network Module
+* [ ] Network module broadcast self
+* [ ] Network module sets up cluster
 
 
 ### Long term checkpoints

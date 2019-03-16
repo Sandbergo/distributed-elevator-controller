@@ -1,9 +1,45 @@
 defmodule NetworkHandler do
-    @moduledoc """
-    NetworkHandler module yayeet
-    """
+  @moduledoc """
+  NetworkHandler module. Broadcast and set up node cluster
+  """
+  use GenServer
+  #@RECEIVE_PORT 5679
+  #@BROADCAST_PORT 5678
+  #@BROADCAST_SLEEP 5000
+  #@OFFLINE_SLEEP 5000
+  #@LISTEN_TIMEOUT 2000
+  #@COOKIE "COOKIE"
+
+  def start_link [send_port, recv_port] \\ [20001,20002] do
+    GenServer.start_link(__MODULE__, [send_port, recv_port], [{:name, __MODULE__}])
+  end
+
+  def init [send_port, recv_port] do
+    IO.puts "NetworkHandler init"
+    {:ok, [send_port, recv_port]}
+  end
+
+  def broadcast_self do
+    IO.puts "BROADCASTING MY DUDES"
+  end
+
+
+
+  def test do
+    IO.puts "Leggo my eggo"
+    DriverInterface.start()
+    OrderHandler.start_link()
+    Poller.start_link()
+    StateMachine.start_link()
+    start_link()
+  end
+
+
+    ############################----BOILERPLATE----#######################
+
+
       @doc """
-  Returns (hopefully) the ip address of your network interface. 
+  Returns (hopefully) the ip address of your network interface.
   ## Examples
       iex> NetworkStuff.get_my_ip
       {10, 100, 23, 253}
@@ -21,7 +57,6 @@ defmodule NetworkHandler do
   end
 
 
-
   @doc """
   formats an ip address on tuple format to a bytestring
   ## Examples
@@ -32,7 +67,6 @@ defmodule NetworkHandler do
   def ip_to_string ip do
     :inet.ntoa(ip) |> to_string()
   end
-
 
 
   @doc """
@@ -46,11 +80,10 @@ defmodule NetworkHandler do
 
   def all_nodes do
     case [Node.self | Node.list] do
-      [:'nonode@nohost'] -> {:error, :node_not_running}
+      [:nonode@nohost] -> {:error, :node_not_running}
       nodes -> nodes
     end
   end
-
 
 
   @doc """
@@ -67,6 +100,4 @@ defmodule NetworkHandler do
     Node.start(String.to_atom(full_name), :longnames, tick_time)
   end
 
-    
 end
-  
