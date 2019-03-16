@@ -9,8 +9,7 @@
 * [x] StateMachine tells OrderHandler to delete order
 * [x] Open/Close Doors on reached floor
 * [x] Order lights
-* [ ] Floor lights
-* [ ] Fix OrderList in OrderHandler
+* [x] Fix OrderList in OrderHandler
 
 ### Short term checkpoints network
 * [x] Minimum working Network Module
@@ -21,7 +20,7 @@
 ### Long term checkpoints
 * [x] One elevator can perform one order correctly
 * [x] One elevator can perform multiple orders correctly
-* [ ] StateMachine module finished
+* [x] StateMachine module finished v1.0
 * [ ] Network setup nodes
 * [ ] communication of data between nodes
 * [ ] handle restart
