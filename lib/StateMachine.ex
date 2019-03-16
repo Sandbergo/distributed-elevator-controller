@@ -77,18 +77,26 @@ defmodule StateMachine do
       update_state_direction(direction)
       executed?(state, order)
     else
-      {:no_active_orders}
+      {:no_active_orders}a
     end
   end
 
   def executed?(state, order) do
     if order.floor == DriverInterface.get_floor_sensor_state(DriverInterface) do
-      DriverInterface.set_motor_direction(DriverInterface, :stop)
-      DriverInterface.set_door_open_light(DriverInterface, :on)
+      DriverInterface.set_motor_direction DriverInterface, :stop
+      #DriverInterface.set_door_open_light DriverInterface, :on
+      open_doors
       delete_active_order(order)
     else 
       executed?(state, order)
     end
+  end
+
+  def open_doors do
+    # SET A STATE?
+    DriverInterface.set_door_open_light DriverInterface, :on
+    :timer.sleep(3000)
+    DriverInterface.set_door_open_light DriverInterface, :on
   end
 
 end

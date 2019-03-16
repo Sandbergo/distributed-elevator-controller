@@ -17,7 +17,9 @@
 * [ ] One elevator can perform multiple order correctly
 * [ ] Network setup nodes
 * [ ] communication of data between nodes
-* [ ] FAT
+* [ ] handle restart
+* [ ] handle motor stop
+* [ ] :heart: FAT :heart: 
 
 
 ### Check out 
