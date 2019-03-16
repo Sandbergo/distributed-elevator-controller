@@ -8,9 +8,9 @@ defmodule StateMachine do
   end
 
   def init direction do
-    DriverInterface.set_motor_direction(DriverInterface, direction)
+    DriverInterface.set_motor_direction DriverInterface, direction
     floor = initialized?()
-    DriverInterface.set_motor_direction(DriverInterface, :stop)
+    DriverInterface.set_motor_direction DriverInterface, :stop
     state = %State{floor: floor, direction: :stop, active_orders: []}
     {:ok, state}
   end
@@ -26,6 +26,7 @@ defmodule StateMachine do
 
   def handle_cast {:neworder, order}, state do 
     state = %{state | active_orders: state.active_orders ++ [order]}
+    GenServer.cast DriverInterface, {:set_order_button_light, order.type, order.floor, :on }
       if length(state.active_orders)==1 do
         execute_order(state)
       end
@@ -34,15 +35,17 @@ defmodule StateMachine do
 
   def handle_cast {:at_floor, floor}, state do
     state = %{state | floor: floor}
-    IO.puts "Floor Change"
-      
+    #DriverInterface.set_floor_indicator DriverInterface, floor
     {:noreply, state}
   end
 
-  def handle_cast {:executed_order,order}, state do
-    IO.puts "Order deleted"
+  def handle_cast {:executed_order, order}, state do
+    IO.puts "Order deleted for StateMachine"
     state = %{state | active_orders: state.active_orders -- [order]}
+    GenServer.cast(OrderHandler, {:order_executed, order}) # fix this boy
+    GenServer.cast DriverInterface, {:set_order_button_light, order.type, order.floor, :off }
     IO.inspect state
+    execute_order(state) 
     {:noreply, state}
   end
   
@@ -73,19 +76,19 @@ defmodule StateMachine do
         true ->
           {:errore!}
       end
-      DriverInterface.set_motor_direction(DriverInterface, direction)
+      DriverInterface.set_motor_direction DriverInterface, direction
       update_state_direction(direction)
       executed?(state, order)
     else
-      {:no_active_orders}a
+      {:no_active_orders}
     end
   end
 
   def executed?(state, order) do
-    if order.floor == DriverInterface.get_floor_sensor_state(DriverInterface) do
+    if order.floor == DriverInterface.get_floor_sensor_state DriverInterface do
       DriverInterface.set_motor_direction DriverInterface, :stop
       #DriverInterface.set_door_open_light DriverInterface, :on
-      open_doors
+      open_doors()
       delete_active_order(order)
     else 
       executed?(state, order)
@@ -94,9 +97,11 @@ defmodule StateMachine do
 
   def open_doors do
     # SET A STATE?
+    #IO.puts "opnin doors"
     DriverInterface.set_door_open_light DriverInterface, :on
-    :timer.sleep(3000)
-    DriverInterface.set_door_open_light DriverInterface, :on
+    :timer.sleep(1000)
+    DriverInterface.set_door_open_light DriverInterface, :off
+    #IO.puts "closin doors"
   end
 
 end

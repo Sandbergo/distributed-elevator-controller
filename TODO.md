@@ -1,20 +1,25 @@
 # TODO
 
-### List of short term checkpoints
+### Short term checkpoints elevator
 * [x] Implement Poller.button_polling and receive in OrderHandler
 * [x] OrderHandler sends order to elevator
 * [x] implement states in StateMachine
 * [x] Stop on ordered floor
 * [x] Implement order list 
-* [ ] StateMachine tells OrderHandler to delete order
-* [ ] Open/Close Doors on reached floor
-* [ ] lights
+* [x] StateMachine tells OrderHandler to delete order
+* [x] Open/Close Doors on reached floor
+* [x] Order lights
+* [ ] Floor lights
+
+### Short term checkpoints network
+* [ ] Minimum working Network Module
+* [ ] Network module starts everything
 
 
-
-### List of long term checkpoints
+### Long term checkpoints
 * [x] One elevator can perform one order correctly
-* [ ] One elevator can perform multiple order correctly
+* [x] One elevator can perform multiple orders correctly
+* [ ] StateMachine module finished
 * [ ] Network setup nodes
 * [ ] communication of data between nodes
 * [ ] handle restart
@@ -22,4 +27,6 @@
 * [ ] :heart: FAT :heart: 
 
 
-### Check out 
+### Remember to check out 
+* Fix OrderList in OrderHandler
+* better order priority in StateMachine?
