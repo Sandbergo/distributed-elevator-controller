@@ -1,26 +1,62 @@
 defmodule NetworkHandler do
   @moduledoc """
-  NetworkHandler module. Broadcast and set up node cluster
+  NetworkHandler module. Broadcast own IP and set up p2p node cluster
   """
   use GenServer
-  #@RECEIVE_PORT 5679
-  #@BROADCAST_PORT 5678
-  #@BROADCAST_SLEEP 5000
-  #@OFFLINE_SLEEP 5000
-  #@LISTEN_TIMEOUT 2000
-  #@COOKIE "COOKIE"
+  @receive_port 20086
+  @broadcast_port 20087
+  @broadcast_freq 5000
+  @offline_sleep 5000
+  @listen_timeout 2000
+  @node_dead_time 6000
+  @cookie :penis
 
-  def start_link [send_port, recv_port] \\ [20001,20002] do
+  def start_link [send_port, recv_port] \\ [@broadcast_port,@receive_port] do
     GenServer.start_link(__MODULE__, [send_port, recv_port], [{:name, __MODULE__}])
   end
 
   def init [send_port, recv_port] do
     IO.puts "NetworkHandler init"
-    {:ok, [send_port, recv_port]}
+    {:ok, broadcast_socket} = :gen_udp.open(send_port, [:list, {:active, false}, {:broadcast, true}])
+    #{:ok, listen_socket} = :gen_tcp
+    name = "#{"elev@"}#{get_my_ip() |> ip_to_string()}"
+    Node.start(String.to_atom(name), :longnames, @node_dead_time)
+    Node.set_cookie(Node.self(), @cookie)
+    Process.spawn(__MODULE__, :broadcast_self, [broadcast_socket, recv_port, name], [:link])
+    {:ok, _listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
   end
 
-  def broadcast_self do
-    IO.puts "BROADCASTING MY DUDES"
+  def broadcast_self(socket, recv_port, name) do
+    broadcast_address = {255, 255, 255, 255}
+    :gen_udp.send(socket, broadcast_address, recv_port, name)
+    :timer.sleep(@broadcast_freq)
+    broadcast_self(socket, recv_port, name)
+  end
+
+
+  def handle_info(:msg) do
+    # broadcast
+  end
+
+  def handle_info(:udp, ip, state) do
+    IO.inspect ip
+    # IP to string
+    # name
+    # Node.ping(Name) -> pong / pang
+  end
+
+
+  def listen(socket) do
+    IO.puts "STOP, collaborate and listen"
+    {:ok,_ip,_port,node_name} = :gen_udp.recv(socket, 0)
+    IO.puts(node_name)
+
+    if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
+      IO.puts "connecting to node #{node_name}"
+      Node.ping(String.to_atom(node_name))
+    end
+
+    listen(socket)
   end
 
 
