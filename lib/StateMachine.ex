@@ -35,7 +35,7 @@ defmodule StateMachine do
 
   def handle_cast {:at_floor, floor}, state do
     state = %{state | floor: floor}
-    #DriverInterface.set_floor_indicator DriverInterface, floor
+    DriverInterface.set_floor_indicator DriverInterface, floor
     {:noreply, state}
   end
 
