@@ -15,7 +15,9 @@
 * [x] Minimum working Network Module
 * [x] Network module broadcast self
 * [x] Network module sets up cluster
-* [ ] Network module sync orders
+* [x] Network module sync orders
+* [ ] set up testing network from own PCs
+* [ ] Order is handled by best elevator
 
 
 ### Long term checkpoints
@@ -23,7 +25,7 @@
 * [x] One elevator can perform multiple orders correctly
 * [x] StateMachine module finished v1.0
 * [x] Network setup nodes
-* [ ] communication of data between nodes
+* [x] communication of data between nodes
 * [ ] handle packet loss
 * [ ] handle restart
 * [ ] handle motor stop
@@ -32,3 +34,4 @@
 
 ### Remember to check out 
 * better order priority in StateMachine?
+* Supervising

@@ -47,7 +47,7 @@ defmodule OrderHandler do
 
   def sync_order (order_list) do
     IO.puts "time to sync!"
-    Genderver.cast NetworkHandler, {:sync_order_lists, order_list}
+    GenServer.cast NetworkHandler, {:sync_order_lists, order_list}
   end
 
 end

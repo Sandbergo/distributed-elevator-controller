@@ -61,7 +61,7 @@ defmodule NetworkHandler do
 
 
   def handle_cast {:sync_order_lists, order_list}, node_list do
-    GenServer.multi_call(Node.list(), NetworkHandler, {:sync_order, order_list}, 1000)
+    GenServer.multi_call(Node.list(), NetworkHandler, {:sync_orders, order_list}, 1000)
     {:noreply, node_list}
     #multicast
   end

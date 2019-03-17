@@ -1,4 +1,5 @@
 #clear 
+#epmd -daemon # fix erlang issue
 
 # start server
 pkill ElevatorServer # kill last instance of server
@@ -10,5 +11,4 @@ gnome-terminal -x ~/.cargo/bin/ElevatorServer  & disown
 mix compile
 
 # run boy
-#iex -S mix 
 iex -S mix run -e NetworkHandler.test
