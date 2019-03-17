@@ -13,21 +13,22 @@
 
 ### Short term checkpoints network
 * [x] Minimum working Network Module
-* [ ] Network module broadcast self
-* [ ] Network module sets up cluster
+* [x] Network module broadcast self
+* [x] Network module sets up cluster
+* [ ] Network module sync orders
 
 
 ### Long term checkpoints
 * [x] One elevator can perform one order correctly
 * [x] One elevator can perform multiple orders correctly
 * [x] StateMachine module finished v1.0
-* [ ] Network setup nodes
+* [x] Network setup nodes
 * [ ] communication of data between nodes
+* [ ] handle packet loss
 * [ ] handle restart
 * [ ] handle motor stop
 * [ ] :heart: FAT :heart: 
 
 
 ### Remember to check out 
-* Fix OrderList in OrderHandler
 * better order priority in StateMachine?

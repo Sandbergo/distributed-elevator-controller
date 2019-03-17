@@ -19,6 +19,7 @@ defmodule OrderHandler do
       order_list = order_list ++ [new_order]
       IO.puts "order added in OrderHandler, order list is now:"
       IO.inspect order_list
+      sync_order (order_list)
       distribute_order(new_order)
     end
     {:noreply, order_list}
@@ -30,9 +31,23 @@ defmodule OrderHandler do
     {:noreply, order_list --[order]}
   end
 
+  def handle_cast {:sync_order_list, ext_order_list}, order_list do
+    Enum.each(ext_order_list, fn(ext_order) ->
+      if ext_order not in order_list do
+        distribute_order(ext_order)
+      end
+    end)
+    order_list = Enum.uniq(order_list ++ ext_order_list)
+    {:noreply, order_list}
+  end
+
   def distribute_order(order) do
     GenServer.cast StateMachine, {:neworder, order}
+  end
 
+  def sync_order (order_list) do
+    IO.puts "time to sync!"
+    Genderver.cast NetworkHandler, {:sync_order_lists, order_list}
   end
 
 end

@@ -23,7 +23,7 @@ defmodule NetworkHandler do
     Node.set_cookie(String.to_atom(name), @cookie)
     Process.spawn(__MODULE__, :broadcast_self, [broadcast_socket, recv_port, name], [:link])
     {:ok, listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
-    listen(listen_socket)
+    Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
     {:ok, name}
   end
 
@@ -35,33 +35,46 @@ defmodule NetworkHandler do
     broadcast_self(socket, recv_port, name)
   end
 
-"""
-  def handle_info(:msg) do
-    # broadcast
-  end
-
-  def handle_info(:udp, ip, state) do
-    IO.inspect ip
-    # IP to string
-    # name
-    # Node.ping(Name) -> pong / pang
-  end
-"""
-
-  def listen(socket) do
-    IO.puts "STOP, collaborate and listen"
-    {:ok, {_ip,_port,node_name}} = :gen_udp.recv(socket, 0)
-    IO.puts "Receiving: #{node_name}"
-
-    if to_string(node_name) not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
-      IO.puts "connecting to node #{node_name}"
-      Node.ping(String.to_atom(to_string(node_name)))
+  def handle_info({:request_connection, node_name}, state) do
+    if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
+      IO.puts "connecting to node {node_name}"
+      Node.ping(String.to_atom(node_name))
     end
-
-    listen(socket)
+    IO.inspect Node.list
+    {:noreply, state}
   end
 
 
+  def listen(socket, network_handler_pid) do
+    IO.puts "STOP, collaborate and listen"
+    case :gen_udp.recv(socket, 0, 3*@broadcast_freq) do
+      {:ok, {_ip,_port,node_name}} ->
+        IO.puts "Receiving: #{node_name}"
+        node_name = to_string(node_name)
+        Process.send(network_handler_pid, {:request_connection, node_name}, [])
+        listen(socket, network_handler_pid)
+      {:error, reason} ->
+        IO.inspect reason
+        #Reset node?
+    end
+  end
+
+
+  def handle_cast {:sync_order_lists, order_list}, node_list do
+    GenServer.multi_call(Node.list(), NetworkHandler, {:sync_order, order_list}, 1000)
+    {:noreply, node_list}
+    #multicast
+  end
+
+  def handle_call {:sync_orders, ext_order_list}, _from, state do
+    sync(ext_order_list)
+    {:reply, state, state}
+
+  end
+
+  def sync(ext_order_list) do
+    GenServer.cast(OrderHandler, {:sync_order_list, ext_order_list})
+  end
 
   def test do
     IO.puts "Leggo my eggo"
@@ -69,7 +82,7 @@ defmodule NetworkHandler do
     OrderHandler.start_link()
     Poller.start_link()
     StateMachine.start_link()
-    start_link()
+    NetworkHandler.start_link()
   end
 
 
