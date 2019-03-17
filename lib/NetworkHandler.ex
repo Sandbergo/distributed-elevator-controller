@@ -18,22 +18,24 @@ defmodule NetworkHandler do
   def init [send_port, recv_port] do
     IO.puts "NetworkHandler init"
     {:ok, broadcast_socket} = :gen_udp.open(send_port, [:list, {:active, false}, {:broadcast, true}])
-    #{:ok, listen_socket} = :gen_tcp
     name = "#{"elev@"}#{get_my_ip() |> ip_to_string()}"
     Node.start(String.to_atom(name), :longnames, @node_dead_time)
-    Node.set_cookie(Node.self(), @cookie)
+    Node.set_cookie(String.to_atom(name), @cookie)
     Process.spawn(__MODULE__, :broadcast_self, [broadcast_socket, recv_port, name], [:link])
-    {:ok, _listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
+    {:ok, listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
+    listen(listen_socket)
+    {:ok, name}
   end
 
   def broadcast_self(socket, recv_port, name) do
-    broadcast_address = {255, 255, 255, 255}
+    IO.puts "broadcasting to my dudes"
+    broadcast_address = {10, 100, 23, 255}
     :gen_udp.send(socket, broadcast_address, recv_port, name)
     :timer.sleep(@broadcast_freq)
     broadcast_self(socket, recv_port, name)
   end
 
-
+"""
   def handle_info(:msg) do
     # broadcast
   end
@@ -44,16 +46,16 @@ defmodule NetworkHandler do
     # name
     # Node.ping(Name) -> pong / pang
   end
-
+"""
 
   def listen(socket) do
     IO.puts "STOP, collaborate and listen"
-    {:ok,_ip,_port,node_name} = :gen_udp.recv(socket, 0)
-    IO.puts(node_name)
+    {:ok, {_ip,_port,node_name}} = :gen_udp.recv(socket, 0)
+    IO.puts "Receiving: #{node_name}"
 
-    if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
+    if to_string(node_name) not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
       IO.puts "connecting to node #{node_name}"
-      Node.ping(String.to_atom(node_name))
+      Node.ping(String.to_atom(to_string(node_name)))
     end
 
     listen(socket)
@@ -82,13 +84,15 @@ defmodule NetworkHandler do
   """
 
   def get_my_ip do
-    {:ok, socket} = :gen_udp.open(6789, [active: false, broadcast: true])
-    :ok = :gen_udp.send(socket, {255,255,255,255}, 6789, "test packet")
+    IO.puts "get IP"
+    {:ok, socket} = :gen_udp.open(5678, [active: false, broadcast: true])
+    :ok = :gen_udp.send(socket, {10, 100, 23, 255}, 5678, "test packet")
     ip = case :gen_udp.recv(socket, 100, 1000) do
       {:ok, {ip, _port, _data}} -> ip
       {:error, _} -> {:error, :could_not_get_ip}
     end
     :gen_udp.close(socket)
+    IO.inspect ip
     ip
   end
 
