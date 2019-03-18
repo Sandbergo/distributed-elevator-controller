@@ -10,6 +10,7 @@
 * [x] Open/Close Doors on reached floor
 * [x] Order lights
 * [x] Fix OrderList in OrderHandler
+* [ ] One elevator has optimal performance
 
 ### Short term checkpoints network
 * [x] Minimum working Network Module
@@ -17,6 +18,7 @@
 * [x] Network module sets up cluster
 * [x] Network module sync orders
 * [ ] set up testing network from own PCs
+* [ ] Information about elevator states are considered
 * [ ] Order is handled by best elevator
 
 
@@ -26,6 +28,7 @@
 * [x] StateMachine module finished v1.0
 * [x] Network setup nodes
 * [x] communication of data between nodes
+* [ ] single elevator optimal performance
 * [ ] handle packet loss
 * [ ] handle restart
 * [ ] handle motor stop
@@ -33,5 +36,6 @@
 
 
 ### Remember to check out 
-* better order priority in StateMachine?
+* packet loss
 * Supervising
+* Idle state?
