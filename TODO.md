@@ -10,7 +10,8 @@
 * [x] Open/Close Doors on reached floor
 * [x] Order lights
 * [x] Fix OrderList in OrderHandler
-* [ ] One elevator has optimal performance
+* [x] One elevator has (close to) optimal performance
+* [ ] Bug in OrderHandler: resets every time? 
 
 ### Short term checkpoints network
 * [x] Minimum working Network Module
@@ -29,6 +30,7 @@
 * [x] Network setup nodes
 * [x] communication of data between nodes
 * [ ] single elevator optimal performance
+* [ ] elevator network reasonable performance
 * [ ] handle packet loss
 * [ ] handle restart
 * [ ] handle motor stop
@@ -39,3 +41,4 @@
 * packet loss
 * Supervising
 * Idle state?
+* Even better performance for one elevator

@@ -35,15 +35,15 @@ defmodule StateMachine do
 
   def handle_cast {:at_floor, floor}, state do
     state = %{state | floor: floor}
-    #DriverInterface.set_floor_indicator DriverInterface, floor
+    execute_order(state)
     {:noreply, state}
   end
 
   def handle_cast {:executed_order, order}, state do
     IO.puts "Order deleted for StateMachine"
     state = %{state | active_orders: state.active_orders -- [order]}
-    GenServer.cast(OrderHandler, {:order_executed, order}) # fix this boy
-    GenServer.cast DriverInterface, {:set_order_button_light, order.type, order.floor, :off }
+    GenServer.cast(OrderHander, {:order_executed, order})  # fix this boy
+    GenServer.cast(DriverInterface, {:set_order_button_light, order.type, order.floor, :off })
     IO.inspect state
     execute_order(state) 
     {:noreply, state}
@@ -78,21 +78,26 @@ defmodule StateMachine do
       end
       DriverInterface.set_motor_direction DriverInterface, direction
       update_state_direction(direction)
-      executed?(state, order)
+      executed?(state)
     else
       {:no_active_orders}
     end
   end
 
-  def executed?(state, order) do
-    if order.floor == DriverInterface.get_floor_sensor_state DriverInterface do
+  def executed?(state) do
+    if should_stop?(state) do
       DriverInterface.set_motor_direction DriverInterface, :stop
-      #DriverInterface.set_door_open_light DriverInterface, :on
       open_doors()
-      delete_active_order(order)
-    else 
-      executed?(state, order)
+      Enum.each(state.active_orders, fn(order)->
+        if order.floor == state.floor do 
+          delete_active_order(order)
+        end
+      end)
     end
+  end
+
+  def should_stop?(state) do 
+    Enum.any?(state.active_orders, fn(order) -> order.floor == state.floor end)
   end
 
   def open_doors do
