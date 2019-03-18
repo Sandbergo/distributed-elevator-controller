@@ -82,7 +82,7 @@ defmodule NetworkHandler do
     OrderHandler.start_link()
     Poller.start_link()
     StateMachine.start_link()
-    NetworkHandler.start_link()
+    #NetworkHandler.start_link()
   end
 
 
