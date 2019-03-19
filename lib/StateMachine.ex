@@ -26,7 +26,7 @@ defmodule StateMachine do
 
   def handle_cast {:neworder, order}, state do 
     state = %{state | active_orders: state.active_orders ++ [order]}
-    GenServer.cast DriverInterface, {:set_order_button_light, order.type, order.floor, :on }
+    DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
       if length(state.active_orders)==1 do
         execute_order(state)
       end
@@ -42,8 +42,7 @@ defmodule StateMachine do
   def handle_cast {:executed_order, order}, state do
     IO.puts "Order deleted for StateMachine"
     state = %{state | active_orders: state.active_orders -- [order]}
-    GenServer.cast(OrderHander, {:order_executed, order})  # fix this boy
-    GenServer.cast(DriverInterface, {:set_order_button_light, order.type, order.floor, :off })
+    DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :off)
     IO.inspect state
     execute_order(state) 
     {:noreply, state}
@@ -55,6 +54,7 @@ defmodule StateMachine do
   end
 
   def delete_active_order(order) do
+    GenServer.cast(OrderHander, {:order_executed, order})
     GenServer.cast(StateMachine, {:executed_order, order})
   end
 

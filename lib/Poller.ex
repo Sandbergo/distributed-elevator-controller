@@ -1,7 +1,8 @@
 defmodule Poller do
    @moduledoc """
-    Poller module periodically checks buttons and floor sensors
+    Poller module periodically checks buttons and floor sensors with two threads
     Sends messages to OrderHandler and StateMachine
+    Has no state
     """
   use GenServer
 

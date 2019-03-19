@@ -15,15 +15,14 @@ defmodule OrderHandler do
 
   def handle_cast {:register_order, floor, button_type}, order_list do
     new_order = %Order{type: button_type, floor: floor}
-    if not Enum.member?(order_list, new_order) do
-
-      IO.puts "order added in OrderHandler, order list:"
-      IO.inspect order_list
-      order_list = order_list ++ [new_order]
+    order_list = if not Enum.member?(order_list, new_order) do
       IO.puts "order added in OrderHandler, order list is now "
-      IO.inspect order_list
+      IO.inspect order_list++[new_order]
       sync_order (order_list)
       distribute_order(new_order)
+      order_list ++ [new_order]
+    else
+      order_list
     end
     {:noreply, order_list}
   end
