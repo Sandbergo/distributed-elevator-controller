@@ -12,6 +12,7 @@ defmodule NetworkHandler do
   @broadcast {10,24,39,255} #{10, 100, 23, 255}
   @cookie :penis
 
+
   def start_link [send_port, recv_port] \\ [@broadcast_port,@receive_port] do
     GenServer.start_link(__MODULE__, [send_port, recv_port], [{:name, __MODULE__}])
   end
@@ -29,7 +30,7 @@ defmodule NetworkHandler do
   end
 
   def broadcast_self(socket, recv_port, name) do
-    IO.puts "broadcasting to my dudes"
+    #IO.puts "broadcasting to my dudes"
     broadcast_address = {10, 100, 23, 255}
     :gen_udp.send(socket, @broadcast, recv_port, name)
     :timer.sleep(@broadcast_freq)
@@ -38,19 +39,18 @@ defmodule NetworkHandler do
 
   def handle_info({:request_connection, node_name}, state) do
     if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
-      IO.puts "connecting to node {node_name}"
+      #IO.puts "connecting to node #{node_name}"
       Node.ping(String.to_atom(node_name))
     end
-    IO.inspect Node.list
     {:noreply, state}
   end
 
 
   def listen(socket, network_handler_pid) do
-    IO.puts "STOP, collaborate and listen"
+    #IO.puts "STOP, collaborate and listen"
     case :gen_udp.recv(socket, 0, 3*@broadcast_freq) do
       {:ok, {_ip,_port,node_name}} ->
-        IO.puts "Receiving: #{node_name}"
+        #IO.puts "Receiving: #{node_name}"
         node_name = to_string(node_name)
         Process.send(network_handler_pid, {:request_connection, node_name}, [])
         listen(socket, network_handler_pid)
@@ -65,6 +65,11 @@ defmodule NetworkHandler do
     GenServer.multi_call(Node.list(), NetworkHandler, {:sync_orders, order_list}, 1000)
     {:noreply, node_list}
     #multicast
+  end
+
+  def handle_cast {:send_state_backup, backup}, state  do
+    GenServer.multi_call(Node.list(), NetworkHandler, {:state_backup, backup}, 1000)
+    {:noreply, state}
   end
 
   def handle_call {:sync_orders, ext_order_list}, _from, state do
@@ -84,6 +89,7 @@ defmodule NetworkHandler do
     Poller.start_link()
     StateMachine.start_link()
     NetworkHandler.start_link()
+    WatchDog.start_link()
   end
 
 
@@ -98,7 +104,6 @@ defmodule NetworkHandler do
   """
 
   def get_my_ip do
-    IO.puts "get IP"
     {:ok, socket} = :gen_udp.open(5678, [active: false, broadcast: true])
     :ok = :gen_udp.send(socket, @broadcast, 5678, "test packet")
     ip = case :gen_udp.recv(socket, 100, 1000) do
@@ -106,7 +111,6 @@ defmodule NetworkHandler do
       {:error, _} -> {:error, :could_not_get_ip}
     end
     :gen_udp.close(socket)
-    IO.inspect ip
     ip
   end
 

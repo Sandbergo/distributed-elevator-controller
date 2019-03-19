@@ -33,7 +33,7 @@ defmodule OrderHandler do
     order_list = order_list -- [order]
     IO.puts "order deleted in OrderHandler, order list is now:"
     IO.inspect order_list --[order]
-    {:noreply, order_list --[order]}
+    {:noreply, order_list}
   end
 
   def handle_cast {:sync_order_list, ext_order_list}, order_list do
@@ -51,7 +51,6 @@ defmodule OrderHandler do
   end
 
   def sync_order (order_list) do
-    IO.puts "time to sync!"
     no_cab_order_list = Enum.reject(order_list, fn(order) -> order.type == :cab end)
     IO.puts "Synced orders"
     IO.inspect no_cab_order_list

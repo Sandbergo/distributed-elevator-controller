@@ -49,18 +49,6 @@ defmodule Poller do
     button_poller()
   end
 
-  def register_button_press state, floor, button_type do
-    case state do
-
-    :new_press ->
-      set_order(floor, button_type)
-      register_button_press(:transient, floor, button_type)
-    :transient ->
-      IO.puts "still pressin eh?"
-    _->
-    end
-  end
-
   def set_order floor, button_type do
     GenServer.cast OrderHandler, {:register_order, floor, button_type}
   end
