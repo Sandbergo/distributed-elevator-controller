@@ -1,7 +1,8 @@
 defmodule Poller do
    @moduledoc """
-    Poller module periodically checks buttons and floor sensors
+    Poller module periodically checks buttons and floor sensors with two threads
     Sends messages to OrderHandler and StateMachine
+    Has no state
     """
   use GenServer
 
@@ -13,6 +14,11 @@ defmodule Poller do
   end
 
   def init _mock do
+    Enum.each(@floors, fn(floor) ->
+      Enum.each(@button_types, fn(button_type)->
+        GenServer.cast DriverInterface, {:set_order_button_light, button_type, floor, :off }
+      end)
+    end)
     Process.spawn(Poller, :floor_poller, [:between_floors], [:link])
     Process.spawn(Poller, :button_poller, [], [:link])
     {:ok, _mock}
@@ -20,9 +26,9 @@ defmodule Poller do
 
   def floor_poller floor do
     new_floor = DriverInterface.get_floor_sensor_state(DriverInterface)
-    if new_floor != floor
-    && new_floor != :between_floors do
-        send_floor(new_floor)
+    if new_floor != floor && new_floor != :between_floors do
+      DriverInterface.set_floor_indicator(DriverInterface, new_floor)
+      send_floor(new_floor)
     end
     floor_poller(new_floor)
   end
