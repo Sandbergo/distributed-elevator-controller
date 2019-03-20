@@ -18,7 +18,7 @@ defmodule StateMachine do
 
   def initialized? do
     cond do
-      is_atom(DriverInterface.get_floor_sensor_state DriverInterface) -> 
+      is_atom(DriverInterface.get_floor_sensor_state DriverInterface) ->
         initialized?()
       true ->
         DriverInterface.get_floor_sensor_state DriverInterface
@@ -52,7 +52,7 @@ defmodule StateMachine do
       DriverInterface.set_motor_direction DriverInterface, :stop
       open_doors()
       Enum.each(state.active_orders, fn(order)->
-        if order.floor == state.floor do 
+        if order.floor == state.floor do
           #IO.puts "Delete this bitch"
           delete_active_order(order)
         end
@@ -60,22 +60,22 @@ defmodule StateMachine do
     end
   end
 
-  def should_stop?(state) do 
+  def should_stop?(state) do
     cond do
       state.direction == :stop ->
         true
       Enum.any?(state.active_orders, fn(other_order) ->
       other_order.floor == state.floor and
-      (order_type_to_int(other_order) == direction_to_int(state) or 
-      other_order.type == :cab) end) -> 
+      (order_type_to_int(other_order) == direction_to_int(state) or
+      other_order.type == :cab) end) ->
         true
-      Enum.any?(state.active_orders, fn(other_order) -> 
+      Enum.any?(state.active_orders, fn(other_order) ->
       other_order.floor == state.floor + direction_to_int(state) end) ->
         false
       Enum.any?(state.active_orders, fn(other_order) ->
-      other_order.floor == state.floor end) -> 
+      other_order.floor == state.floor end) ->
         true
-      true -> 
+      true ->
         false
     end
 
@@ -109,14 +109,14 @@ defmodule StateMachine do
   def reset_motor_timer() do
     GenServer.cast(WatchDog, {:floor_changed})
   end
-  
+
   def backup_state(state) do
     GenServer.cast(WatchDog, {:backup, state})
   end
 
   #-------------------Handle cast and call functions-------------#
-  
-  def handle_cast {:neworder, order}, state do 
+
+  def handle_cast {:neworder, order}, state do
     state = %{state | active_orders: state.active_orders ++ [order]}
     backup_state(state)
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
@@ -137,11 +137,12 @@ defmodule StateMachine do
 
   def handle_cast {:executed_order, order}, state do
     state = %{state | active_orders: Enum.reject(state.active_orders, fn(order) -> order.floor == state.floor end)}
+    backup_state(state)
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :off)
-    execute_order(state) 
+    execute_order(state)
     {:noreply, state}
   end
-  
+
   def handle_cast {:update_direction, direction}, state do
     state = %{state | direction: direction}
     {:noreply, state}

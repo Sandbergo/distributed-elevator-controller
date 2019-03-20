@@ -104,6 +104,7 @@ defmodule NetworkHandler do
 
   def handle_cast {:send_state_backup, backup}, net_state  do
     net_state = Map.put(net_state, Node.self(), backup)
+    IO.inspect(net_state)
 
     multi_call_update_backup(backup)
     {:noreply, net_state}
@@ -138,6 +139,7 @@ defmodule NetworkHandler do
 
   def handle_call {:update_backup, backup, from_node}, _from, net_state do
     net_state = Map.put(net_state, from_node, backup)
+    IO.inspect(net_state)
     {:reply, net_state, net_state}
   end
 
