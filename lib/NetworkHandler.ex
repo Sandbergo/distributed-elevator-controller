@@ -30,8 +30,12 @@ defmodule NetworkHandler do
     {:ok, net_state}
   end
   #--------------------------Non-communicative functions----------------------------#
-  def cost_function(state = %State{},order = %Order{}) do
+  def cost_function(state, order) do
     cost = length(state.active_orders) + abs(distance_to_order(order, state))
+    IO.puts "Here comes the current state: "
+    IO.inspect state
+    IO.puts "Here comes the current order"
+    IO.inspect order
     IO.puts "Cost func: #{cost}"
     cost
   end
@@ -118,9 +122,10 @@ defmodule NetworkHandler do
   def handle_call {:am_i_chosen?, order}, _from, net_state do
     my_order_rank = cost_function(net_state.backup, order)
     {replies, bad_nodes} = multi_call_request_order_rank(order);
-    you_are_chosen = not Enum.any?(replies, fn({node, reply_cost_func}) ->
-      my_order_rank < reply_cost_func end)
-    IO.puts "YOU ARE #{you_are_chosen}"
+    IO.puts "Replies"
+    IO.inspect replies
+    you_are_chosen = not Enum.any?(replies, fn({name, reply}) ->
+      my_order_rank < reply end)
     {:reply, you_are_chosen, net_state}
   end
 

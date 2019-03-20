@@ -11,7 +11,8 @@ defmodule WatchDog do
   end
 
   def init [overwatch, backup] do
-    #watchdog(overwatch)
+    backup = %{backup | floor: DriverInterface.get_floor_sensor_state(DriverInterface)}
+    send_backup(backup)
     {:ok, [overwatch, backup]}
   end
 

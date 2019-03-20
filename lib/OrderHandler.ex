@@ -57,12 +57,13 @@ defmodule OrderHandler do
 
   def handle_cast {:sync_order_list, ext_order_list}, order_list do
     cab_orders = Enum.reject(order_list, fn(int_order)-> int_order.type != :cab end)
-    Enum.each(ext_order_list, fn(ext_order) ->
+    "Enum.each(ext_order_list, fn(ext_order) ->
       if ext_order not in order_list do
         distribute_order(ext_order)
       end
-      order_list = ext_order_list ++ cab_orders
-    end)
+    end)"
+    order_list = ext_order_list ++ cab_orders
+    IO.inspect order_list
     {:noreply, order_list}
   end
 

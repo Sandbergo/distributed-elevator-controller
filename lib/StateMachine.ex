@@ -119,7 +119,6 @@ defmodule StateMachine do
   def handle_cast {:neworder, order}, state do 
     state = %{state | active_orders: state.active_orders ++ [order]}
     backup_state(state)
-    IO.inspect state
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
       if length(state.active_orders)==1 do
         start_motor_timer()
@@ -130,6 +129,7 @@ defmodule StateMachine do
 
   def handle_cast {:at_floor, floor}, state do
     state = %{state | floor: floor}
+    backup_state(state)
     reset_motor_timer()
     executed?(state)
     {:noreply, state}
