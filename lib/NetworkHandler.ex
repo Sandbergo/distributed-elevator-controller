@@ -9,10 +9,10 @@ defmodule NetworkHandler do
   @offline_sleep 5000
   @listen_timeout 2000
   @node_dead_time 6000
-  @broadcast {10,24,31,255} #{10, 100, 23, 255}
+  @broadcast {10, 100, 23, 255} # {10,24,31,255} 
   @cookie :penis
 
-
+  #--------------------------INIT----------------------------#
   def start_link [send_port, recv_port] \\ [@broadcast_port,@receive_port] do
     GenServer.start_link(__MODULE__, [send_port, recv_port], [{:name, __MODULE__}])
   end
@@ -28,7 +28,12 @@ defmodule NetworkHandler do
     Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
     {:ok, name}
   end
-
+  #--------------------------Non-communicative functions----------------------------#
+  def cost_function(order = %Order{}) do
+    state = WatchDog.request_state_backup()
+    cost = length(state.active_orders) + abs(OrderHandler.distance_to_order(order, state))
+  end
+  #--------------------------Network functions and node connections----------------------------#
   def broadcast_self(socket, recv_port, name) do
     #IO.puts "broadcasting to my dudes"
     broadcast_address = {10, 100, 23, 255}
@@ -36,6 +41,7 @@ defmodule NetworkHandler do
     :timer.sleep(@broadcast_freq)
     broadcast_self(socket, recv_port, name)
   end
+
 
   def handle_info({:request_connection, node_name}, state) do
     if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
@@ -60,15 +66,33 @@ defmodule NetworkHandler do
     end
   end
 
+  #--------------------------Casts/calls----------------------------#
 
-  def handle_cast {:sync_order_lists, order_list}, node_list do
+  def sync(ext_order_list) do
+    GenServer.cast(OrderHandler, {:sync_order_list, ext_order_list})
+  end
+
+  def synchronize_order_lists(order_list) do
     GenServer.multi_call(Node.list(), NetworkHandler, {:sync_orders, order_list}, 1000)
+  end
+
+  def multi_call_state_backup(backup) do
+    GenServer.multi_call(Node.list(), NetworkHandler, {:state_backup, backup}, 1000)
+  end
+
+  def multi_call_request_order_rank(order) do
+    GenServer.multi_call(Node.list(), NetworkHandler, {:request_order_rank, order}, 1000)
+  end
+
+  #--------------------------Handle casts/calls----------------------------#
+  def handle_cast {:sync_order_lists, order_list}, node_list do
+    synchronize_order_lists(order_list)
     {:noreply, node_list}
     #multicast
   end
 
   def handle_cast {:send_state_backup, backup}, state  do
-    GenServer.multi_call(Node.list(), NetworkHandler, {:state_backup, backup}, 1000)
+    multi_call_state_backup(backup)
     {:noreply, state}
   end
 
@@ -78,10 +102,19 @@ defmodule NetworkHandler do
 
   end
 
-  def sync(ext_order_list) do
-    GenServer.cast(OrderHandler, {:sync_order_list, ext_order_list})
+  def handle_call {:request_order_rank, order}, _from, state do
+    my_order_rank = cost_function(order)
+    {:reply, my_order_rank, state}
   end
 
+  def handle_call {:am_i_chosen?, order}, _from, state do
+    my_order_rank = cost_function(order)
+    {replies, bad_nodes} = multi_call_request_order_rank(order);
+    you_are_chosen = not Enum.any?(replies, fn({node, reply_cost_func}) ->
+      my_order_rank < reply_cost_func end)
+    {:reply, you_are_chosen, state}
+
+  end
   def test do
     IO.puts "Leggo my eggo"
     DriverInterface.start()

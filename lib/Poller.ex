@@ -40,7 +40,7 @@ defmodule Poller do
           1 ->
             set_order(floor, button_type)
             IO.puts "Noticed press: #{button_type} on floor: #{floor}"#Pass received message to OrderHandler
-            :timer.sleep(250) # remove
+            :timer.sleep(100) # remove?
           0 ->
             {:no_orders}
         end

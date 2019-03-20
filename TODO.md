@@ -12,6 +12,7 @@
 * [x] Fix OrderList in OrderHandler
 * [x] One elevator has (close to) optimal performance
 * [x] Bug in OrderHandler: resets every time? 
+* [x] Fix elevator priority of order pressed 
 
 ### Short term checkpoints network
 * [x] Minimum working Network Module
@@ -19,9 +20,10 @@
 * [x] Network module sets up cluster
 * [x] Network module sync orders
 * [ ] set up testing network from own PCs
-* [ ] Only non-cab orders shared
+* [x] Only non-cab orders shared
 * [ ] Information about elevator states are considered
 * [ ] Order is handled by best elevator
+* [ ] Orders are deleted form active orders when executed by other elevator 
 
 
 ### Long term checkpoints
@@ -30,19 +32,16 @@
 * [x] StateMachine module finished v1.0
 * [x] Network setup nodes
 * [x] communication of data between nodes
-* [ ] single elevator optimal performance
-* [ ] elevator network reasonable performance
+* [x] single elevator optimal performance
+* [x] elevator network reasonable performance
+* [ ] elevator network spec performance
 * [ ] implement watchdog v1.0
-* [ ] handle packet loss
+* [ ] handle packet loss (script)
 * [ ] handle restart
 * [ ] handle motor stop
+* [ ] cleanup of all code 
 * [ ] :heart: FAT :heart: 
 
 
 ### Remember to check out 
-* packet loss
-* ask studass if one-elevator performance good enough
 * Supervising
-* Idle state?
-* Even better performance for one elevator?
-* Syntax: using State struct and calling Driver correctly

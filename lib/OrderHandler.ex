@@ -5,6 +5,7 @@ defmodule OrderHandler do
   """
   #@order_list %{}
   use GenServer
+  #--------------------------INIT----------------------------#
   def start_link do
     GenServer.start_link(__MODULE__, [], [{:name, __MODULE__}])
   end
@@ -14,6 +15,24 @@ defmodule OrderHandler do
     #_valid_orders = Order.get_valid_order
     {:ok, order_list}
   end
+  #--------------------------Non-communicative functions----------------------------#
+  def distance_to_order(elevator_order, elevator_state) do
+    elevator_order.floor - elevator_state.floor
+  end
+  #--------------------------Casts/calls----------------------------#
+  def distribute_order(order) do
+    if GenServer.call NetworkHandler, {:am_i_chosen?, order} do
+      GenServer.cast StateMachine, {:neworder, order}
+    end
+  end
+
+  def sync_order (order_list) do
+    no_cab_order_list = Enum.reject(order_list, fn(order) -> order.type == :cab end)
+    IO.puts "Synced orders"
+    IO.inspect no_cab_order_list
+    GenServer.cast NetworkHandler, {:sync_order_lists, no_cab_order_list}
+  end
+  #--------------------------Handle casts/calls----------------------------#
 
   def handle_cast {:register_order, floor, button_type}, order_list do
     new_order = %Order{type: button_type, floor: floor}
@@ -46,15 +65,5 @@ defmodule OrderHandler do
     {:noreply, order_list}
   end
 
-  def distribute_order(order) do
-    GenServer.cast StateMachine, {:neworder, order}
-  end
-
-  def sync_order (order_list) do
-    no_cab_order_list = Enum.reject(order_list, fn(order) -> order.type == :cab end)
-    IO.puts "Synced orders"
-    IO.inspect no_cab_order_list
-    GenServer.cast NetworkHandler, {:sync_order_lists, no_cab_order_list}
-  end
 
 end

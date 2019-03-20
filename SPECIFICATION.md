@@ -1,4 +1,4 @@
-levator Project
+Elevator Project
 ================
 
 
@@ -13,7 +13,7 @@ Be reasonable: There may be semantic hoops that you can jump through to create s
 
 ### No orders are lost
  - Once the light on a hall call button (buttons for calling an elevator to that floor; top 6 buttons on the control panel) is turned on, an elevator should arrive at that floor
- - Similarly for a cab call (for telling the elevator what floor you want to exit at; front 4 buttons on the control panel), but only the elevator at that specific workspace should take the order
+ - ~~Similarly for a cab call (for telling the elevator what floor you want to exit at; front 4 buttons on the control panel), but only the elevator at that specific workspace should take the order~~
  - This means handling network packet loss, losing network connection entirely, software that crashes, and losing power - both to the elevator motor and the machine that controls the elevator
    - For cab orders, handling loss of power/software crash implies that the orders are executed once service is restored
    - The time used to detect these failures should be reasonable, ie. on the order of magnitude of seconds (not minutes)
@@ -28,12 +28,12 @@ Be reasonable: There may be semantic hoops that you can jump through to create s
  - You are free to choose and design your own "cost function" of some sort: Minimal movement, minimal waiting time, etc.
  - The project is not about creating the "best" or "optimal" distribution of orders. It only has to be clear that the elevators are cooperating and communicating.
  
-### An individual elevator should behave sensibly and efficiently
+### ~~An individual elevator should behave sensibly and efficiently~~
  - No stopping at every floor "just to be safe"
  - The hall "call upward" and "call downward" buttons should behave differently
    - Ex: If the elevator is moving from floor 1 up to floor 4 and there is a downward order at floor 3, then the elevator should not stop on its way upward, but should return back to floor 3 on its way down
  
-### The lights and buttons should function as expected
+### ~~The lights and buttons should function as expected~~
  - The hall call buttons on all workspaces should let you summon an elevator
  - Under normal circumstances, the lights on the hall buttons should show the same thing on all workspaces 
    - Under circumstances with high packet loss, at least one light must work as expected
