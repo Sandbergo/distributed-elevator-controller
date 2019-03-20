@@ -121,6 +121,10 @@ defmodule NetworkHandler do
     {:noreply, net_state}
   end
   
+  def handle_call {:state_backup, backup}, _from, net_state do
+    IO.puts "Heythere"
+  end
+
   def test do
     IO.puts "Leggo my eggo"
     DriverInterface.start()
