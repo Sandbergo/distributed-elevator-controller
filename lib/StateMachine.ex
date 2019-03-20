@@ -102,14 +102,26 @@ defmodule StateMachine do
     GenServer.cast(StateMachine, {:update_direction, direction})
   end
 
+  def start_motor_timer() do
+    GenServer.cast(WatchDog, {:elev_going_active})
+  end
+
+  def reset_motor_timer() do
+    GenServer.cast(WatchDog, {:floor_changed})
+  end
+  
+  def backup_state(state) do
+    GenServer.cast(WatchDog, {:backup, state})
+  end
+
   #-------------------Handle cast and call functions-------------#
   
   def handle_cast {:neworder, order}, state do 
     state = %{state | active_orders: state.active_orders ++ [order]}
+    backup_state(state)
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
       if length(state.active_orders)==1 do
-        IO.puts "cast to WD"
-        GenServer.cast(WatchDog, {:elev_going_active})
+        start_motor_timer()
         execute_order(state)
       end
     {:noreply, state}
@@ -117,7 +129,7 @@ defmodule StateMachine do
 
   def handle_cast {:at_floor, floor}, state do
     state = %{state | floor: floor}
-    GenServer.cast(WatchDog, {:floor_changed})
+    reset_motor_timer()
     executed?(state)
     {:noreply, state}
   end

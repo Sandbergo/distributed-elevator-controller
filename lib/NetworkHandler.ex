@@ -26,11 +26,11 @@ defmodule NetworkHandler do
     Process.spawn(__MODULE__, :broadcast_self, [broadcast_socket, recv_port, name], [:link])
     {:ok, listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
     Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
-    {:ok, name}
+    net_state = %{name: String.to_atom(name), backup: %State{}}
+    {:ok, net_state}
   end
   #--------------------------Non-communicative functions----------------------------#
-  def cost_function(order = %Order{}) do
-    state = WatchDog.request_state_backup()
+  def cost_function(state = %State{},order = %Order{}) do
     cost = length(state.active_orders) + abs(OrderHandler.distance_to_order(order, state))
   end
   #--------------------------Network functions and node connections----------------------------#
@@ -43,12 +43,12 @@ defmodule NetworkHandler do
   end
 
 
-  def handle_info({:request_connection, node_name}, state) do
+  def handle_info({:request_connection, node_name}, net_state) do
     if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
       #IO.puts "connecting to node #{node_name}"
       Node.ping(String.to_atom(node_name))
     end
-    {:noreply, state}
+    {:noreply, net_state}
   end
 
 
@@ -91,29 +91,34 @@ defmodule NetworkHandler do
     #multicast
   end
 
-  def handle_cast {:send_state_backup, backup}, state  do
+  def handle_cast {:send_state_backup, backup}, net_state  do
+    net_state = %{net_state | backup: backup}
     multi_call_state_backup(backup)
-    {:noreply, state}
+    {:noreply, net_state}
   end
 
-  def handle_call {:sync_orders, ext_order_list}, _from, state do
+  def handle_call {:sync_orders, ext_order_list}, _from, net_state do
     sync(ext_order_list)
-    {:reply, state, state}
+    {:reply, net_state, net_state}
 
   end
 
-  def handle_call {:request_order_rank, order}, _from, state do
-    my_order_rank = cost_function(order)
-    {:reply, my_order_rank, state}
+  def handle_call {:request_order_rank, order}, _from, net_state do
+    my_order_rank = cost_function(net_state.backup, order)
+    {:reply, my_order_rank, net_state}
   end
 
-  def handle_call {:am_i_chosen?, order}, _from, state do
-    my_order_rank = cost_function(order)
+  def handle_call {:am_i_chosen?, order}, _from, net_state do
+    my_order_rank = cost_function(net_state.backup, order)
     {replies, bad_nodes} = multi_call_request_order_rank(order);
     you_are_chosen = not Enum.any?(replies, fn({node, reply_cost_func}) ->
       my_order_rank < reply_cost_func end)
-    {:reply, you_are_chosen, state}
+    {:reply, you_are_chosen, net_state}
+  end
 
+  def handle_cast {:motorstop}, net_state do
+    IO.puts "RESTART REQUIRED"
+    {:noreply, net_state}
   end
   
   def test do

@@ -23,6 +23,7 @@
 * [x] Only non-cab orders shared
 * [x] Information about elevator states are considered
 * [ ] Order is handled by best elevator
+* [ ] redistribute orders after motor stop
 
 
 ### Long term checkpoints
