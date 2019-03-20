@@ -50,6 +50,7 @@ defmodule StateMachine do
   def executed?(state) do
     if should_stop?(state) do
       DriverInterface.set_motor_direction DriverInterface, :stop
+      update_state_direction(:stop)
       open_doors()
       Enum.each(state.active_orders, fn(order)->
         if order.floor == state.floor do
@@ -145,6 +146,7 @@ defmodule StateMachine do
 
   def handle_cast {:update_direction, direction}, state do
     state = %{state | direction: direction}
+    backup_state(state)
     {:noreply, state}
   end
 

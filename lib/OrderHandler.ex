@@ -18,11 +18,11 @@ defmodule OrderHandler do
   #--------------------------Non-communicative functions----------------------------#
 
   #--------------------------Casts/calls----------------------------#
-  def distribute_order(order) do
+  def distribute_order(order, test \\ false) do
     cond do
       order.type == :cab ->
         GenServer.cast StateMachine, {:neworder, order}
-      GenServer.call NetworkHandler, {:am_i_chosen?, order} ->
+      test ->
         IO.puts "I VOLUNTEER AS TRIBUTE"
         GenServer.cast StateMachine, {:neworder, order}
       true -> "Prim must die >:("

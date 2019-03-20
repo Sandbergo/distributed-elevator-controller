@@ -81,6 +81,14 @@ defmodule NetworkHandler do
     GenServer.cast(OrderHandler, {:sync_order_list, ext_order_list})
   end
 
+  def export_order({:internal_order, order, _chosen_node}) do
+    GenServer.cast OrderHandler, {:internal_order, order}
+  end
+
+  def export_order({:external_order, order, chosen_node }) do
+    GenServer.multi_call(chosen_node, NetworkHandler, {:external_order, order}, 1000)
+  end
+
   def synchronize_order_lists(order_list) do
     GenServer.multi_call(Node.list(), NetworkHandler, {:sync_orders, order_list}, 1000)
   end
@@ -123,13 +131,19 @@ defmodule NetworkHandler do
 
   def handle_call {:am_i_chosen?, order}, _from, net_state do
     IO.puts("Am i chosen?")
-    #my_order_rank = cost_function(net_state.backup, order)
-    #{replies, _bad_nodes} = multi_call_request_order_rank(order);
-    #IO.puts "Replies"
-    #IO.inspect replies
-    #you_are_chosen = not Enum.any?(replies, fn({_name, reply}) ->
-    #  my_order_rank > reply end)
-    {:reply, net_state, net_state}#{:reply, you_are_chosen, net_state}
+
+    lowest_value = Enum.min_by(Map.values(net_state),
+     fn(node_state) -> cost_function(node_state, order) end)
+
+    chosen_node = List.keyfind(Map.to_list(net_state), lowest_value, 2)
+    if chosen_node == Node.self() do
+        export_order({:internal_order, order, chosen_node})
+    else
+        export_order({:external_order, order, chosen_node})
+    end
+
+
+    {:reply, net_state, net_state}
   end
 
   def handle_cast {:motorstop}, net_state do
@@ -141,6 +155,14 @@ defmodule NetworkHandler do
     net_state = Map.put(net_state, from_node, backup)
     IO.inspect(net_state)
     {:reply, net_state, net_state}
+  end
+
+  def handle_cast {:internal_order, order, _chosen_node}, net_state do
+    OrderHandler.distribute_order(order, true)
+  end
+
+  def handle_call {:external_order, order}, _from, net_state do
+    OrderHandler.distribute_order(order, true)
   end
 
   def test do
