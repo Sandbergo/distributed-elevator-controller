@@ -31,7 +31,12 @@ defmodule NetworkHandler do
   end
   #--------------------------Non-communicative functions----------------------------#
   def cost_function(state = %State{},order = %Order{}) do
-    cost = length(state.active_orders) + abs(OrderHandler.distance_to_order(order, state))
+    cost = length(state.active_orders) + abs(distance_to_order(order, state))
+    IO.puts "Cost func: #{cost}"
+    cost
+  end
+  def distance_to_order(elevator_order, elevator_state) do
+    elevator_order.floor - elevator_state.floor
   end
   #--------------------------Network functions and node connections----------------------------#
   def broadcast_self(socket, recv_port, name) do
@@ -115,6 +120,7 @@ defmodule NetworkHandler do
     {replies, bad_nodes} = multi_call_request_order_rank(order);
     you_are_chosen = not Enum.any?(replies, fn({node, reply_cost_func}) ->
       my_order_rank < reply_cost_func end)
+    IO.puts "YOU ARE #{you_are_chosen}"
     {:reply, you_are_chosen, net_state}
   end
 

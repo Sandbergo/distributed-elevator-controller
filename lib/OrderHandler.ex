@@ -16,14 +16,16 @@ defmodule OrderHandler do
     {:ok, order_list}
   end
   #--------------------------Non-communicative functions----------------------------#
-  def distance_to_order(elevator_order, elevator_state) do
-    elevator_order.floor - elevator_state.floor
-  end
+
   #--------------------------Casts/calls----------------------------#
   def distribute_order(order) do
-    if GenServer.call NetworkHandler, {:am_i_chosen?, order} do
-      IO.puts "I VOLUNTEER AS TRIBUTE"
-      GenServer.cast StateMachine, {:neworder, order}
+    cond do
+      order.type == :cab ->
+        GenServer.cast StateMachine, {:neworder, order}
+      GenServer.call NetworkHandler, {:am_i_chosen?, order} ->
+        IO.puts "I VOLUNTEER AS TRIBUTE"
+        GenServer.cast StateMachine, {:neworder, order}
+      true -> "Prim must die >:("
     end
   end
 
@@ -36,12 +38,14 @@ defmodule OrderHandler do
   def handle_cast {:register_order, floor, button_type}, order_list do
     new_order = %Order{type: button_type, floor: floor}
     order_list = if not Enum.member?(order_list, new_order) do
-      sync_order (order_list++[new_order])
+      sync_order(order_list++[new_order])
       distribute_order(new_order)
       order_list ++ [new_order]
     else
       order_list
     end
+    IO.puts "Here is the order list"
+    IO.inspect order_list
     {:noreply, order_list}
   end
 
