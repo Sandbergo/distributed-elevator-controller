@@ -30,9 +30,9 @@ defmodule OrderHandler do
   end
 
   def handle_cast {:order_executed, order}, order_list do
-    order_list = order_list -- [order]
+    order_list = Enum.reject(order_list, fn(other_order) -> other_order.floor == order.floor end)
     IO.puts "order deleted in OrderHandler, order list is now:"
-    IO.inspect order_list --[order]
+    IO.inspect order_list
     {:noreply, order_list}
   end
 

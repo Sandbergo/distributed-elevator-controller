@@ -9,7 +9,7 @@ defmodule NetworkHandler do
   @offline_sleep 5000
   @listen_timeout 2000
   @node_dead_time 6000
-  @broadcast {10,24,39,255} #{10, 100, 23, 255}
+  @broadcast {10,24,31,255} #{10, 100, 23, 255}
   @cookie :penis
 
 

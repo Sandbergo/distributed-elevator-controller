@@ -62,11 +62,23 @@ defmodule StateMachine do
   end
 
   def should_stop?(state) do 
-    List.first(state.active_orders).floor == state.floor or 
-    Enum.any?(state.active_orders, fn(other_order) ->
-       other_order.floor == state.floor and
-     (order_type_to_int(other_order) == direction_to_int(state) or 
-     other_order.type == :cab) end)
+    order = List.first(state.active_orders)
+    cond do
+      Enum.any?(state.active_orders, fn(other_order) ->
+      other_order.floor == state.floor and
+      (order_type_to_int(other_order) == direction_to_int(state) or 
+      other_order.type == :cab) end) -> 
+        true
+      state.direction == :up and 
+      order.floor == state.floor -> 
+        true
+      true-> false
+    end
+    #order.floor == state.floor or 
+    #Enum.any?(state.active_orders, fn(other_order) ->
+    #   other_order.floor == state.floor and
+    # (order_type_to_int(other_order) == direction_to_int(state) or 
+    # other_order.type == :cab) end)
   end
 
   def open_doors do
@@ -109,7 +121,7 @@ defmodule StateMachine do
 
   def handle_cast {:executed_order, order}, state do
     IO.puts "Order deleted for StateMachine"
-    state = %{state | active_orders: state.active_orders -- [order]}
+    state = %{state | active_orders: Enum.reject(state.active_orders, fn(order) -> order.floor == state.floor end)}#%{state | active_orders: state.active_orders -- [order]}
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :off)
     IO.inspect state
     execute_order(state) 
