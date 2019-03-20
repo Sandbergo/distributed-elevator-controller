@@ -25,7 +25,7 @@ defmodule OrderHandler do
       test ->
         IO.puts "I VOLUNTEER AS TRIBUTE"
         GenServer.cast StateMachine, {:neworder, order}
-      true -> "Prim must die >:("
+      true -> GenServer.cast(NetworkHandler, {:am_i_chosen?, order})
     end
   end
 
