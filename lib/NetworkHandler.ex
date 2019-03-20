@@ -9,7 +9,7 @@ defmodule NetworkHandler do
   @offline_sleep 5000
   @listen_timeout 2000
   @node_dead_time 6000
-  @broadcast {10, 100, 23, 255} # {10,24,31,255} 
+  @broadcast {10, 100, 23, 255} # {10,24,31,255}
   @cookie :penis
 
   #--------------------------INIT----------------------------#
@@ -26,7 +26,7 @@ defmodule NetworkHandler do
     Process.spawn(__MODULE__, :broadcast_self, [broadcast_socket, recv_port, name], [:link])
     {:ok, listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
     Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
-    net_state = %{name: String.to_atom(name), backup: %State{}}
+    net_state = %{Node.self() => %State{}}
     {:ok, net_state}
   end
   #--------------------------Non-communicative functions----------------------------#
@@ -85,8 +85,8 @@ defmodule NetworkHandler do
     GenServer.multi_call(Node.list(), NetworkHandler, {:sync_orders, order_list}, 1000)
   end
 
-  def multi_call_state_backup(backup) do
-    GenServer.multi_call(Node.list(), NetworkHandler, {:state_backup, backup}, 1000)
+  def multi_call_update_backup(backup) do
+    GenServer.multi_call(Node.list(), NetworkHandler, {:update_backup, backup, Node.self()}, 1000)
   end
 
   def multi_call_request_order_rank(order) do
@@ -103,8 +103,9 @@ defmodule NetworkHandler do
   end
 
   def handle_cast {:send_state_backup, backup}, net_state  do
-    net_state = %{net_state | backup: backup}
-    multi_call_state_backup(backup)
+    net_state = Map.put(net_state, Node.self(), backup)
+
+    multi_call_update_backup(backup)
     {:noreply, net_state}
   end
 
@@ -120,22 +121,23 @@ defmodule NetworkHandler do
   end
 
   def handle_call {:am_i_chosen?, order}, _from, net_state do
-    my_order_rank = cost_function(net_state.backup, order)
-    {replies, bad_nodes} = multi_call_request_order_rank(order);
-    IO.puts "Replies"
-    IO.inspect replies
-    you_are_chosen = not Enum.any?(replies, fn({name, reply}) ->
-      my_order_rank < reply end)
-    {:reply, you_are_chosen, net_state}
+    IO.puts("Am i chosen?")
+    #my_order_rank = cost_function(net_state.backup, order)
+    #{replies, _bad_nodes} = multi_call_request_order_rank(order);
+    #IO.puts "Replies"
+    #IO.inspect replies
+    #you_are_chosen = not Enum.any?(replies, fn({_name, reply}) ->
+    #  my_order_rank > reply end)
+    {:reply, net_state, net_state}#{:reply, you_are_chosen, net_state}
   end
 
   def handle_cast {:motorstop}, net_state do
     IO.puts "RESTART REQUIRED"
     {:noreply, net_state}
   end
-  
-  def handle_call {:state_backup, backup}, _from, net_state do
-    IO.puts "Heythere"
+
+  def handle_call {:update_backup, backup, from_node}, _from, net_state do
+    net_state = Map.put(net_state, from_node, backup)
     {:reply, net_state, net_state}
   end
 
