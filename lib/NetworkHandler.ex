@@ -4,7 +4,7 @@ defmodule NetworkHandler do
   """
   use GenServer
   @receive_port 20086
-  @broadcast_port 20087
+  @broadcast_port 20088
   @broadcast_freq 5000
   @offline_sleep 5000
   @listen_timeout 2000
@@ -32,12 +32,6 @@ defmodule NetworkHandler do
   #--------------------------Non-communicative functions----------------------------#
   def cost_function(state, order) do
     cost = length(state.active_orders) + abs(distance_to_order(order, state))
-    IO.puts "Here comes the current state: "
-    IO.inspect state
-    IO.puts "Here comes the current order"
-    IO.inspect order
-    IO.puts "Cost func: #{cost}"
-    cost
   end
   def distance_to_order(elevator_order, elevator_state) do
     elevator_order.floor - elevator_state.floor
@@ -82,7 +76,7 @@ defmodule NetworkHandler do
   end
 
   def export_order({:internal_order, order, _chosen_node}) do
-    GenServer.cast OrderHandler, {:internal_order, order}
+    GenServer.cast NetworkHandler, {:internal_order, order}
   end
 
   def export_order({:external_order, order, chosen_node }) do
@@ -134,12 +128,16 @@ defmodule NetworkHandler do
 
     lowest_value = Enum.min_by(Map.values(net_state),
      fn(node_state) -> cost_function(node_state, order) end)
-
-    chosen_node = List.keyfind(Map.to_list(net_state), lowest_value, 1)
+    IO.puts "Lowest state"
+    IO.inspect(lowest_value)
+    {chosen_node, _node_state} = List.keyfind(Map.to_list(net_state), lowest_value, 1)
+    IO.puts "Chosen_node"
     IO.inspect chosen_node
     if chosen_node == Node.self() do
+        IO.puts "I've got it"
         export_order({:internal_order, order, chosen_node})
     else
+        IO.puts "Send that shit"
         export_order({:external_order, order, chosen_node})
     end
 
@@ -158,7 +156,7 @@ defmodule NetworkHandler do
     {:reply, net_state, net_state}
   end
 
-  def handle_cast {:internal_order, order, _chosen_node}, net_state do
+  def handle_cast {:internal_order, order}, net_state do
     OrderHandler.distribute_order(order, true)
     {:noreply, net_state}
   end
