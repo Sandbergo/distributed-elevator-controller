@@ -2,12 +2,10 @@
 epmd -daemon # fix erlang issue
 
 # start server
-pkill ElevatorServer # kill last instance of server
-cd ~/Documents/gr25/TTK4145
-./../simulator/SimElavatorServer
-gnome-terminal -x ~/.cargo/bin/ElevatorServer  & disown 
-
-
+pkill SimElevatorServer # kill last instance of server
+cd simulator
+gnome-terminal -x ./SimElevatorServer  & disown 
+cd ..
 # compile
 mix compile
 
