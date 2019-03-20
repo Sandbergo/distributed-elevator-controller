@@ -21,9 +21,8 @@
 * [x] Network module sync orders
 * [ ] set up testing network from own PCs
 * [x] Only non-cab orders shared
-* [ ] Information about elevator states are considered
+* [x] Information about elevator states are considered
 * [ ] Order is handled by best elevator
-* [ ] Orders are deleted form active orders when executed by other elevator 
 
 
 ### Long term checkpoints

@@ -7,12 +7,11 @@ defmodule WatchDog do
 
   #-------------------INIT----------------#
   def start_link do
-    GenServer.start_link(__MODULE__, [%State{}], [{:name, __MODULE__}])
+    GenServer.start_link(__MODULE__, [nil], [{:name, __MODULE__}])
   end
 
   def init overwatch do
-    watchdog(overwatch)
-
+    #watchdog(overwatch)
     {:ok, overwatch}
   end
 
@@ -31,27 +30,38 @@ defmodule WatchDog do
     watchdog(overwatch)
   end
 
-  def watchdog_loop (time \\ 0) do
+  def watchdog_loop() do
     receive do
       {:elev_going_inactive} ->
         IO.puts "stop watchin"
         Process.exit(self(), :kill)
-      {:floors_changed} ->
-        "changin floor in WatchDog"
+      {:floor_changed} ->
+        IO.puts "changin floor in WatchDog"
+        watchdog_loop()
       after
-        5_000 -> {:motorstop}
+        5_000 ->
+        IO.puts("MOTORSTOP")
+        send_motorstop()
     end
   end
 
   #--------------------------Handle casts/calls----------------------------#
-  def handle_cast {:elev_going_active} do
+  def handle_cast {:elev_going_active}, state do
     IO.puts "watch it boy"
-    Process.spawn(WatchDog, :watchdog_loop, [0], [])
-    {:noreply}
+    state = Process.spawn(WatchDog, :watchdog_loop, [], [])
+    {:noreply, state}
   end
   
+  def handle_cast {:elev_going_inactive}, state do
+    send(state, {:elev_going_inactive})
+    state = nil
+    {:noreply, state}
+  end
   
-
+  def handle_cast {:floor_changed}, state do
+    send(state, {:floor_changed})
+    {:noreply, state}
+  end
   
   
   #-------------------Cast and call functions----------------#

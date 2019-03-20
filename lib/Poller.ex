@@ -31,6 +31,7 @@ defmodule Poller do
       send_floor(new_floor)
     end
     floor_poller(new_floor)
+    :timer.sleep(50) 
   end
 
   def button_poller do
@@ -40,12 +41,13 @@ defmodule Poller do
           1 ->
             set_order(floor, button_type)
             #IO.puts "Noticed press: #{button_type} on floor: #{floor}"#Pass received message to OrderHandler
-            :timer.sleep(50) 
+            :timer.sleep(100) 
           0 ->
             {:no_orders}
         end
       end)
     end)
+    :timer.sleep(50) 
     button_poller()
   end
 

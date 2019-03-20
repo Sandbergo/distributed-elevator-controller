@@ -39,7 +39,6 @@ defmodule StateMachine do
         true ->
           {:errore!}
       end
-      IO.puts "Actual direction: #{direction}"
       DriverInterface.set_motor_direction DriverInterface, direction
       update_state_direction(direction)
     else
@@ -109,6 +108,7 @@ defmodule StateMachine do
     state = %{state | active_orders: state.active_orders ++ [order]}
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
       if length(state.active_orders)==1 do
+        IO.puts "cast to WD"
         GenServer.cast(WatchDog, {:elev_going_active})
         execute_order(state)
       end
@@ -117,6 +117,7 @@ defmodule StateMachine do
 
   def handle_cast {:at_floor, floor}, state do
     state = %{state | floor: floor}
+    GenServer.cast(WatchDog, {:floor_changed})
     executed?(state)
     {:noreply, state}
   end
@@ -130,7 +131,6 @@ defmodule StateMachine do
   
   def handle_cast {:update_direction, direction}, state do
     state = %{state | direction: direction}
-    IO.puts "State.direction: #{state.direction}"
     {:noreply, state}
   end
 

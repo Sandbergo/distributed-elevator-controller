@@ -115,6 +115,7 @@ defmodule NetworkHandler do
     {:reply, you_are_chosen, state}
 
   end
+  
   def test do
     IO.puts "Leggo my eggo"
     DriverInterface.start()
