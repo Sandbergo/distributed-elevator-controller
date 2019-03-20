@@ -86,6 +86,8 @@ defmodule NetworkHandler do
 
   #--------------------------Handle casts/calls----------------------------#
   def handle_cast {:sync_order_lists, order_list}, node_list do
+    IO.puts "Order list to be synchronized"
+    IO.inspect order_list
     synchronize_order_lists(order_list)
     {:noreply, node_list}
     #multicast
@@ -123,15 +125,16 @@ defmodule NetworkHandler do
   
   def handle_call {:state_backup, backup}, _from, net_state do
     IO.puts "Heythere"
+    {:reply, net_state, net_state}
   end
 
   def test do
     IO.puts "Leggo my eggo"
+    NetworkHandler.start_link()
     DriverInterface.start()
     OrderHandler.start_link()
     Poller.start_link()
     StateMachine.start_link()
-    NetworkHandler.start_link()
     WatchDog.start_link()
   end
 

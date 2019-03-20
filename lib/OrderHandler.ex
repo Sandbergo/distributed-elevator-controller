@@ -22,6 +22,7 @@ defmodule OrderHandler do
   #--------------------------Casts/calls----------------------------#
   def distribute_order(order) do
     if GenServer.call NetworkHandler, {:am_i_chosen?, order} do
+      IO.puts "I VOLUNTEER AS TRIBUTE"
       GenServer.cast StateMachine, {:neworder, order}
     end
   end
@@ -46,16 +47,18 @@ defmodule OrderHandler do
 
   def handle_cast {:order_executed, order}, order_list do
     order_list = Enum.reject(order_list, fn(other_order) -> other_order.floor == order.floor end)
+    sync_order(order_list)
     {:noreply, order_list}
   end
 
   def handle_cast {:sync_order_list, ext_order_list}, order_list do
+    cab_orders = Enum.reject(order_list, fn(int_order)-> int_order.type != :cab end)
     Enum.each(ext_order_list, fn(ext_order) ->
       if ext_order not in order_list do
         distribute_order(ext_order)
       end
+      order_list = ext_order_list ++ cab_orders
     end)
-    order_list = Enum.uniq(order_list ++ ext_order_list)
     {:noreply, order_list}
   end
 
