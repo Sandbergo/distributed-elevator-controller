@@ -39,6 +39,7 @@ defmodule StateMachine do
         true ->
           {:errore!}
       end
+      IO.puts "Actual direction: #{direction}"
       DriverInterface.set_motor_direction DriverInterface, direction
       update_state_direction(direction)
     else
@@ -53,7 +54,7 @@ defmodule StateMachine do
       open_doors()
       Enum.each(state.active_orders, fn(order)->
         if order.floor == state.floor do 
-          IO.puts "Delete this bitch"
+          #IO.puts "Delete this bitch"
           delete_active_order(order)
         end
       end)
@@ -121,16 +122,15 @@ defmodule StateMachine do
   end
 
   def handle_cast {:executed_order, order}, state do
-    IO.puts "Order deleted for StateMachine"
     state = %{state | active_orders: Enum.reject(state.active_orders, fn(order) -> order.floor == state.floor end)}
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :off)
-    IO.inspect state
     execute_order(state) 
     {:noreply, state}
   end
   
   def handle_cast {:update_direction, direction}, state do
     state = %{state | direction: direction}
+    IO.puts "State.direction: #{state.direction}"
     {:noreply, state}
   end
 

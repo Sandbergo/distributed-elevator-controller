@@ -69,6 +69,7 @@ defmodule DriverInterface do
 
   # Casts  ----------------------------------------------
   def handle_cast {:set_motor_direction, direction}, socket do
+    IO.puts "This is the actual direction: #{direction}"
     :gen_tcp.send(socket, [1, @direction_map[direction], 0, 0])
     {:noreply, socket}
   end

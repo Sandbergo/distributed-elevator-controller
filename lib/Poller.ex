@@ -39,8 +39,8 @@ defmodule Poller do
         case DriverInterface.get_order_button_state(DriverInterface, floor, button_type) do
           1 ->
             set_order(floor, button_type)
-            IO.puts "Noticed press: #{button_type} on floor: #{floor}"#Pass received message to OrderHandler
-            :timer.sleep(100) # remove?
+            #IO.puts "Noticed press: #{button_type} on floor: #{floor}"#Pass received message to OrderHandler
+            :timer.sleep(50) 
           0 ->
             {:no_orders}
         end
