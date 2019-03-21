@@ -1,6 +1,15 @@
 defmodule NetworkHandler do
   @moduledoc """
-  NetworkHandler module. Broadcast own IP and set up p2p node cluster
+  NetworkHandler module. 
+
+  State: A map with the connected nodes as keys and a backup of the node's elevator state as the respective value.
+
+  Tasks: Initializes all modules for one computer, broadcasts own IP and listnes, making a Peer-to-peer network of NetworkModules
+         Decides the recipient of Hall orders based on a cost function, considering number of orders and distance to order.
+         Is also responsible for restarting nodes and redistributing orders that are not executed by assigned elevator
+
+  Communication: Receives from: OrderHandler, WatchDog, (other nodes') NetworkModule(s)
+                 Sends to     : OrderHandler,  (other nodes') NetworkModule(s)
   """
   use GenServer
   @receive_port 20086
@@ -12,7 +21,12 @@ defmodule NetworkHandler do
   @broadcast {10, 100, 23, 255} # {10,24,31,255}
   @cookie :penis
 
-  #--------------------------INIT----------------------------#
+  #--------------------------------INITIALIZATION---------------------------------#
+  #-------------------------------HELPER FUNCTIONS--------------------------------#
+  #----------------------------NETWORK AND CONNECTION-----------------------------#
+  #---------------------------------CASTS/CALLS-----------------------------------#
+  #------------------------------HANDLE CASTS/CALLS-------------------------------#
+  
   def start_link [send_port, recv_port] \\ [@broadcast_port,@receive_port] do
     GenServer.start_link(__MODULE__, [send_port, recv_port], [{:name, __MODULE__}])
   end
@@ -29,16 +43,13 @@ defmodule NetworkHandler do
     net_state = %{Node.self() => %State{}}
     {:ok, net_state}
   end
-  #--------------------------Non-communicative functions----------------------------#
+  #-------------------------------HELPER FUNCTIONS--------------------------------#
   def cost_function(state, order) do
-    cost = length(state.active_orders) + abs(distance_to_order(order, state))
+    cost = length(state.active_orders) + abs(order.floor - state.floor)
   end
-  def distance_to_order(elevator_order, elevator_state) do
-    elevator_order.floor - elevator_state.floor
-  end
-  #--------------------------Network functions and node connections----------------------------#
+
+  #----------------------------NETWORK AND CONNECTION-----------------------------#
   def broadcast_self(socket, recv_port, name) do
-    #IO.puts "broadcasting to my dudes"
     broadcast_address = {10, 100, 23, 255}
     :gen_udp.send(socket, @broadcast, recv_port, name)
     :timer.sleep(@broadcast_freq)
@@ -69,7 +80,7 @@ defmodule NetworkHandler do
     end
   end
 
-  #--------------------------Casts/calls----------------------------#
+  #---------------------------------CASTS/CALLS-----------------------------------#
 
   def sync(ext_order_list) do
     GenServer.cast(OrderHandler, {:sync_order_list, ext_order_list})
@@ -95,7 +106,7 @@ defmodule NetworkHandler do
     GenServer.multi_call(Node.list(), NetworkHandler, {:request_order_rank, order}, 1000)
   end
 
-  #--------------------------Handle casts/calls----------------------------#
+  #------------------------------HANDLE CASTS/CALLS-------------------------------#
   def handle_cast {:sync_order_lists, order_list}, node_list do
     IO.puts "Order list to be synchronized"
     IO.inspect order_list
@@ -175,9 +186,6 @@ defmodule NetworkHandler do
     StateMachine.start_link()
     WatchDog.start_link()
   end
-
-
-    ############################----BOILERPLATE----#######################
 
 
       @doc """

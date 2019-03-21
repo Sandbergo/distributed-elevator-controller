@@ -22,8 +22,9 @@
 * [ ] set up testing network from own PCs
 * [x] Only non-cab orders shared
 * [x] Information about elevator states are considered
-* [ ] Order is handled by best elevator
+* [x] Order is handled by best elevator
 * [ ] redistribute orders after motor stop
+* [ ] all hall-lights light up
 
 
 ### Long term checkpoints
@@ -34,8 +35,8 @@
 * [x] communication of data between nodes
 * [x] single elevator optimal performance
 * [x] elevator network reasonable performance
-* [ ] elevator network spec performance
-* [ ] implement watchdog v1.0
+* [x] elevator network spec performance
+* [x] implement watchdog v1.0
 * [ ] handle packet loss (script)
 * [ ] handle restart
 * [ ] handle motor stop
