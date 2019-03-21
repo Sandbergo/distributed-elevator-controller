@@ -1,9 +1,18 @@
 defmodule Poller do
-   @moduledoc """
-    Poller module periodically checks buttons and floor sensors with two threads
-    Sends messages to OrderHandler and StateMachine
-    Has no state
-    """
+  @moduledoc """
+  Module for polling the DriverInterface to the hardware and passing the information
+  
+  ### State: 
+  * No state
+  
+  ### Tasks:
+  * Spawning two threads polling the floor sensor and button sensor, and passing these messages
+  to the OrderHandler and StateMachine
+
+  ### Communication:
+  * Sends to: OrderHandler, StateMachine
+  * Receives from:
+  """
   use GenServer
 
   @floors Order.get_all_floors

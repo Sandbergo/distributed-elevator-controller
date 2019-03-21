@@ -23,8 +23,9 @@
 * [x] Only non-cab orders shared
 * [x] Information about elevator states are considered
 * [x] Order is handled by best elevator
+* [ ] intermediate cleanup of code
 * [ ] redistribute orders after motor stop
-* [ ] all hall-lights light up
+* [ ] all hall-lights light up (?)
 
 
 ### Long term checkpoints

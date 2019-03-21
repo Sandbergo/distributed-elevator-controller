@@ -1,36 +1,129 @@
 defmodule StateMachine do
   @moduledoc """
-  StateMachine module yayeet
+  Module for the state of an individual elevator, for controlling the execution of orders,
+  ensures own backup and makes sure lights are correct
+  
+  ### State: 
+  * A struct consisting of a floor (the last floor), a direction (:up, :down, :stop) 
+  and a list of active orders it has accepted
+  
+  ### Tasks:
+  * Controlling the elevator
+  * Executing orders
+
+  ### Communication:
+  * Sends to: DriverInterface, WatchDog
+  * Receives from: OrderHandler, Poller
   """
   use GenServer
-  #------------------INIT-------------------#
+
+  #--------------------------------INITIALIZATION---------------------------------#
+
   def start_link do
     GenServer.start_link(__MODULE__, :down, [{:name, __MODULE__}])
   end
 
-  def init direction do
-    DriverInterface.set_motor_direction DriverInterface, direction
-    floor = initialized?()
-    DriverInterface.set_motor_direction DriverInterface, :stop
+  @doc """
+  drive downwards to closest floor and initialize the state
+  """
+  def init(direction) do
+    DriverInterface.set_motor_direction(DriverInterface, direction)
+    floor = initialize_to_floor()
+    DriverInterface.set_motor_direction(DriverInterface, :stop)
     state = %State{floor: floor, direction: :stop, active_orders: []}
     {:ok, state}
   end
 
-  def initialized? do
+  def initialize_to_floor do
     cond do
       is_atom(DriverInterface.get_floor_sensor_state DriverInterface) ->
-        initialized?()
+        initialize_to_floor()
       true ->
         DriverInterface.get_floor_sensor_state DriverInterface
     end
   end
-  #-------------------Non-communicative functions-------------#
-  def execute_order(state) do
+
+  #---------------------------------CASTS/CALLS-----------------------------------#
+
+  def delete_active_order(order) do
+    GenServer.cast(OrderHandler, {:order_executed, order})
+    GenServer.cast(StateMachine, {:order_executed, order})
+  end
+
+  def update_state_direction(direction) do
+    GenServer.cast(StateMachine, {:update_direction, direction})
+  end
+
+  def start_motor_timer do
+    GenServer.cast(WatchDog, {:elev_going_active})
+  end
+
+  def stop_motor_timer do
+    GenServer.cast(WatchDog, {:elev_going_inactive})
+  end
+
+  def reset_motor_timer do
+    GenServer.cast(WatchDog, {:floor_changed})
+  end
+
+  def backup_state(state) do
+    GenServer.cast(WatchDog, {:backup, state})
+  end
+
+  #------------------------------HANDLE CASTS/CALLS-------------------------------#
+
+  @doc """
+  A new order is accepted, the light is set and in case this is the first order, is executed directly
+  """
+  def handle_cast({:neworder, order}, state) do
+    state = %{state | active_orders: state.active_orders ++ [order]}
+    backup_state(state)
+    DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
+      if length(state.active_orders)==1 do
+        start_motor_timer()
+        execute_order(state)
+      end
+    {:noreply, state}
+  end
+
+  def handle_cast({:at_floor, floor}, state) do
+    state = %{state | floor: floor}
+    backup_state(state)
+    reset_motor_timer() ## WHAT?
+    execute_order_on_floor(state)
+    {:noreply, state}
+  end
+
+  def handle_cast({:order_executed, order}, state) do
+    state = %{state | active_orders: Enum.reject(state.active_orders, fn(order) -> order.floor == state.floor end)}
+    backup_state(state)
+    DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :off)
+    execute_order(state)
+    {:noreply, state}
+  end
+
+  def handle_cast({:update_direction, direction}, state) do
+    state = %{state | direction: direction}
+    backup_state(state)
+    {:noreply, state}
+  end
+
+  def handle_call({:request_backup},_from, state) do
+    {:reply, state, state}
+  end
+
+
+  #-------------------------------HELPER FUNCTIONS--------------------------------#
+
+  @doc """
+  function for controlling elevator direction
+  """
+  def execute_order(state) do ## TOO COMPLICATED, WHY FIRST?
     order = List.first(state.active_orders)
     if order != nil  do
       direction = cond do
         order.floor == state.floor ->
-          executed?(state)
+          execute_order_on_floor(state)
           :stop
         order.floor > state.floor ->
           :up
@@ -39,17 +132,20 @@ defmodule StateMachine do
         true ->
           {:errore!}
       end
-      DriverInterface.set_motor_direction DriverInterface, direction
+      DriverInterface.set_motor_direction(DriverInterface, direction)
       update_state_direction(direction)
     else
-      GenServer.cast(WatchDog, {:elev_going_inactive})
+      stop_motor_timer()
       {:no_active_orders}
     end
   end
 
-  def executed?(state) do
+  @doc """
+  When on a floor, execute the order if the elevator should stop
+  """
+  def execute_order_on_floor(state) do
     if should_stop?(state) do
-      DriverInterface.set_motor_direction DriverInterface, :stop
+      DriverInterface.set_motor_direction(DriverInterface, :stop)
       update_state_direction(:stop)
       open_doors()
       Enum.each(state.active_orders, fn(order)->
@@ -61,7 +157,10 @@ defmodule StateMachine do
     end
   end
 
-  def should_stop?(state) do
+  @doc """
+  Logic for deciding whether the elevator should stop at that specific floor
+  """
+  def should_stop?(state) do ## CLEANUP REQUIRED
     cond do
       state.direction == :stop ->
         true
@@ -79,83 +178,15 @@ defmodule StateMachine do
       true ->
         false
     end
-
   end
 
   def open_doors do
-    # SET A STATE?
-    #IO.puts "opnin doors"
     DriverInterface.set_door_open_light DriverInterface, :on
     :timer.sleep(1000)
     DriverInterface.set_door_open_light DriverInterface, :off
-    true
-    #IO.puts "closin doors"
+    true ## WHAT?
   end
 
-  #-------------------Cast and call functions-------------#
-
-  def delete_active_order(order) do
-    GenServer.cast(OrderHandler, {:order_executed, order})
-    GenServer.cast(StateMachine, {:executed_order, order})
-  end
-
-  def update_state_direction(direction) do
-    GenServer.cast(StateMachine, {:update_direction, direction})
-  end
-
-  def start_motor_timer() do
-    GenServer.cast(WatchDog, {:elev_going_active})
-  end
-
-  def reset_motor_timer() do
-    GenServer.cast(WatchDog, {:floor_changed})
-  end
-
-  def backup_state(state) do
-    GenServer.cast(WatchDog, {:backup, state})
-  end
-
-  #-------------------Handle cast and call functions-------------#
-
-  def handle_cast {:neworder, order}, state do
-    state = %{state | active_orders: state.active_orders ++ [order]}
-    backup_state(state)
-    DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
-      if length(state.active_orders)==1 do
-        start_motor_timer()
-        execute_order(state)
-      end
-    {:noreply, state}
-  end
-
-  def handle_cast {:at_floor, floor}, state do
-    state = %{state | floor: floor}
-    backup_state(state)
-    reset_motor_timer()
-    executed?(state)
-    {:noreply, state}
-  end
-
-  def handle_cast {:executed_order, order}, state do
-    state = %{state | active_orders: Enum.reject(state.active_orders, fn(order) -> order.floor == state.floor end)}
-    backup_state(state)
-    DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :off)
-    execute_order(state)
-    {:noreply, state}
-  end
-
-  def handle_cast {:update_direction, direction}, state do
-    state = %{state | direction: direction}
-    backup_state(state)
-    {:noreply, state}
-  end
-
-  def handle_call {:request_backup},_from, state do
-    {:reply, state, state}
-  end
-
-
-  #################BOILERPLATE#########################
   def order_type_to_int(elevator_order) do
     %{hall_up: 1, cab: 0, hall_down: -1}[elevator_order.type]
   end
@@ -164,4 +195,17 @@ defmodule StateMachine do
     %{up: 1, stop: 0, down: -1}[elevator_state.direction]
   end
 
+end
+
+defmodule State do
+  @valid_dirns [:up, :stop, :down]
+  defstruct floor: 0, direction: :stop, active_orders: []
+  
+  def state_machine(direction, floor, active_orders) when direction in @valid_dirns do
+      %State{floor: floor, direction: direction, active_orders: active_orders}
+  end
+  
+  def get_valid_dirns do
+      @valid_dirns
+  end
 end
