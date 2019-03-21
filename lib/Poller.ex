@@ -22,7 +22,7 @@ defmodule Poller do
     GenServer.start_link(__MODULE__, [], [{:name, __MODULE__}])
   end
 
-  def init _mock do
+  def init _mock do ## REMOVE MOCK?
     Enum.each(@floors, fn(floor) ->
       Enum.each(@button_types, fn(button_type)->
         GenServer.cast DriverInterface, {:set_order_button_light, button_type, floor, :off }
@@ -49,8 +49,8 @@ defmodule Poller do
         case DriverInterface.get_order_button_state(DriverInterface, floor, button_type) do
           1 ->
             set_order(floor, button_type)
-            IO.puts "Noticed press: #{button_type} on floor: #{floor}"#Pass received message to OrderHandler
-            :timer.sleep(100) 
+            IO.puts "Noticed press: #{button_type} on floor: #{floor}"
+            :timer.sleep(100)  ## DOUBLE SLEEP
           0 ->
             {:no_orders}
         end

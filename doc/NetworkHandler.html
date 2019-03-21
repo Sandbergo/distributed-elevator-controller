@@ -118,9 +118,9 @@ NetworkHandler              </h1>
     <div class="summary-synopsis"><p>Returns all nodes in the current cluster. Returns a list of nodes or an error message</p>
 <h2>Examples</h2>
 <pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">all_nodes</span><span class="w">
-</span><span class="p" data-group-id="3393715726-1">[</span><span class="ss">:&#39;heis@10.100.23.253&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">:&#39;heis@10.100.23.226&#39;</span><span class="p" data-group-id="3393715726-1">]</span><span class="w">
+</span><span class="p" data-group-id="8571328822-1">[</span><span class="ss">:&#39;heis@10.100.23.253&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">:&#39;heis@10.100.23.226&#39;</span><span class="p" data-group-id="8571328822-1">]</span><span class="w">
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">all_nodes</span><span class="w">
-</span><span class="p" data-group-id="3393715726-2">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:node_not_running</span><span class="p" data-group-id="3393715726-2">}</span></code></pre>
+</span><span class="p" data-group-id="8571328822-2">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:node_not_running</span><span class="p" data-group-id="8571328822-2">}</span></code></pre>
 </div>
 </div>
 <div class="summary-row">
@@ -130,8 +130,8 @@ NetworkHandler              </h1>
     <div class="summary-synopsis"><p>boots a node with a specified tick time. node_name sets the node name before @. The IP-address is
 automatically imported</p>
 <pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">boot_node</span><span class="w"> </span><span class="s">&quot;frank&quot;</span><span class="w">
-</span><span class="p" data-group-id="9969649105-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="9969649105-2">#</span><span class="nc" data-group-id="9969649105-2">PID</span><span class="p" data-group-id="9969649105-2">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">12</span><span class="o">.</span><span class="mi">2</span><span class="p" data-group-id="9969649105-2">&gt;</span><span class="p" data-group-id="9969649105-1">}</span><span class="w">
-</span><span class="n">iex</span><span class="p" data-group-id="9969649105-3">(</span><span class="n">frank</span><span class="err">@</span><span class="mf">10.100</span><span class="o">.</span><span class="mf">23.253</span><span class="p" data-group-id="9969649105-3">)</span><span class="o">&gt;</span><span class="w"> </span><span class="bp">_</span></code></pre>
+</span><span class="p" data-group-id="5447781178-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5447781178-2">#</span><span class="nc" data-group-id="5447781178-2">PID</span><span class="p" data-group-id="5447781178-2">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">12</span><span class="o">.</span><span class="mi">2</span><span class="p" data-group-id="5447781178-2">&gt;</span><span class="p" data-group-id="5447781178-1">}</span><span class="w">
+</span><span class="n">iex</span><span class="p" data-group-id="5447781178-3">(</span><span class="n">frank</span><span class="err">@</span><span class="mf">10.100</span><span class="o">.</span><span class="mf">23.253</span><span class="p" data-group-id="5447781178-3">)</span><span class="o">&gt;</span><span class="w"> </span><span class="bp">_</span></code></pre>
 </div>
 </div>
 <div class="summary-row">
@@ -163,7 +163,7 @@ automatically imported</p>
     <div class="summary-synopsis"><p>Returns (hopefully) the ip address of your network interface.</p>
 <h2>Examples</h2>
 <pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">get_my_ip</span><span class="w">
-</span><span class="p" data-group-id="5349182221-1">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">253</span><span class="p" data-group-id="5349182221-1">}</span></code></pre>
+</span><span class="p" data-group-id="5802405610-1">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">253</span><span class="p" data-group-id="5802405610-1">}</span></code></pre>
 </div>
 </div>
 <div class="summary-row">
@@ -186,7 +186,7 @@ automatically imported</p>
   </div>
     <div class="summary-synopsis"><p>formats an ip address on tuple format to a bytestring</p>
 <h2>Examples</h2>
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">ip_to_string</span><span class="w"> </span><span class="p" data-group-id="9943957049-1">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">253</span><span class="p" data-group-id="9943957049-1">}</span><span class="w">
+<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">ip_to_string</span><span class="w"> </span><span class="p" data-group-id="9984839948-1">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">253</span><span class="p" data-group-id="9984839948-1">}</span><span class="w">
 </span><span class="sc">&#39;10.100.23.253&#39;</span></code></pre>
 </div>
 </div>
@@ -252,9 +252,9 @@ Functions          </h1>
 </h2>
 
 <pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">all_nodes</span><span class="w">
-</span><span class="p" data-group-id="9727065854-1">[</span><span class="ss">:&#39;heis@10.100.23.253&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">:&#39;heis@10.100.23.226&#39;</span><span class="p" data-group-id="9727065854-1">]</span><span class="w">
+</span><span class="p" data-group-id="1169605300-1">[</span><span class="ss">:&#39;heis@10.100.23.253&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">:&#39;heis@10.100.23.226&#39;</span><span class="p" data-group-id="1169605300-1">]</span><span class="w">
 </span><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">all_nodes</span><span class="w">
-</span><span class="p" data-group-id="9727065854-2">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:node_not_running</span><span class="p" data-group-id="9727065854-2">}</span></code></pre>
+</span><span class="p" data-group-id="1169605300-2">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:node_not_running</span><span class="p" data-group-id="1169605300-2">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="boot_node/2">
@@ -271,8 +271,8 @@ Functions          </h1>
 <p>boots a node with a specified tick time. node_name sets the node name before @. The IP-address is
 automatically imported</p>
 <pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">boot_node</span><span class="w"> </span><span class="s">&quot;frank&quot;</span><span class="w">
-</span><span class="p" data-group-id="5777299997-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5777299997-2">#</span><span class="nc" data-group-id="5777299997-2">PID</span><span class="p" data-group-id="5777299997-2">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">12</span><span class="o">.</span><span class="mi">2</span><span class="p" data-group-id="5777299997-2">&gt;</span><span class="p" data-group-id="5777299997-1">}</span><span class="w">
-</span><span class="n">iex</span><span class="p" data-group-id="5777299997-3">(</span><span class="n">frank</span><span class="err">@</span><span class="mf">10.100</span><span class="o">.</span><span class="mf">23.253</span><span class="p" data-group-id="5777299997-3">)</span><span class="o">&gt;</span><span class="w"> </span><span class="bp">_</span></code></pre>
+</span><span class="p" data-group-id="6436669535-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6436669535-2">#</span><span class="nc" data-group-id="6436669535-2">PID</span><span class="p" data-group-id="6436669535-2">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">12</span><span class="o">.</span><span class="mi">2</span><span class="p" data-group-id="6436669535-2">&gt;</span><span class="p" data-group-id="6436669535-1">}</span><span class="w">
+</span><span class="n">iex</span><span class="p" data-group-id="6436669535-3">(</span><span class="n">frank</span><span class="err">@</span><span class="mf">10.100</span><span class="o">.</span><span class="mf">23.253</span><span class="p" data-group-id="6436669535-3">)</span><span class="o">&gt;</span><span class="w"> </span><span class="bp">_</span></code></pre>
   </section>
 </section>
 <section class="detail" id="broadcast_self/3">
@@ -337,7 +337,7 @@ automatically imported</p>
 </h2>
 
 <pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">get_my_ip</span><span class="w">
-</span><span class="p" data-group-id="2789391173-1">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">253</span><span class="p" data-group-id="2789391173-1">}</span></code></pre>
+</span><span class="p" data-group-id="6832079344-1">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">253</span><span class="p" data-group-id="6832079344-1">}</span></code></pre>
   </section>
 </section>
 <section class="detail" id="handle_cast/2">
@@ -379,7 +379,7 @@ automatically imported</p>
   Examples
 </h2>
 
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">ip_to_string</span><span class="w"> </span><span class="p" data-group-id="3115735362-1">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">253</span><span class="p" data-group-id="3115735362-1">}</span><span class="w">
+<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">ip_to_string</span><span class="w"> </span><span class="p" data-group-id="9839868976-1">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">253</span><span class="p" data-group-id="9839868976-1">}</span><span class="w">
 </span><span class="sc">&#39;10.100.23.253&#39;</span></code></pre>
   </section>
 </section>

@@ -29,7 +29,7 @@ defmodule NetworkHandler do
   end
 
   @doc """
-  Boot Node with name "elev@ip" and spawn listen and receive processes based on UDP
+  Boot Node with name "elev@ip" and spawn listen and receive processes based on UDP broadcasting
   """
   def init([send_PORT, recv_PORT]) do
     IO.puts "NetworkHandler init"
@@ -190,14 +190,12 @@ defmodule NetworkHandler do
     cost = length(state.active_orders) + abs(order.floor - state.floor)
   end
 
-
       @doc """
   Returns (hopefully) the ip address of your network interface.
   ## Examples
       iex> NetworkStuff.get_my_ip
       {10, 100, 23, 253}
   """
-
   def get_my_ip do
     {:ok, socket} = :gen_udp.open(5678, [active: false, broadcast: true])
     :ok = :gen_udp.send(socket, @broadcast, 5678, "test packet")
@@ -209,18 +207,15 @@ defmodule NetworkHandler do
     ip
   end
 
-
   @doc """
   formats an ip address on tuple format to a bytestring
   ## Examples
       iex> NetworkStuff.ip_to_string {10, 100, 23, 253}
       '10.100.23.253'
   """
-
   def ip_to_string ip do
     :inet.ntoa(ip) |> to_string()
   end
-
 
   @doc """
   Returns all nodes in the current cluster. Returns a list of nodes or an error message
@@ -238,7 +233,6 @@ defmodule NetworkHandler do
     end
   end
 
-
   @doc """
   boots a node with a specified tick time. node_name sets the node name before @. The IP-address is
   automatically imported
@@ -246,7 +240,6 @@ defmodule NetworkHandler do
       {:ok, #PID<0.12.2>}
       iex(frank@10.100.23.253)> _
   """
-
   def boot_node(node_name, tick_time \\ 15000) do
     ip = get_my_ip() |> ip_to_string()
     full_name = node_name <> "@" <> ip
