@@ -71,6 +71,10 @@ defmodule StateMachine do
     GenServer.cast(WatchDog, {:backup, state})
   end
 
+  def sync_order_lights(order, light_state) do
+    GenServer.cast(NetworkHandler, {:sync_lights, order, light_state})
+  end
+
   #------------------------------HANDLE CASTS/CALLS-------------------------------#
 
   @doc """
@@ -79,6 +83,7 @@ defmodule StateMachine do
   def handle_cast({:neworder, order}, state) do
     state = %{state | active_orders: state.active_orders ++ [order]}
     backup_state(state)
+    sync_order_lights(order, :on)
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
       if length(state.active_orders)==1 do
         start_motor_timer()
@@ -98,6 +103,7 @@ defmodule StateMachine do
   def handle_cast({:order_executed, order}, state) do
     state = %{state | active_orders: Enum.reject(state.active_orders, fn(order) -> order.floor == state.floor end)}
     backup_state(state)
+    sync_order_lights(order, :off)
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :off)
     execute_order(state)
     {:noreply, state}

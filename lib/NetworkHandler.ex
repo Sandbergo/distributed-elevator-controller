@@ -38,51 +38,31 @@ defmodule NetworkHandler do
     net_state = %{}
     IO.puts "Booting distributed node"
     name = "#{"elev@"}#{get_my_ip() |> ip_to_string()}"
-    guard = case Node.start(String.to_atom(name), :longnames, @node_dead_time) do
+    case Node.start(String.to_atom(name), :longnames, @node_dead_time) do
       {:error, reason} -> 
-        IO.puts("Unable to start node, retrying in 1 sec")
-        Node.stop()
-        :timer.sleep(1000)
-        init([send_port, recv_port])
-        true
+        IO.puts("Unable to start node")
       _ -> 
         IO.puts("Node boot successful")
-        false
     end
     Node.set_cookie(String.to_atom(name), @cookie)
     IO.puts "Opening sockets"
-    {broadcast_socket, guard} = case :gen_udp.open(send_port, [:list, {:active, false}, {:broadcast, true}]) do
+    case :gen_udp.open(send_port, [:list, {:active, false}, {:broadcast, true}]) do
       {:error, :eaddrinuse} ->
-        IO.puts("Broadcast port already open: closing port, stopping node and retrying in 1 sec")
-        System.cmd("fuser", ["-k", "#{send_port}/udp"])
-        Node.stop()
-        :timer.sleep(1000)
-        init([send_port, recv_port])
-        {:error, true}
+        IO.puts("Broadcast port already open: stopping node")
       {:ok, broadcast_socket} -> 
         IO.puts("Broadcast port successfully opened")
-        {broadcast_socket, false}
+        Process.spawn(__MODULE__, :broadcast_self, [broadcast_socket, recv_port, name], [:link])
     end
-    net_state = if not guard do
-      listen_socket = case :gen_udp.open(recv_port, [:list, {:active, false}]) do
-        {:error, :eaddrinuse} ->
-          IO.puts("Listen port already open: closing port, stopping node and retrying in 1 sec")
-          :gen_udp.close(broadcast_socket)
-          System.cmd("fuser", ["-k", "#{recv_port}/udp"])
-          Node.stop()
-          :timer.sleep(1000)
-          init([send_port, recv_port])
-        {:ok, listen_socket} -> 
-          IO.puts("Listen port successfully opened")
-          Process.spawn(__MODULE__, :broadcast_self, [broadcast_socket, recv_port, name], [:link])
-          Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
-          listen_socket
-          net_state = %{Node.self() => %State{}}
+    listen_socket = case :gen_udp.open(recv_port, [:list, {:active, false}]) do
+      {:error, :eaddrinuse} ->
+        IO.puts("Listen port already open: stopping node")
+        Node.stop()
+      {:ok, listen_socket} -> 
+        IO.puts("Listen port successfully opened")
+        Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
       end
-    else
-      net_state = %{Node.self() => %State{}}
-    end
-    net_state
+    net_state = %{Node.self() => %State{}}
+    {:ok, net_state}
   end
 
   # -------------------------For driving 3 local elevator simulators ---------------#
@@ -132,7 +112,6 @@ defmodule NetworkHandler do
   #--------------------------Network functions and node connections----------------------------#
   def broadcast_self(socket, recv_port, name) do
     #IO.puts "broadcasting to my dudes"
-    broadcast_address = {10, 100, 23, 255}
     :gen_udp.send(socket, @broadcast, recv_port, name)
     :timer.sleep(@broadcast_freq)
     broadcast_self(socket, recv_port, name)
@@ -201,19 +180,35 @@ defmodule NetworkHandler do
     {:reply, requested_state, net_state}
   end
 
+  
+  def handle_cast({:sync_lights, order, light_state}, net_state) do
+    GenServer.multi_call(Node.list(), NetworkHandler, {:sync_elev_lights, order}, 1000)
+    {:noreply, net_state}
+  end
+
+  def handle_call({:sync_elev_lights, order, light_state}, _from, net_state) do
+    DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, light_state)
+    {:reply, net_state, net_state}
+  end
+  
+
   @doc """
   An elevator is chosen for the specific order, using the cost function
   """
   def handle_cast({:choose_elevator, order}, net_state) do
     IO.puts("find the right elevator for this order")
-
-    lowest_value = Enum.min_by(Map.values(net_state),
+    
+    #Retrieve best cost function
+    best_cost = Enum.min_by(Map.values(net_state),
      fn(node_state) -> cost_function(node_state, order) end)
     IO.puts "Lowest state"
-    IO.inspect(lowest_value)
-    {chosen_node, _node_state} = List.keyfind(Map.to_list(net_state), lowest_value, 1)
+    IO.inspect(best_cost)
+
+    #Find the node with this cost
+    {chosen_node, _node_state} = List.keyfind(Map.to_list(net_state), best_cost, 1)
     IO.puts "Chosen_node"
     IO.inspect chosen_node
+
     if chosen_node == Node.self() do
         IO.puts "I've got it"
         export_order({:internal_order, order, chosen_node})
@@ -270,13 +265,6 @@ defmodule NetworkHandler do
     # gets state from other node for this node, returns nil if 
     GenServer.multi_call([node_name], NetworkHandler, {:request_backup}, 1000) 
   end
-
-  def broadcast_self(socket, recv_port, name) do
-    IO.puts "Broadcasting"
-    :gen_udp.send(socket, @broadcast, recv_port, name)
-    :timer.sleep(@broadcast_freq)
-    broadcast_self(socket, recv_port, name)
-
 
   def handle_info({:request_connection, node_name}, net_state) do
     if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
