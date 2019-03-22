@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.19.3">
+    <title>API Reference — elevator v0.1.0</title>
+    <link rel="stylesheet" href="dist/html-399e30b9b028e3059575.css" />
+    <script src="dist/sidebar_items-a3353d255e.js"></script>
+    <script async src="dist/html-399e30b9b028e3059575.js"></script>
+    
+  </head>
+  <body data-type="extras">
+    <script>try { if(localStorage.getItem('night-mode')) document.body.className += ' night-mode'; } catch (e) { }</script>
+<div class="main">
+<button class="sidebar-button sidebar-toggle">
+  <span class="icon-menu" aria-hidden="true"></span>
+  <span class="sr-only">Toggle Sidebar</span>
+</button>
+<button class="sidebar-button night-mode-toggle">
+  <span class="icon-theme" aria-hidden="true"></span>
+  <span class="sr-only">Toggle Theme</span>
+</button>
+<section class="sidebar">
+
+  <a href="api-reference.html" class="sidebar-projectLink">
+    <div class="sidebar-projectDetails">
+      <h1 class="sidebar-projectName">
+elevator      </h1>
+      <h2 class="sidebar-projectVersion">
+        v0.1.0
+      </h2>
+    </div>
+  </a>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button">
+      <span class="icon-search" aria-hidden="true"></span>
+    </button>
+    <input name="q" type="text" id="search-list" class="search-input" placeholder="Search" aria-label="Search" autocomplete="off" />
+  </form>
+
+  <ul class="sidebar-listNav">
+    <li><a id="extras-list" href="#full-list">Pages</a></li>
+
+      <li><a id="modules-list" href="#full-list">Modules</a></li>
+
+
+  </ul>
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+
+<h1>
+  <small class="visible-xs">elevator v0.1.0</small>
+  API Reference
+</h1>
+
+  <section class="details-list">
+    <h2 id="modules" class="section-heading">
+  <a href="#modules" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Modules
+</h2>
+
+    <div class="summary">
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="DriverInterface.html">DriverInterface</a>
+  </div>
+    <div class="summary-synopsis"><p>Module is an interface between elevator server and executable</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="NetworkHandler.html">NetworkHandler</a>
+  </div>
+    <div class="summary-synopsis"><p>Module for handling and setting up the Node Network, and communication between nodes</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Order.html">Order</a>
+  </div>
+    <div class="summary-synopsis"><p>A struct for the orders handled, with a direction and a floor number</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="OrderHandler.html">OrderHandler</a>
+  </div>
+    <div class="summary-synopsis"><p>Module for receiving and handling orders form Poller and NetworkHandler and synchronizing orders</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Poller.html">Poller</a>
+  </div>
+    <div class="summary-synopsis"><p>Module for polling the DriverInterface to the hardware and passing the information</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="State.html">State</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="StateMachine.html">StateMachine</a>
+  </div>
+    <div class="summary-synopsis"><p>Module for the state of an individual elevator, for controlling the execution of orders,
+ensures own backup and makes sure lights are correct</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="WatchDog.html">WatchDog</a>
+  </div>
+    <div class="summary-synopsis"><p>Module for backing up the state of an individual elevator and updating the NetworkHandler when this state changes, 
+and sending a request to the NetworkHandler.
+If the elevator has become inactive for more than 5 seconds, e.g. because of a motor stop</p>
+</div>
+</div>
+    </div>
+  </section>
+
+
+      <footer class="footer">
+        <p>
+          <span class="line">
+            Built using
+            <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener">ExDoc</a> (v0.19.3),
+          </span>
+          <span class="line">
+            designed by
+            <a href="https://twitter.com/dignifiedquire" target="_blank" rel="noopener" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+            </span>
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+  
+  </body>
+</html>
+

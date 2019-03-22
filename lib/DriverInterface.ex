@@ -1,4 +1,17 @@
 defmodule DriverInterface do
+  @moduledoc """
+  Module is an interface between elevator server and executable 
+  
+  ### State: 
+  * No state
+  
+  ### Tasks:
+  * Communicating between server and program
+
+  ### Communication:
+  * Sends to: Poller, StateMachine
+  * Receives from: ElevatorServer
+  """
   use GenServer
   @call_timeout 1000
   @button_map %{:hall_up => 0, :hall_down => 1, :cab => 2}
