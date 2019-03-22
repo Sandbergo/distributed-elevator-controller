@@ -6,8 +6,10 @@ defmodule NetworkHandler do
   * A map with the connected nodes as keys and a backup of the node's elevator state as the respective value.
 
   ### Tasks: 
-  * Initializes all modules for one computer, broadcasts own IP and listnes, making a Peer-to-peer network of NetworkModules
-  * Decides the recipient of Hall orders based on a cost function, considering number of orders and distance to order.
+  * Initializes all modules for one computer, broadcasts own IP and listnes, making a Peer-to-peer network 
+  of NetworkModules
+  * Decides the recipient of Hall orders based on a cost function, considering number of orders and 
+  distance to order.
   * Is responsible for restarting nodes and redistributing orders that are not executed by assigned elevator
 
   ### Communication: 
@@ -21,7 +23,7 @@ defmodule NetworkHandler do
   #@offline_sleep 5000
   #@listen_timeout 2000
   @node_dead_time 6000
-  @broadcast {10,42,0,255} #{10, 100, 23, 255} 
+  @broadcast {10,42,0,255} #{10, 100, 23, 255} # {10,24,31,255}
   @cookie :penis
 
   def start_link([send_port, recv_port] \\ [@broadcast_port,@receive_port]) do
@@ -32,17 +34,55 @@ defmodule NetworkHandler do
   Boot Node with name "elev@ip" and spawn listen and receive processes based on UDP broadcasting
   """
   def init([send_port, recv_port]) do
-    IO.puts "NetworkHandler init"
-    {:ok, broadcast_socket} = :gen_udp.open(send_port, [:list, {:active, false}, {:broadcast, true}])
+    guard = false
+    net_state = %{}
+    IO.puts "Booting distributed node"
     name = "#{"elev@"}#{get_my_ip() |> ip_to_string()}"
-    IO.puts name
-    Node.start(String.to_atom(name), :longnames, @node_dead_time)
+    guard = case Node.start(String.to_atom(name), :longnames, @node_dead_time) do
+      {:error, reason} -> 
+        IO.puts("Unable to start node, retrying in 1 sec")
+        Node.stop()
+        :timer.sleep(1000)
+        init([send_port, recv_port])
+        true
+      _ -> 
+        IO.puts("Node boot successful")
+        false
+    end
     Node.set_cookie(String.to_atom(name), @cookie)
-    Process.spawn(__MODULE__, :broadcast_self, [broadcast_socket, recv_port, name], [:link])
-    {:ok, listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
-    Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
-    net_state = %{Node.self() => %State{}}
-    {:ok, net_state}
+    IO.puts "Opening sockets"
+    {broadcast_socket, guard} = case :gen_udp.open(send_port, [:list, {:active, false}, {:broadcast, true}]) do
+      {:error, :eaddrinuse} ->
+        IO.puts("Broadcast port already open: closing port, stopping node and retrying in 1 sec")
+        System.cmd("fuser", ["-k", "#{send_port}/udp"])
+        Node.stop()
+        :timer.sleep(1000)
+        init([send_port, recv_port])
+        {:error, true}
+      {:ok, broadcast_socket} -> 
+        IO.puts("Broadcast port successfully opened")
+        {broadcast_socket, false}
+    end
+    net_state = if not guard do
+      listen_socket = case :gen_udp.open(recv_port, [:list, {:active, false}]) do
+        {:error, :eaddrinuse} ->
+          IO.puts("Listen port already open: closing port, stopping node and retrying in 1 sec")
+          :gen_udp.close(broadcast_socket)
+          System.cmd("fuser", ["-k", "#{recv_port}/udp"])
+          Node.stop()
+          :timer.sleep(1000)
+          init([send_port, recv_port])
+        {:ok, listen_socket} -> 
+          IO.puts("Listen port successfully opened")
+          Process.spawn(__MODULE__, :broadcast_self, [broadcast_socket, recv_port, name], [:link])
+          Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
+          listen_socket
+          net_state = %{Node.self() => %State{}}
+      end
+    else
+      net_state = %{Node.self() => %State{}}
+    end
+    net_state
   end
 
   # -------------------------For driving 3 local elevator simulators ---------------#
@@ -120,6 +160,10 @@ defmodule NetworkHandler do
     GenServer.multi_call(Node.list(), NetworkHandler, {:update_backup, backup, Node.self()}, 1000)
   end
 
+  def multi_call_request_backup(node_name) do
+    GenServer.multi_call(node_name, NetworkHandler, {:request_backup, Node.self()}, 1000)
+  end
+
   def multi_call_request_order_rank(order) do
     GenServer.multi_call(Node.list(), NetworkHandler, {:request_order_rank, order}, 1000)
   end
@@ -152,6 +196,11 @@ defmodule NetworkHandler do
     {:reply, my_order_rank, net_state}
   end
 
+  def handle_call({:request_backup}, from, net_state) do
+    requested_state = net_state[from] # returns nil if not in map
+    {:reply, requested_state, net_state}
+  end
+
   @doc """
   An elevator is chosen for the specific order, using the cost function
   """
@@ -177,6 +226,9 @@ defmodule NetworkHandler do
 
   def handle_cast({:motorstop}, net_state) do
     IO.puts "RESTART REQUIRED"
+    
+    redistribute_orders(Node.self()) # except self?
+    # kill own process? nope
     {:noreply, net_state}
   end
 
@@ -208,7 +260,19 @@ defmodule NetworkHandler do
     WatchDog.start_link()
   end
 
+  def redistribute_orders(node_name) do
+    # to everyone except for self. pick random elevator? 
+    # for Emum.each 
+  end
+
+  def request_backup(node_name) do
+    "check if I have active orders waiting in another node's net_state"
+    # gets state from other node for this node, returns nil if 
+    GenServer.multi_call([node_name], NetworkHandler, {:request_backup}, 1000) 
+  end
+
   def broadcast_self(socket, recv_port, name) do
+    IO.puts "Broadcasting"
     :gen_udp.send(socket, @broadcast, recv_port, name)
     :timer.sleep(@broadcast_freq)
     broadcast_self(socket, recv_port, name)
@@ -218,7 +282,19 @@ defmodule NetworkHandler do
     if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
       #IO.puts "connecting to node #{node_name}"
       Node.ping(String.to_atom(node_name))
+      Node.monitor(String.to_atom(node_name), true) # monitor this newly connected node
+      # request backup from newly connected node
+      backup_state_est = request_backup(node_name)
+      if backup_state_est != nil do
+        net_state = Map.put(net_state, Node.self(), request_backup(node_name))
+        #loop_add_orders(backup_state_est.active_orders) ## WRITE THIS 
+      end
     end
+    {:noreply, net_state}
+  end
+
+  def handle_info({:nodedown, node_name}, net_state) do
+    # node_lost() # redistribute orders
     {:noreply, net_state}
   end
 
@@ -227,12 +303,13 @@ defmodule NetworkHandler do
     #IO.puts "STOP, collaborate and listen"
     case :gen_udp.recv(socket, 0, 3*@broadcast_freq) do
       {:ok, {_ip,_port,node_name}} ->
-        #IO.puts "Receiving: #{node_name}"
+        IO.puts "Receiving: #{node_name}"
         node_name = to_string(node_name)
         Process.send(network_handler_pid, {:request_connection, node_name}, [])
         listen(socket, network_handler_pid)
       {:error, reason} ->
         IO.inspect reason
+        IO.puts "I am so lonely"
         #Reset node?
     end
   end
