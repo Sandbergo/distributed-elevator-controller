@@ -6,8 +6,10 @@ defmodule NetworkHandler do
   * A map with the connected nodes as keys and a backup of the node's elevator state as the respective value.
 
   ### Tasks: 
-  * Initializes all modules for one computer, broadcasts own IP and listnes, making a Peer-to-peer network of NetworkModules
-  * Decides the recipient of Hall orders based on a cost function, considering number of orders and distance to order.
+  * Initializes all modules for one computer, broadcasts own IP and listnes, making a Peer-to-peer network 
+  of NetworkModules
+  * Decides the recipient of Hall orders based on a cost function, considering number of orders and 
+  distance to order.
   * Is responsible for restarting nodes and redistributing orders that are not executed by assigned elevator
 
   ### Communication: 
@@ -21,7 +23,7 @@ defmodule NetworkHandler do
   #@offline_sleep 5000
   #@listen_timeout 2000
   @node_dead_time 6000
-  @broadcast {10, 100, 23, 255} # {10,24,31,255}
+  @broadcast {10,42,0,255} #{10, 100, 23, 255} # {10,24,31,255}
   @cookie :penis
 
   def start_link([send_port, recv_port] \\ [@broadcast_port,@receive_port]) do
@@ -68,6 +70,10 @@ defmodule NetworkHandler do
     GenServer.multi_call(Node.list(), NetworkHandler, {:update_backup, backup, Node.self()}, 1000)
   end
 
+  def multi_call_request_backup(node_name) do
+    GenServer.multi_call(node_name, NetworkHandler, {:request_backup, Node.self()}, 1000)
+  end
+
   def multi_call_request_order_rank(order) do
     GenServer.multi_call(Node.list(), NetworkHandler, {:request_order_rank, order}, 1000)
   end
@@ -100,6 +106,11 @@ defmodule NetworkHandler do
     {:reply, my_order_rank, net_state}
   end
 
+  def handle_call({:request_backup}, from, net_state) do
+    requested_state = net_state[from] # returns nil if not in map
+    {:reply, requested_state, net_state}
+  end
+
   @doc """
   An elevator is chosen for the specific order, using the cost function
   """
@@ -125,6 +136,9 @@ defmodule NetworkHandler do
 
   def handle_cast({:motorstop}, net_state) do
     IO.puts "RESTART REQUIRED"
+    
+    redistribute_orders(Node.self()) # except self?
+    # kill own process? nope
     {:noreply, net_state}
   end
 
@@ -156,6 +170,17 @@ defmodule NetworkHandler do
     WatchDog.start_link()
   end
 
+  def redistribute_orders(node_name) do
+    # to everyone except for self. pick random elevator? 
+    # for Emum.each 
+  end
+
+  def request_backup(node_name) do
+    "check if I have active orders waiting in another node's net_state"
+    # gets state from other node for this node, returns nil if 
+    GenServer.multi_call([node_name], NetworkHandler, {:request_backup}, 1000) 
+  end
+
   def broadcast_self(socket, recv_port, name) do
     :gen_udp.send(socket, @broadcast, recv_port, name)
     :timer.sleep(@broadcast_freq)
@@ -167,7 +192,19 @@ defmodule NetworkHandler do
     if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
       #IO.puts "connecting to node #{node_name}"
       Node.ping(String.to_atom(node_name))
+      Node.monitor(String.to_atom(node_name), true) # monitor this newly connected node
+      # request backup from newly connected node
+      backup_state_est = request_backup(node_name)
+      if backup_state_est != nil do
+        net_state = Map.put(net_state, Node.self(), request_backup(node_name))
+        #loop_add_orders(backup_state_est.active_orders) ## WRITE THIS 
+      end
     end
+    {:noreply, net_state}
+  end
+
+  def handle_info({:nodedown, node_name}, net_state) do
+    # node_lost() # redistribute orders
     {:noreply, net_state}
   end
 

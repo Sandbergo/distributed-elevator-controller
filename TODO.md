@@ -23,9 +23,10 @@
 * [x] Only non-cab orders shared
 * [x] Information about elevator states are considered
 * [x] Order is handled by best elevator
-* [ ] intermediate cleanup of code
+* [x] intermediate cleanup of code
 * [ ] redistribute orders after motor stop
-* [ ] all hall-lights light up (?)
+* [x] all hall-lights light up (?)
+* [ ] re-initialize with backup
 
 
 ### Long term checkpoints
@@ -38,7 +39,7 @@
 * [x] elevator network reasonable performance
 * [x] elevator network spec performance
 * [x] implement watchdog v1.0
-* [ ] handle packet loss (script)
+* [ ] handle packet loss (script testing)
 * [ ] handle restart
 * [ ] handle motor stop
 * [ ] cleanup of all code 
