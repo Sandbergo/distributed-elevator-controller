@@ -13,7 +13,7 @@ defmodule NetworkHandler do
   * Is responsible for restarting nodes and redistributing orders that are not executed by assigned elevator
 
   ### Communication: 
-  * Receives from: OrderHandler, WatchDog, (other nodes') NetworkModule(s)
+  * Receives from: OrderHandler, WatchDog, StateMachine, (other nodes') NetworkModule(s)
   * Sends to: OrderHandler,  (other nodes') NetworkModule(s)
   """
   use GenServer
@@ -274,6 +274,16 @@ defmodule NetworkHandler do
     # for Emum.each 
   end
 
+<<<<<<< Updated upstream
+=======
+  def broadcast_self(socket, recv_port, name) do
+    IO.puts "Broadcasting"
+    :gen_udp.send(socket, @broadcast, recv_port, name)
+    :timer.sleep(@broadcast_freq)
+    broadcast_self(socket, recv_port, name)
+
+
+>>>>>>> Stashed changes
   def handle_info({:request_connection, node_name}, net_state) do
     if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
       #IO.puts "connecting to node #{node_name}"
@@ -281,6 +291,7 @@ defmodule NetworkHandler do
       Node.monitor(String.to_atom(node_name), true) # monitor this newly connected node
       
       # request backup from newly connected node
+<<<<<<< Updated upstream
       IO.puts "Checking information about #{node_name}"
       case net_state[String.to_atom(node_name)] do
         nil -> 
@@ -289,15 +300,31 @@ defmodule NetworkHandler do
           IO.puts "Here you go"
           IO.inspect net_state[String.to_atom(node_name)]
           return_cab_orders(node_name, net_state)
+=======
+      backup_state_est = multi_call_request_backup(node_name)
+      if backup_state_est != nil do
+        net_state = Map.put(net_state, Node.self(), request_backup(node_name))
+        loop_add_orders(backup_state_est.active_orders) ## WRITE THIS 
+>>>>>>> Stashed changes
       end
       multi_call_update_backup(net_state[Node.self()])
     end
     {:noreply, net_state}
   end
 
+  loop add orders
+    for elem in net_state[node].active
+      export_order({:internal_order, order, Node.self()})
+      
   def handle_info({:nodedown, node_name}, net_state) do
+<<<<<<< Updated upstream
     IO.puts "Node down"
     redistribute_orders(node_name, net_state)
+=======
+    IO.puts "MAN DOWN MAN DOWN"
+    IO.inspect node_name
+    # node_lost() # redistribute orders
+>>>>>>> Stashed changes
     {:noreply, net_state}
   end
 
