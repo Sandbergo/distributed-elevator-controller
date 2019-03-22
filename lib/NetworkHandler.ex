@@ -34,17 +34,55 @@ defmodule NetworkHandler do
   Boot Node with name "elev@ip" and spawn listen and receive processes based on UDP broadcasting
   """
   def init([send_port, recv_port]) do
-    IO.puts "NetworkHandler init"
-    {:ok, broadcast_socket} = :gen_udp.open(send_port, [:list, {:active, false}, {:broadcast, true}])
+    guard = false
+    net_state = %{}
+    IO.puts "Booting distributed node"
     name = "#{"elev@"}#{get_my_ip() |> ip_to_string()}"
-    IO.puts name
-    Node.start(String.to_atom(name), :longnames, @node_dead_time)
+    guard = case Node.start(String.to_atom(name), :longnames, @node_dead_time) do
+      {:error, reason} -> 
+        IO.puts("Unable to start node, retrying in 1 sec")
+        Node.stop()
+        :timer.sleep(1000)
+        init([send_port, recv_port])
+        true
+      _ -> 
+        IO.puts("Node boot successful")
+        false
+    end
     Node.set_cookie(String.to_atom(name), @cookie)
-    Process.spawn(__MODULE__, :broadcast_self, [broadcast_socket, recv_port, name], [:link])
-    {:ok, listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
-    Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
-    net_state = %{Node.self() => %State{}}
-    {:ok, net_state}
+    IO.puts "Opening sockets"
+    {broadcast_socket, guard} = case :gen_udp.open(send_port, [:list, {:active, false}, {:broadcast, true}]) do
+      {:error, :eaddrinuse} ->
+        IO.puts("Broadcast port already open: closing port, stopping node and retrying in 1 sec")
+        System.cmd("fuser", ["-k", "#{send_port}/udp"])
+        Node.stop()
+        :timer.sleep(1000)
+        init([send_port, recv_port])
+        {:error, true}
+      {:ok, broadcast_socket} -> 
+        IO.puts("Broadcast port successfully opened")
+        {broadcast_socket, false}
+    end
+    net_state = if not guard do
+      listen_socket = case :gen_udp.open(recv_port, [:list, {:active, false}]) do
+        {:error, :eaddrinuse} ->
+          IO.puts("Listen port already open: closing port, stopping node and retrying in 1 sec")
+          :gen_udp.close(broadcast_socket)
+          System.cmd("fuser", ["-k", "#{recv_port}/udp"])
+          Node.stop()
+          :timer.sleep(1000)
+          init([send_port, recv_port])
+        {:ok, listen_socket} -> 
+          IO.puts("Listen port successfully opened")
+          Process.spawn(__MODULE__, :broadcast_self, [broadcast_socket, recv_port, name], [:link])
+          Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
+          listen_socket
+          net_state = %{Node.self() => %State{}}
+      end
+    else
+      net_state = %{Node.self() => %State{}}
+    end
+    net_state
   end
  
 
@@ -182,6 +220,7 @@ defmodule NetworkHandler do
   end
 
   def broadcast_self(socket, recv_port, name) do
+    IO.puts "Broadcasting"
     :gen_udp.send(socket, @broadcast, recv_port, name)
     :timer.sleep(@broadcast_freq)
     broadcast_self(socket, recv_port, name)
@@ -213,12 +252,13 @@ defmodule NetworkHandler do
     #IO.puts "STOP, collaborate and listen"
     case :gen_udp.recv(socket, 0, 3*@broadcast_freq) do
       {:ok, {_ip,_port,node_name}} ->
-        #IO.puts "Receiving: #{node_name}"
+        IO.puts "Receiving: #{node_name}"
         node_name = to_string(node_name)
         Process.send(network_handler_pid, {:request_connection, node_name}, [])
         listen(socket, network_handler_pid)
       {:error, reason} ->
         IO.inspect reason
+        IO.puts "I am so lonely"
         #Reset node?
     end
   end
