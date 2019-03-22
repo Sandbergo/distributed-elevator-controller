@@ -176,7 +176,14 @@ defmodule NetworkHandler do
   end
 
   def handle_call({:request_backup}, from, net_state) do
-    requested_state = net_state[from] # returns nil if not in map
+    requested_state = case net_state[from] do 
+      nil ->
+        %State{}
+      _ -> 
+        net_state[from]
+    end
+    IO.puts "Here you have my backup"
+    IO.inspect requested_state
     {:reply, requested_state, net_state}
   end
 
@@ -266,17 +273,28 @@ defmodule NetworkHandler do
       Node.ping(String.to_atom(node_name))
       Node.monitor(String.to_atom(node_name), true) # monitor this newly connected node
       # request backup from newly connected node
-      IO.puts "Requesting information about self"
-      self_state = multi_call_request_backup(node_name)
+      IO.puts "Checking information about #{node_name}"
+      case net_state[String.to_atom(node_name)] do
+        nil -> 
+          IO.puts "No information available about #{node_name}"
+        _ ->
+          IO.puts "Here you go"
+          IO.inspect net_state[String.to_atom(node_name)]
+          return_cab_orders(node_name, net_state)
+      end
+      multi_call_update_backup(net_state[Node.self()])
+      """
+      {self_state, _ext_state} = multi_call_request_backup(node_name)
       IO.inspect self_state
-      if self_state != nil do
+      if self_state != [] do
         IO.puts "Regain state information"
         net_state = Map.put(net_state, Node.self(), self_state)
         #loop_add_orders(backup_state_est.active_orders) ## WRITE THIS 
       else
         IO.puts "Hey, this is me"
-        multi_call_update_backup(self_state)
+        multi_call_update_backup(net_state[Node.self()])
       end
+      """
     end
     {:noreply, net_state}
   end
@@ -286,6 +304,16 @@ defmodule NetworkHandler do
     {:noreply, net_state}
   end
 
+  def return_cab_orders(node_name, net_state) do
+    active_orders_of_node = net_state[String.to_atom(node_name)].active_orders
+
+
+    Enum.each?(active_orders_of_node, fn(order) -> 
+      if order.type == :cab do
+        export_order({:external_order, order, String.to_atom(node_name)})
+      end)
+
+  end
 
   def listen(socket, network_handler_pid) do
     #IO.puts "STOP, collaborate and listen"

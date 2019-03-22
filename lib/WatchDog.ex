@@ -25,7 +25,7 @@ defmodule WatchDog do
 
   def init([overwatch, backup]) do
     backup = %{backup | floor: DriverInterface.get_floor_sensor_state(DriverInterface)}
-    send_backup(backup)
+    #send_backup(backup)
     {:ok, [overwatch, backup]}
   end
 
@@ -68,6 +68,11 @@ defmodule WatchDog do
   def handle_cast({:backup, state}, [overwatch, backup]) do
     backup = state
     send_backup(backup)
+    {:noreply, [overwatch, backup]}
+  end
+
+  def handle_cast({:backup_updated, ext_backup}, [overwatch, backup]) do
+    backup = ext_backup;
     {:noreply, [overwatch, backup]}
   end
   
