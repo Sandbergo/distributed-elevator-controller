@@ -72,8 +72,25 @@ defmodule OrderHandler do
   end
 
   def handle_cast({:sync_order_list, ext_order_list}, order_list) do
+    Enum.each(ext_order_list, fn(it_order)->
+      if it_order not in order_list do
+        DriverInterface.set_order_button_light(DriverInterface, it_order.type, it_order.floor, :on)
+      end
+    end)
+
+
     cab_orders = Enum.reject(order_list, fn(int_order)-> int_order.type != :cab end)
     order_list = ext_order_list ++ cab_orders ## PIPELINE?
+    Enum.each(Order.get_all_floors(), fn(floor) ->
+      Enum.each(Order.get_valid_order(), fn(button_type)->
+        possible_order = %Order{floor: floor, type: button_type}
+        if possible_order in order_list do
+          GenServer.cast DriverInterface, {:set_order_button_light, button_type, floor, :on }
+        else
+          GenServer.cast DriverInterface, {:set_order_button_light, button_type, floor, :off}
+        end
+      end)
+    end)
     IO.inspect order_list
     {:noreply, order_list}
   end

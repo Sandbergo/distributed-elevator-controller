@@ -16,29 +16,30 @@ defmodule NetworkHandler do
   """
   use GenServer
   @receive_port 20086
-  @broadcast_port 20088
+  @broadcast_port 20087
   @broadcast_freq 5000
   #@offline_sleep 5000
   #@listen_timeout 2000
-  #@node_dead_time 6000
+  @node_dead_time 6000
   @broadcast {10, 100, 23, 255} # {10,24,31,255}
   @cookie :penis
 
-  def start_link([send_PORT, recv_PORT] \\ [@broadcast_port,@receive_port]) do
-    GenServer.start_link(__MODULE__, [send_PORT, recv_PORT], [{:name, __MODULE__}])
+  def start_link([send_port, recv_port] \\ [@broadcast_port,@receive_port]) do
+    GenServer.start_link(__MODULE__, [send_port, recv_port], [{:name, __MODULE__}])
   end
 
   @doc """
   Boot Node with name "elev@ip" and spawn listen and receive processes based on UDP broadcasting
   """
-  def init([send_PORT, recv_PORT]) do
+  def init([send_port, recv_port]) do
     IO.puts "NetworkHandler init"
-    {:ok, broadcast_socket} = :gen_udp.open(send_PORT, [:list, {:active, false}, {:broadcast, true}])
+    {:ok, broadcast_socket} = :gen_udp.open(send_port, [:list, {:active, false}, {:broadcast, true}])
     name = "#{"elev@"}#{get_my_ip() |> ip_to_string()}"
+    IO.puts name
     Node.start(String.to_atom(name), :longnames, @node_dead_time)
     Node.set_cookie(String.to_atom(name), @cookie)
-    Process.spawn(__MODULE__, :broadcast_self, [broadcast_socket, recv_PORT, name], [:link])
-    {:ok, listen_socket} = :gen_udp.open(recv_PORT, [:list, {:active, false}])
+    Process.spawn(__MODULE__, :broadcast_self, [broadcast_socket, recv_port, name], [:link])
+    {:ok, listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
     Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
     net_state = %{Node.self() => %State{}}
     {:ok, net_state}
@@ -155,11 +156,10 @@ defmodule NetworkHandler do
     WatchDog.start_link()
   end
 
-  def broadcast_self(socket, recv_PORT, name) do
-    broadcast_address = {10, 100, 23, 255}
-    :gen_udp.send(socket, @broadcast, recv_PORT, name)
+  def broadcast_self(socket, recv_port, name) do
+    :gen_udp.send(socket, @broadcast, recv_port, name)
     :timer.sleep(@broadcast_freq)
-    broadcast_self(socket, recv_PORT, name)
+    broadcast_self(socket, recv_port, name)
   end
 
 
@@ -175,7 +175,7 @@ defmodule NetworkHandler do
   def listen(socket, network_handler_pid) do
     #IO.puts "STOP, collaborate and listen"
     case :gen_udp.recv(socket, 0, 3*@broadcast_freq) do
-      {:ok, {_ip,_PORT,node_name}} ->
+      {:ok, {_ip,_port,node_name}} ->
         #IO.puts "Receiving: #{node_name}"
         node_name = to_string(node_name)
         Process.send(network_handler_pid, {:request_connection, node_name}, [])
@@ -200,7 +200,7 @@ defmodule NetworkHandler do
     {:ok, socket} = :gen_udp.open(5678, [active: false, broadcast: true])
     :ok = :gen_udp.send(socket, @broadcast, 5678, "test packet")
     ip = case :gen_udp.recv(socket, 100, 1000) do
-      {:ok, {ip, _PORT, _data}} -> ip
+      {:ok, {ip, _port, _data}} -> ip
       {:error, _} -> {:error, :could_not_get_ip}
     end
     :gen_udp.close(socket)
