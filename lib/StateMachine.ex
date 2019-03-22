@@ -12,7 +12,7 @@ defmodule StateMachine do
   * Executing orders
 
   ### Communication:
-  * Sends to: DriverInterface, WatchDog
+  * Sends to: DriverInterface, WatchDog, NetworkHandler
   * Receives from: OrderHandler, Poller
   """
   use GenServer

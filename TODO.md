@@ -19,7 +19,7 @@
 * [x] Network module broadcast self
 * [x] Network module sets up cluster
 * [x] Network module sync orders
-* [ ] set up testing network from own PCs
+* [x] set up testing network from own PCs
 * [x] Only non-cab orders shared
 * [x] Information about elevator states are considered
 * [x] Order is handled by best elevator
@@ -47,4 +47,9 @@
 
 
 ### Remember to check out 
-* Supervising
+ON:
+sudo iptables -A INPUT -p tcp --dport 15657 -j ACCEPT 
+sudo iptables -A INPUT -p tcp --sport 15657 -j ACCEPT
+sudo iptables -A INPUT -m static --mode random --probability 0.2 -j DROP 
+OFF:
+sudo iptables -F

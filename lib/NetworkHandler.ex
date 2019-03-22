@@ -23,7 +23,7 @@ defmodule NetworkHandler do
   #@offline_sleep 5000
   #@listen_timeout 2000
   @node_dead_time 6000
-  @broadcast {10,42,0,255} #{10, 100, 23, 255} # {10,24,31,255}
+  @broadcast {10, 100, 23, 255}#{10,42,0,255} #{10, 100, 23, 255} # {10,24,31,255}
   @cookie :penis
 
   def start_link([send_port, recv_port] \\ [@broadcast_port,@receive_port]) do
@@ -149,8 +149,6 @@ defmodule NetworkHandler do
 
   #------------------------------HANDLE CASTS/CALLS-------------------------------#
   def handle_cast({:sync_order_lists, order_list}, node_list) do
-    IO.puts "Order list to be synchronized"
-    IO.inspect order_list
     synchronize_order_lists(order_list)
     {:noreply, node_list}
     #multicast
@@ -158,8 +156,6 @@ defmodule NetworkHandler do
 
   def handle_cast({:send_state_backup, backup}, net_state)  do
     net_state = Map.put(net_state, Node.self(), backup)
-    IO.inspect(net_state)
-
     multi_call_update_backup(backup)
     {:noreply, net_state}
   end
@@ -208,13 +204,9 @@ defmodule NetworkHandler do
     #Retrieve best cost function
     best_cost = Enum.min_by(Map.values(net_state),
      fn(node_state) -> cost_function(node_state, order) end)
-    IO.puts "Lowest state"
-    IO.inspect(best_cost)
 
     #Find the node with this cost
     {chosen_node, _node_state} = List.keyfind(Map.to_list(net_state), best_cost, 1)
-    IO.puts "Chosen_node"
-    IO.inspect chosen_node
 
     if chosen_node == Node.self() do
         IO.puts "I've got it"
@@ -236,7 +228,6 @@ defmodule NetworkHandler do
 
   def handle_call({:update_backup, backup, from_node}, _from, net_state) do
     net_state = Map.put(net_state, from_node, backup)
-    IO.inspect(net_state)
     {:reply, net_state, net_state}
   end
 
@@ -263,27 +254,17 @@ defmodule NetworkHandler do
   end
 
   def redistribute_orders(node_name, net_state) do
-    active_orders_of_node = net_state[String.to_atom(node_name)].active_orders
+    # active_orders_of_node = net_state[String.to_atom(List.to_string(node_name))].active_orders
+    active_orders_of_node = net_state[node_name].active_orders
     Enum.each(active_orders_of_node, fn(order) ->
       if order.type != :cab do
-        GenServer.cast(NetworkHandler, {:choose_elevator, order})
+        export_order({:internal_order, order, Node.self()})
+        #GenServer.cast(NetworkHandler, {:choose_elevator, order})
       end
     end)
     
-    # to everyone except for self. pick random elevator? 
-    # for Emum.each 
   end
 
-<<<<<<< Updated upstream
-=======
-  def broadcast_self(socket, recv_port, name) do
-    IO.puts "Broadcasting"
-    :gen_udp.send(socket, @broadcast, recv_port, name)
-    :timer.sleep(@broadcast_freq)
-    broadcast_self(socket, recv_port, name)
-
-
->>>>>>> Stashed changes
   def handle_info({:request_connection, node_name}, net_state) do
     if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
       #IO.puts "connecting to node #{node_name}"
@@ -291,7 +272,6 @@ defmodule NetworkHandler do
       Node.monitor(String.to_atom(node_name), true) # monitor this newly connected node
       
       # request backup from newly connected node
-<<<<<<< Updated upstream
       IO.puts "Checking information about #{node_name}"
       case net_state[String.to_atom(node_name)] do
         nil -> 
@@ -300,31 +280,17 @@ defmodule NetworkHandler do
           IO.puts "Here you go"
           IO.inspect net_state[String.to_atom(node_name)]
           return_cab_orders(node_name, net_state)
-=======
-      backup_state_est = multi_call_request_backup(node_name)
-      if backup_state_est != nil do
-        net_state = Map.put(net_state, Node.self(), request_backup(node_name))
-        loop_add_orders(backup_state_est.active_orders) ## WRITE THIS 
->>>>>>> Stashed changes
       end
       multi_call_update_backup(net_state[Node.self()])
     end
     {:noreply, net_state}
   end
-
-  loop add orders
-    for elem in net_state[node].active
-      export_order({:internal_order, order, Node.self()})
       
   def handle_info({:nodedown, node_name}, net_state) do
-<<<<<<< Updated upstream
     IO.puts "Node down"
+    IO.puts "ORDERS TO BE REDISTRIBUTED:"
+    IO.inspect net_state
     redistribute_orders(node_name, net_state)
-=======
-    IO.puts "MAN DOWN MAN DOWN"
-    IO.inspect node_name
-    # node_lost() # redistribute orders
->>>>>>> Stashed changes
     {:noreply, net_state}
   end
 

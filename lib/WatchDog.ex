@@ -35,7 +35,7 @@ defmodule WatchDog do
     receive do
       {:elev_going_inactive} ->
         IO.puts "stop watchin"
-        Process.exit(self(), :kill)
+        Process.exit(self(), :normal)
       {:floor_changed} ->
         IO.puts "changin floor in WatchDog"
         watchdog_loop()
@@ -56,12 +56,16 @@ defmodule WatchDog do
   
   def handle_cast({:elev_going_inactive}, [overwatch, backup]) do
     send(overwatch, {:elev_going_inactive})
-    overwatch = nil
     {:noreply, [overwatch, backup]}
   end
   
   def handle_cast({:floor_changed}, [overwatch, backup]) do
-    send(overwatch, {:floor_changed})
+    case overwatch do
+      nil -> 
+        IO.puts "you are dragging me, you sneaky bastard"
+      _ -> 
+        send(overwatch, {:floor_changed})
+    end
     {:noreply, [overwatch, backup]}
   end
 
