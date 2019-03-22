@@ -21,7 +21,7 @@ defmodule NetworkHandler do
   #@offline_sleep 5000
   #@listen_timeout 2000
   @node_dead_time 6000
-  @broadcast {10, 100, 23, 255} # {10,24,31,255}
+  @broadcast {10,42,0,255} #{10, 100, 23, 255} 
   @cookie :penis
 
   def start_link([send_port, recv_port] \\ [@broadcast_port,@receive_port]) do
@@ -44,7 +44,59 @@ defmodule NetworkHandler do
     net_state = %{Node.self() => %State{}}
     {:ok, net_state}
   end
- 
+
+  # -------------------------For driving 3 local elevator simulators ---------------#
+  def start_link([send_port, recv_port, name]) do
+    GenServer.start_link(__MODULE__, [send_port, recv_port, name], [{:name, __MODULE__}])
+  end
+
+  def init [send_port, recv_port, name] do
+    IO.puts "NetworkHandler init"
+    {:ok, broadcast_socket} = :gen_udp.open(send_port, [:list, {:active, false}, {:broadcast, true}])
+    node_name = "#{name}#{get_my_ip() |> ip_to_string()}"
+    Node.start(String.to_atom(node_name), :longnames, @node_dead_time)
+    Node.set_cookie(String.to_atom(node_name), @cookie)
+    Process.spawn(__MODULE__, :broadcast_local, [broadcast_socket, node_name], [:link])
+    {:ok, listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
+    Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
+    net_state = %{Node.self() => %State{}}
+    {:ok, net_state}
+  end
+  
+  def broadcast_local(socket, name) do
+    :gen_udp.send(socket, @broadcast, 20087, name)
+    :gen_udp.send(socket, @broadcast, 20089, name)
+    :gen_udp.send(socket, @broadcast, 20091, name)
+    :timer.sleep(@broadcast_freq)
+    broadcast_local(socket, name)
+  end
+
+    # -----------------LOCAL TEST----------------#
+
+    def test(broadcast_port, receive_port, name, elev_port) do
+      IO.puts "Leggo my eggo"
+      NetworkHandler.start_link([broadcast_port, receive_port, name])
+      DriverInterface.start({127,0,0,1}, elev_port)
+      OrderHandler.start_link()
+      Poller.start_link()
+      StateMachine.start_link()
+      WatchDog.start_link()
+    end
+  #--------------------------Non-communicative functions----------------------------#
+  def cost_function(state, order) do
+    cost = length(state.active_orders) + abs(distance_to_order(order, state))
+  end
+  def distance_to_order(elevator_order, elevator_state) do
+    elevator_order.floor - elevator_state.floor
+  end
+  #--------------------------Network functions and node connections----------------------------#
+  def broadcast_self(socket, recv_port, name) do
+    #IO.puts "broadcasting to my dudes"
+    broadcast_address = {10, 100, 23, 255}
+    :gen_udp.send(socket, @broadcast, recv_port, name)
+    :timer.sleep(@broadcast_freq)
+    broadcast_self(socket, recv_port, name)
+  end
 
   #---------------------------------CASTS/CALLS-----------------------------------#
 
@@ -160,7 +212,6 @@ defmodule NetworkHandler do
     :gen_udp.send(socket, @broadcast, recv_port, name)
     :timer.sleep(@broadcast_freq)
     broadcast_self(socket, recv_port, name)
-  end
 
 
   def handle_info({:request_connection, node_name}, net_state) do
