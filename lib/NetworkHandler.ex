@@ -140,7 +140,7 @@ defmodule NetworkHandler do
   end
 
   def multi_call_request_backup(node_name) do
-    GenServer.multi_call(node_name, NetworkHandler, {:request_backup, Node.self()}, 1000)
+    GenServer.multi_call([node_name], NetworkHandler, {:request_backup, Node.self()}, 1000)
   end
 
   def multi_call_request_order_rank(order) do
@@ -182,7 +182,7 @@ defmodule NetworkHandler do
 
   
   def handle_cast({:sync_lights, order, light_state}, net_state) do
-    GenServer.multi_call(Node.list(), NetworkHandler, {:sync_elev_lights, order}, 1000)
+    GenServer.multi_call(Node.list(), NetworkHandler, {:sync_elev_lights, order, light_state}, 1000)
     {:noreply, net_state}
   end
 
@@ -260,29 +260,29 @@ defmodule NetworkHandler do
     # for Emum.each 
   end
 
-  def request_backup(node_name) do
-    "check if I have active orders waiting in another node's net_state"
-    # gets state from other node for this node, returns nil if 
-    GenServer.multi_call([node_name], NetworkHandler, {:request_backup}, 1000) 
-  end
-
   def handle_info({:request_connection, node_name}, net_state) do
     if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
       #IO.puts "connecting to node #{node_name}"
       Node.ping(String.to_atom(node_name))
       Node.monitor(String.to_atom(node_name), true) # monitor this newly connected node
       # request backup from newly connected node
-      backup_state_est = request_backup(node_name)
-      if backup_state_est != nil do
-        net_state = Map.put(net_state, Node.self(), request_backup(node_name))
+      IO.puts "Requesting information about self"
+      self_state = multi_call_request_backup(node_name)
+      IO.inspect self_state
+      if self_state != nil do
+        IO.puts "Regain state information"
+        net_state = Map.put(net_state, Node.self(), self_state)
         #loop_add_orders(backup_state_est.active_orders) ## WRITE THIS 
+      else
+        IO.puts "Hey, this is me"
+        multi_call_update_backup(self_state)
       end
     end
     {:noreply, net_state}
   end
 
   def handle_info({:nodedown, node_name}, net_state) do
-    # node_lost() # redistribute orders
+    IO.puts "Node down"
     {:noreply, net_state}
   end
 
@@ -291,7 +291,6 @@ defmodule NetworkHandler do
     #IO.puts "STOP, collaborate and listen"
     case :gen_udp.recv(socket, 0, 3*@broadcast_freq) do
       {:ok, {_ip,_port,node_name}} ->
-        IO.puts "Receiving: #{node_name}"
         node_name = to_string(node_name)
         Process.send(network_handler_pid, {:request_connection, node_name}, [])
         listen(socket, network_handler_pid)

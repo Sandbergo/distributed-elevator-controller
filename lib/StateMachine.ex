@@ -72,7 +72,9 @@ defmodule StateMachine do
   end
 
   def sync_order_lights(order, light_state) do
-    GenServer.cast(NetworkHandler, {:sync_lights, order, light_state})
+    if order.type != :cab do
+      GenServer.cast(NetworkHandler, {:sync_lights, order, light_state})
+    end
   end
 
   #------------------------------HANDLE CASTS/CALLS-------------------------------#
@@ -85,10 +87,10 @@ defmodule StateMachine do
     backup_state(state)
     sync_order_lights(order, :on)
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
-      if length(state.active_orders)==1 do
-        start_motor_timer()
-        execute_order(state)
-      end
+    if length(state.active_orders)==1 do
+      start_motor_timer()
+      execute_order(state)
+    end
     {:noreply, state}
   end
 
