@@ -131,8 +131,12 @@ defmodule NetworkHandler do
     GenServer.cast(OrderHandler, {:sync_order_list, ext_order_list})
   end
 
+  def single_elevator_mode() do
+    GenServer.cast(NetworkHandler, {:lost_network})
+  end
+
   def monitor_me_back(node_name) do
-    GenServer.multi_call(NetworkHandler, {:monitor_me_back, Node.self()}, 1000)
+    GenServer.multi_call([node_name], NetworkHandler, {:monitor_me_back, Node.self()}, 1000)
   end
 
   def export_order({:internal_order, order, _chosen_node}) do
@@ -160,6 +164,14 @@ defmodule NetworkHandler do
   end
 
   #------------------------------HANDLE CASTS/CALLS-------------------------------#
+  """
+  def handle_cast {:lost_network}, net_state do
+    IO.puts("Disconnected from network, single elevator mode activated")
+    IO.inspect net_state
+    {:noreply, net_state}
+  end
+  """
+
   def handle_cast({:sync_order_lists, order_list}, net_state) do
     synchronize_order_lists(order_list)
     {:noreply, net_state}
@@ -243,9 +255,12 @@ defmodule NetworkHandler do
 
   def handle_cast({:motorstop}, net_state) do
     IO.puts "RESTART REQUIRED"
-    System.cmd("kill", ["-l"])
-    #redistribute_orders(Node.self(), net_state) # except self?
-    # kill own process? nope
+    node_state = List.first(net_state[Node.self()])
+    net_state = Map.replace(net_state, Node.self(), [node_state, false])
+    IO.inspect net_state
+    Node.stop()
+    pid = Process.spawn(NetworkHandler, :recover_from_error_mode, [Node.self(), net_state], [])
+    Process.send_after(pid, :motorstop, 7000)
     {:noreply, net_state}
   end
 
@@ -295,11 +310,12 @@ defmodule NetworkHandler do
   end
 
   def handle_info({:request_connection, node_name}, net_state) do
-    if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
+    if node_name not in ([Node.self | [:nonode@nohost | Node.list]]|> Enum.map(&(to_string(&1)))) do
       node_name = node_name |> String.to_atom()#IO.puts "connecting to node #{node_name}"
+      
       Node.monitor(node_name, true) # monitor this newly connected node
       Node.ping(node_name)
-      #monitor_me_back(Node.self())
+      monitor_me_back(node_name)
       # request backup from newly connected node
       IO.puts "Checking information about #{node_name}"
       net_state = case net_state[node_name] do
@@ -317,7 +333,7 @@ defmodule NetworkHandler do
           node_state = List.first(net_state[node_name])
           IO.inspect net_state[node_name]
           backup = Map.replace(net_state, node_name, [node_state, true])
-          pid = Process.spawn(NetworkHandler, :return_cab_orders, [node_name, backup], [])
+          pid = Process.spawn(NetworkHandler, :recover_from_error_mode, [node_name, backup], [])
           Process.send_after(pid, :send_cab_orders, 3000)
           backup
       end
@@ -327,20 +343,27 @@ defmodule NetworkHandler do
   end
       
   def handle_info({:nodedown, node_name}, net_state) do
-    IO.puts "Node down"
-    node_state = List.first(net_state[node_name])
+    net_state = case length(Node.list()) do
+      0 -> 
+        IO.puts "Mr.Lonely"
+        %{Node.self() => net_state[Node.self()]}
+      _->
+        IO.puts "Node down"
+        node_state = List.first(net_state[node_name])
+        
+        net_state = Map.replace(net_state, node_name, [node_state, false])
     
-    net_state = Map.replace(net_state, node_name, [node_state, false])
-
-    IO.puts "My current map: "
-    IO.inspect net_state
-
-    active_orders_of_node = node_state.active_orders
-    redistribute_orders(active_orders_of_node)
+        IO.puts "My current map: "
+        IO.inspect net_state
+    
+        active_orders_of_node = node_state.active_orders
+        redistribute_orders(active_orders_of_node)
+        net_state
+    end
     {:noreply, net_state}
   end
 
-  def return_cab_orders(node_name, net_state) do
+  def recover_from_error_mode(node_name, net_state) do
     receive do
       :send_cab_orders -> 
         active_orders_of_node = List.first(net_state[node_name]).active_orders
@@ -350,8 +373,11 @@ defmodule NetworkHandler do
             export_order({:external_order, order, node_name})
           end
         end)
+      :motorstop ->
+        boot_node("elev", 6000)
+        Node.set_cookie(@cookie)
       after
-        4_000 ->
+        10_000 ->
           IO.puts "Resend timeout"
     end
   end
@@ -366,6 +392,8 @@ defmodule NetworkHandler do
       {:error, reason} ->
         IO.inspect reason
         IO.puts "I am so lonely"
+        #single_elevator_mode()
+        listen(socket,network_handler_pid)
         #Reset node?
     end
   end
