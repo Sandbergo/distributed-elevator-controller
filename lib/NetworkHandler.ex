@@ -144,11 +144,11 @@ defmodule NetworkHandler do
   end
 
   def multi_call_update_backup(backup) do
-    GenServer.multi_call(Node.list(), NetworkHandler, {:update_backup, backup, Node.self()}, 1000)
+    GenServer.multi_call(Node.list(), NetworkHandler, {:update_backup, [backup, true], Node.self()}, 1000)
   end
 
   def multi_call_request_backup(from_node_name, about_node) do ## get info from other node about own node
-    GenServer.multi_call([String.to_atom(from_node_name)], NetworkHandler, {:request_backup, about_node}, 1000)
+    GenServer.multi_call([from_node_name], NetworkHandler, {:request_backup, about_node}, 1000)
   end
 
   def multi_call_request_order_rank(order) do
@@ -238,7 +238,9 @@ defmodule NetworkHandler do
   end
 
   def handle_call({:update_backup, backup, from_node}, _from, net_state) do
-    net_state = Map.put(net_state, from_node, [backup, true])
+    IO.puts "Incoming backup"
+    IO.inspect backup
+    net_state = Map.put(net_state, from_node, backup)
     IO.puts "My current map"
     IO.inspect net_state
     {:reply, net_state, net_state}
@@ -286,7 +288,7 @@ defmodule NetworkHandler do
       
       # request backup from newly connected node
       IO.puts "Checking information about #{node_name}"
-      case net_state[node_name] do
+      net_state = case net_state[node_name] do
         nil -> 
           IO.puts "No information available about #{node_name}"
           {requested_state, _ignored} = multi_call_request_backup(node_name, node_name)
@@ -295,7 +297,7 @@ defmodule NetworkHandler do
           IO.inspect requested_state
           IO.puts "My current mapezo"
           IO.inspect net_state
-
+          net_state
           # request info about node_name to own net_state
         _ ->
           IO.puts "Here you go"
@@ -303,6 +305,7 @@ defmodule NetworkHandler do
           net_state = Map.replace(net_state, node_name, [node_state, true])
           IO.inspect net_state[node_name]
           return_cab_orders(node_name, net_state)
+          net_state
       end
       multi_call_update_backup(net_state[Node.self()])
     end
