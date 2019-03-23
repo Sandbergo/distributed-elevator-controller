@@ -195,9 +195,7 @@ defmodule StateMachine do
 
   def open_doors(state) do
     DriverInterface.set_door_open_light DriverInterface, :on
-    IO.puts "opnin door"
     :timer.sleep(3000) ## alternative
-    IO.puts "closin door"
     DriverInterface.set_door_open_light DriverInterface, :off
     #execute_order(state)
     true ## WHAT?

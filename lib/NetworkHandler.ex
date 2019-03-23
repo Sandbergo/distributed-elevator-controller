@@ -139,8 +139,8 @@ defmodule NetworkHandler do
     GenServer.multi_call(Node.list(), NetworkHandler, {:update_backup, backup, Node.self()}, 1000)
   end
 
-  def multi_call_request_backup(node_name) do
-    GenServer.multi_call([node_name], NetworkHandler, {:request_backup, Node.self()}, 1000)
+  def multi_call_request_backup(from_node_name, about_node) do ## get info from other node about own node
+    GenServer.multi_call([from_node_name], NetworkHandler, {:request_backup, about_node}, 1000)
   end
 
   def multi_call_request_order_rank(order) do
@@ -171,12 +171,13 @@ defmodule NetworkHandler do
     {:reply, my_order_rank, net_state}
   end
 
-  def handle_call({:request_backup}, from, net_state) do
-    requested_state = case net_state[from] do 
+  def handle_call({:request_backup, about_node}, _from, net_state) do
+    about_node = to_string(about_node) |> String.to_atom()
+    requested_state = case net_state[about_node] do 
       nil ->
         %State{}
       _ -> 
-        net_state[from]
+        net_state[about_node]
     end
     IO.puts "Here you have my backup"
     IO.inspect requested_state
@@ -184,7 +185,7 @@ defmodule NetworkHandler do
   end
 
   
-  def handle_cast({:sync_lights, order, light_state}, net_state) do
+  def handle_cast({:sync_lights, order, light_state}, net_state) do ## CHANGE NAME
     GenServer.multi_call(Node.list(), NetworkHandler, {:sync_elev_lights, order, light_state}, 1000)
     {:noreply, net_state}
   end
@@ -228,6 +229,8 @@ defmodule NetworkHandler do
 
   def handle_call({:update_backup, backup, from_node}, _from, net_state) do
     net_state = Map.put(net_state, from_node, backup)
+    IO.puts "My current map"
+    IO.inspect net_state
     {:reply, net_state, net_state}
   end
 
@@ -276,6 +279,14 @@ defmodule NetworkHandler do
       case net_state[String.to_atom(node_name)] do
         nil -> 
           IO.puts "No information available about #{node_name}"
+          requested_state = multi_call_request_backup(node_name, node_name)
+          Map.put(net_state, String.to_atom(node_name), requested_state)
+          IO.puts "Requested state:"
+          IO.inspect requested_state
+          IO.puts "My current map"
+          IO.inspect net_state
+
+          # request info about node_name to own net_state
         _ ->
           IO.puts "Here you go"
           IO.inspect net_state[String.to_atom(node_name)]
