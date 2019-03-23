@@ -140,7 +140,7 @@ defmodule NetworkHandler do
   end
 
   def multi_call_request_backup(from_node_name, about_node) do ## get info from other node about own node
-    GenServer.multi_call([from_node_name], NetworkHandler, {:request_backup, about_node}, 1000)
+    GenServer.multi_call([String.to_atom(from_node_name)], NetworkHandler, {:request_backup, about_node}, 1000)
   end
 
   def multi_call_request_order_rank(order) do
@@ -172,6 +172,7 @@ defmodule NetworkHandler do
   end
 
   def handle_call({:request_backup, about_node}, _from, net_state) do
+    IO.puts "Backup requested"
     about_node = to_string(about_node) |> String.to_atom()
     requested_state = case net_state[about_node] do 
       nil ->
@@ -279,8 +280,8 @@ defmodule NetworkHandler do
       case net_state[String.to_atom(node_name)] do
         nil -> 
           IO.puts "No information available about #{node_name}"
-          requested_state = multi_call_request_backup(node_name, node_name)
-          Map.put(net_state, String.to_atom(node_name), requested_state)
+          {requested_state, _ignored} = multi_call_request_backup(node_name, node_name)
+          net_state = Map.put(net_state, String.to_atom(node_name), requested_state[String.to_atom(node_name)])
           IO.puts "Requested state:"
           IO.inspect requested_state
           IO.puts "My current map"
