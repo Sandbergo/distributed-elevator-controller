@@ -61,7 +61,8 @@ defmodule NetworkHandler do
         IO.puts("Listen port successfully opened")
         Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
       end
-    net_state = %{Node.self() => %State{}}
+    net_state = %{Node.self() => [%State{}, true]}
+    IO.inspect net_state
     {:ok, net_state}
   end
 
@@ -79,7 +80,8 @@ defmodule NetworkHandler do
     Process.spawn(__MODULE__, :broadcast_local, [broadcast_socket, node_name], [:link])
     {:ok, listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
     Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
-    net_state = %{Node.self() => %State{}}
+    net_state = %{Node.self() => [%State{}, true]}
+    IO.inspect net_state
     {:ok, net_state}
   end
   
@@ -104,8 +106,14 @@ defmodule NetworkHandler do
     end
   #--------------------------Non-communicative functions----------------------------#
   def cost_function(state, order) do
-    cost = length(state.active_orders) + abs(distance_to_order(order, state))
+    IO.inspect state
+    cost = if List.last(state) do
+      length(List.first(state).active_orders) + abs(distance_to_order(order, List.first(state)))
+    else
+      100000
+    end
   end
+
   def distance_to_order(elevator_order, elevator_state) do
     elevator_order.floor - elevator_state.floor
   end
@@ -148,14 +156,14 @@ defmodule NetworkHandler do
   end
 
   #------------------------------HANDLE CASTS/CALLS-------------------------------#
-  def handle_cast({:sync_order_lists, order_list}, node_list) do
+  def handle_cast({:sync_order_lists, order_list}, net_state) do
     synchronize_order_lists(order_list)
-    {:noreply, node_list}
+    {:noreply, net_state}
     #multicast
   end
 
   def handle_cast({:send_state_backup, backup}, net_state)  do
-    net_state = Map.put(net_state, Node.self(), backup)
+    net_state = Map.put(net_state, Node.self(), [backup, true])
     multi_call_update_backup(backup)
     {:noreply, net_state}
   end
@@ -167,7 +175,7 @@ defmodule NetworkHandler do
   end
 
   def handle_call({:request_order_rank, order}, _from, net_state) do
-    my_order_rank = cost_function(net_state.backup, order)
+    my_order_rank = cost_function(net_state[Node.self()], order)
     {:reply, my_order_rank, net_state}
   end
 
@@ -176,7 +184,7 @@ defmodule NetworkHandler do
     about_node = to_string(about_node) |> String.to_atom()
     requested_state = case net_state[about_node] do 
       nil ->
-        %State{}
+        [%State{}, true]
       _ -> 
         net_state[about_node]
     end
@@ -229,7 +237,7 @@ defmodule NetworkHandler do
   end
 
   def handle_call({:update_backup, backup, from_node}, _from, net_state) do
-    net_state = Map.put(net_state, from_node, backup)
+    net_state = Map.put(net_state, from_node, [backup, true])
     IO.puts "My current map"
     IO.inspect net_state
     {:reply, net_state, net_state}
@@ -259,7 +267,7 @@ defmodule NetworkHandler do
 
   def redistribute_orders(node_name, net_state) do
     # active_orders_of_node = net_state[String.to_atom(List.to_string(node_name))].active_orders
-    active_orders_of_node = net_state[node_name].active_orders
+    active_orders_of_node = List.first(net_state[node_name]).active_orders
     Enum.each(active_orders_of_node, fn(order) ->
       if order.type != :cab do
         export_order({:internal_order, order, Node.self()})
@@ -299,15 +307,17 @@ defmodule NetworkHandler do
   end
       
   def handle_info({:nodedown, node_name}, net_state) do
+    active_orders_of_node = List.first(net_state[String.to_atom(node_name)]).active_orders
+    net_state = Map.replace(net_state, node_name, [active_orders_of_node, false])
     IO.puts "Node down"
     IO.puts "ORDERS TO BE REDISTRIBUTED:"
-    IO.inspect net_state
+    IO.inspect net_state[node_name]
     redistribute_orders(node_name, net_state)
     {:noreply, net_state}
   end
 
   def return_cab_orders(node_name, net_state) do
-    active_orders_of_node = net_state[String.to_atom(node_name)].active_orders
+    active_orders_of_node = List.first(net_state[String.to_atom(node_name)]).active_orders
     Enum.each(active_orders_of_node, fn(order) -> 
       if order.type == :cab do
         export_order({:external_order, order, String.to_atom(node_name)})
@@ -328,10 +338,6 @@ defmodule NetworkHandler do
         IO.puts "I am so lonely"
         #Reset node?
     end
-  end
-
-  def cost_function(state, order) do
-    cost = length(state.active_orders) + abs(order.floor - state.floor)
   end
 
       @doc """
