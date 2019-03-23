@@ -19,7 +19,7 @@ defmodule StateMachine do
 
   #--------------------------------INITIALIZATION---------------------------------#
 
-  def start_link do
+  def start_link _mock do
     GenServer.start_link(__MODULE__, :down, [{:name, __MODULE__}])
   end
 

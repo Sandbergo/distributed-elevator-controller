@@ -291,12 +291,16 @@ defmodule NetworkHandler do
    
   def test do
     IO.puts "Leggo my eggo"
+    """
+    Overseer.start_link()
     NetworkHandler.start_link()
     DriverInterface.start()
     OrderHandler.start_link()
     Poller.start_link()
     WatchDog.start_link()
     StateMachine.start_link()
+    """
+    Overseer.start_link
   end
 
   def redistribute_orders(order_list) do

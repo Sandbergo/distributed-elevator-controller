@@ -18,7 +18,7 @@ defmodule Poller do
   @floors Order.get_all_floors
   @button_types Order.get_valid_order
 
-  def start_link do
+  def start_link _mock do
     GenServer.start_link(__MODULE__, [], [{:name, __MODULE__}])
   end
 

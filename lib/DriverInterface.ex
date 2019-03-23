@@ -18,11 +18,11 @@ defmodule DriverInterface do
   @state_map  %{:on => 1, :off => 0}
   @direction_map %{:up => 1, :down => 255, :stop => 0}
 
-  def start do
-    start {127,0,0,1}, 15657
+  def start_link _mock do
+    start_link {127,0,0,1}, 15657
   end
 
-  def start address, port do
+  def start_link address, port do
     GenServer.start_link(__MODULE__, [address, port], [{:name, __MODULE__}])
   end
 
