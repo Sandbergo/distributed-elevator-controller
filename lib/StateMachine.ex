@@ -83,10 +83,14 @@ defmodule StateMachine do
   A new order is accepted, the light is set and in case this is the first order, is executed directly
   """
   def handle_cast({:neworder, order}, state) do
+    IO.puts "new order"
+    IO.inspect order
     state = %{state | active_orders: state.active_orders ++ [order]}
     backup_state(state)
     sync_order_lights(order, :on)
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
+    IO.puts "length of active orders:"
+    IO.inspect length(state.active_orders)
     if length(state.active_orders)==1 do
       start_motor_timer()
       execute_order(state)
@@ -156,13 +160,13 @@ defmodule StateMachine do
     if should_stop?(state) do
       DriverInterface.set_motor_direction(DriverInterface, :stop)
       update_state_direction(:stop)
-      open_doors()
       Enum.each(state.active_orders, fn(order)->
         if order.floor == state.floor do
           #IO.puts "Delete this bitch"
           delete_active_order(order)
         end
       end)
+      open_doors(state)
     end
   end
 
@@ -189,12 +193,15 @@ defmodule StateMachine do
     end
   end
 
-  def open_doors do
+  def open_doors(state) do
     DriverInterface.set_door_open_light DriverInterface, :on
-    :timer.sleep(1000)
+    IO.puts "opnin door"
+    :timer.sleep(3000) ## alternative
+    IO.puts "closin door"
     DriverInterface.set_door_open_light DriverInterface, :off
+    #execute_order(state)
     true ## WHAT?
-  end
+end
 
   def order_type_to_int(elevator_order) do
     %{hall_up: 1, cab: 0, hall_down: -1}[elevator_order.type]

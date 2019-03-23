@@ -16,7 +16,7 @@ defmodule WatchDog do
   * Receives from: StateMachine
   """
   use GenServer
-  @motorstop_timeout 5000
+  @motorstop_timeout 20000
 
   #--------------------------------INITIALIZATION---------------------------------#
   def start_link do
