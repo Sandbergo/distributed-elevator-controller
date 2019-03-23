@@ -1,3 +1,4 @@
+#!/bin/bash
 #clear 
 epmd -daemon # fix erlang issue
 
@@ -10,5 +11,9 @@ gnome-terminal -x ~/.cargo/bin/ElevatorServer & disown
 # compile
 mix compile
 
-# run boy
-iex -S mix run -e NetworkHandler.test
+# run boy ruuuuuuuuuuuuuun 
+while ! iex -S mix run -e NetworkHandler.test
+do 
+  sleep 5
+  echo "Restartin!"
+done
