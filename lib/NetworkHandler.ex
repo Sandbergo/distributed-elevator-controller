@@ -164,7 +164,7 @@ defmodule NetworkHandler do
 
   def handle_cast({:send_state_backup, backup}, net_state)  do
     net_state = Map.put(net_state, Node.self(), [backup, true])
-    multi_call_update_backup(backup)
+    multi_call_update_backup([backup, true])
     {:noreply, net_state}
   end
 
@@ -231,7 +231,7 @@ defmodule NetworkHandler do
 
   def handle_cast({:motorstop}, net_state) do
     IO.puts "RESTART REQUIRED"
-    
+    System.cmd("kill", ["-l"])
     #redistribute_orders(Node.self(), net_state) # except self?
     # kill own process? nope
     {:noreply, net_state}
@@ -253,6 +253,8 @@ defmodule NetworkHandler do
 
   def handle_call({:external_order, order}, _from, net_state) do
     OrderHandler.distribute_order(order, true)
+    IO.puts "Incoming order: "
+    IO.inspect order
     {:reply, net_state, net_state}
   end
 
@@ -264,8 +266,9 @@ defmodule NetworkHandler do
     DriverInterface.start()
     OrderHandler.start_link()
     Poller.start_link()
-    StateMachine.start_link()
     WatchDog.start_link()
+    StateMachine.start_link()
+    
   end
 
   def redistribute_orders(order_list) do
@@ -302,8 +305,10 @@ defmodule NetworkHandler do
           IO.puts "Here you go"
           node_state = List.first(net_state[node_name])
           IO.inspect net_state[node_name]
-          return_cab_orders(node_name, Map.replace(net_state, node_name, [node_state, true]))
-          Map.replace(net_state, node_name, [node_state, true])
+          backup = Map.replace(net_state, node_name, [node_state, true])
+          pid = Process.spawn(NetworkHandler, :return_cab_orders, [node_name, backup], [])
+          Process.send_after(pid, :send_cab_orders, 3000)
+          backup
       end
       multi_call_update_backup(net_state[Node.self()])
     end
@@ -325,14 +330,19 @@ defmodule NetworkHandler do
   end
 
   def return_cab_orders(node_name, net_state) do
-    active_orders_of_node = List.first(net_state[node_name]).active_orders
-    IO.inspect active_orders_of_node
-    Enum.each(active_orders_of_node, fn(order) -> 
-      if order.type == :cab do
-        export_order({:external_order, order, node_name})
-      end
-    end)
-
+    receive do
+      :send_cab_orders -> 
+        active_orders_of_node = List.first(net_state[node_name]).active_orders
+        IO.inspect active_orders_of_node
+        Enum.each(active_orders_of_node, fn(order) -> 
+          if order.type == :cab do
+            export_order({:external_order, order, node_name})
+          end
+        end)
+      after
+        4_000 ->
+          IO.puts "Resend timeout"
+    end
   end
 
   def listen(socket, network_handler_pid) do

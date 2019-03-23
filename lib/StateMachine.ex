@@ -27,11 +27,12 @@ defmodule StateMachine do
   drive downwards to closest floor and initialize the state
   """
   def init(direction) do
-    start_motor_timer
+    start_motor_timer()
     DriverInterface.set_motor_direction(DriverInterface, direction)
     floor = initialize_to_floor()
     DriverInterface.set_motor_direction(DriverInterface, :stop)
     state = %State{floor: floor, direction: :stop, active_orders: []}
+    stop_motor_timer()
     {:ok, state}
   end
 

@@ -35,6 +35,7 @@ defmodule OrderHandler do
   def distribute_order(order, chosen \\ false) do
     cond do
       order.type == :cab ->
+        IO.puts "Til side gutter, hun er min"
         GenServer.cast(StateMachine, {:neworder, order})
       chosen ->
         IO.puts "I VOLUNTEER AS TRIBUTE"
