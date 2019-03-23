@@ -144,7 +144,7 @@ defmodule NetworkHandler do
   end
 
   def multi_call_update_backup(backup) do
-    GenServer.multi_call(Node.list(), NetworkHandler, {:update_backup, [backup, true], Node.self()}, 1000)
+    GenServer.multi_call(Node.list(), NetworkHandler, {:update_backup, backup, Node.self()}, 1000)
   end
 
   def multi_call_request_backup(from_node_name, about_node) do ## get info from other node about own node
@@ -285,27 +285,25 @@ defmodule NetworkHandler do
       node_name = node_name |> String.to_atom()#IO.puts "connecting to node #{node_name}"
       Node.ping(node_name)
       Node.monitor(node_name, true) # monitor this newly connected node
-      
+      #monitor_me_back(Node.self())
       # request backup from newly connected node
       IO.puts "Checking information about #{node_name}"
       net_state = case net_state[node_name] do
         nil -> 
           IO.puts "No information available about #{node_name}"
           {requested_state, _ignored} = multi_call_request_backup(node_name, node_name)
-          net_state = Map.put(net_state, node_name, requested_state[node_name])
           IO.puts "Requested state:"
           IO.inspect requested_state
           IO.puts "My current mapezo"
-          IO.inspect net_state
-          net_state
+          IO.inspect Map.put(net_state, node_name, requested_state[node_name])
+          Map.put(net_state, node_name, requested_state[node_name])
           # request info about node_name to own net_state
         _ ->
           IO.puts "Here you go"
           node_state = List.first(net_state[node_name])
-          net_state = Map.replace(net_state, node_name, [node_state, true])
           IO.inspect net_state[node_name]
-          return_cab_orders(node_name, net_state)
-          net_state
+          return_cab_orders(node_name, Map.replace(net_state, node_name, [node_state, true]))
+          Map.replace(net_state, node_name, [node_state, true])
       end
       multi_call_update_backup(net_state[Node.self()])
     end
