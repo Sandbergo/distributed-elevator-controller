@@ -258,6 +258,8 @@ defmodule NetworkHandler do
     node_state = List.first(net_state[Node.self()])
     net_state = Map.replace(net_state, Node.self(), [node_state, false])
     IO.inspect net_state
+    Enum.each(Node.list(), fn(node) -> 
+      Node.monitor(node, false) end)
     Node.stop()
     pid = Process.spawn(NetworkHandler, :recover_from_error_mode, [Node.self(), net_state], [])
     Process.send_after(pid, :motorstop, 7000)
