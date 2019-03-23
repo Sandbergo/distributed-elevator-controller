@@ -131,6 +131,10 @@ defmodule NetworkHandler do
     GenServer.cast(OrderHandler, {:sync_order_list, ext_order_list})
   end
 
+  def monitor_me_back(node_name) do
+    GenServer.multi_call(NetworkHandler, {:monitor_me_back, Node.self()}, 1000)
+  end
+
   def export_order({:internal_order, order, _chosen_node}) do
     GenServer.cast NetworkHandler, {:internal_order, order}
   end
@@ -203,6 +207,14 @@ defmodule NetworkHandler do
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, light_state)
     {:reply, net_state, net_state}
   end
+
+  def handle_call({:monitor_me_back, node}, _from, net_state) do
+    node_name = node
+    |> to_string() 
+    |> String.to_atom()
+    Node.monitor(node_name, true)
+    {:reply, net_state, net_state}
+  end
   
 
   @doc """
@@ -268,7 +280,6 @@ defmodule NetworkHandler do
     Poller.start_link()
     WatchDog.start_link()
     StateMachine.start_link()
-    
   end
 
   def redistribute_orders(order_list) do
@@ -286,8 +297,8 @@ defmodule NetworkHandler do
   def handle_info({:request_connection, node_name}, net_state) do
     if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
       node_name = node_name |> String.to_atom()#IO.puts "connecting to node #{node_name}"
-      Node.ping(node_name)
       Node.monitor(node_name, true) # monitor this newly connected node
+      Node.ping(node_name)
       #monitor_me_back(Node.self())
       # request backup from newly connected node
       IO.puts "Checking information about #{node_name}"
