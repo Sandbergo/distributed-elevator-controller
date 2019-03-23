@@ -212,6 +212,7 @@ defmodule NetworkHandler do
     IO.puts("find the right elevator for this order")
     
     #Retrieve best cost function
+    IO.puts "Calculate best cost"
     best_cost = Enum.min_by(Map.values(net_state),
      fn(node_state) -> cost_function(node_state, order) end)
 
@@ -231,7 +232,7 @@ defmodule NetworkHandler do
   def handle_cast({:motorstop}, net_state) do
     IO.puts "RESTART REQUIRED"
     
-    redistribute_orders(Node.self(), net_state) # except self?
+    #redistribute_orders(Node.self(), net_state) # except self?
     # kill own process? nope
     {:noreply, net_state}
   end
@@ -265,10 +266,10 @@ defmodule NetworkHandler do
     WatchDog.start_link()
   end
 
-  def redistribute_orders(node_name, net_state) do
-    # active_orders_of_node = net_state[String.to_atom(List.to_string(node_name))].active_orders
-    active_orders_of_node = List.first(net_state[node_name]).active_orders
-    Enum.each(active_orders_of_node, fn(order) ->
+  def redistribute_orders(order_list) do
+    IO.puts "ORDERS TO BE REDISTRIBUTED:"
+    IO.inspect order_list
+    Enum.each(order_list, fn(order) ->
       if order.type != :cab do
         export_order({:internal_order, order, Node.self()})
         #GenServer.cast(NetworkHandler, {:choose_elevator, order})
@@ -279,26 +280,28 @@ defmodule NetworkHandler do
 
   def handle_info({:request_connection, node_name}, net_state) do
     if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
-      #IO.puts "connecting to node #{node_name}"
-      Node.ping(String.to_atom(node_name))
-      Node.monitor(String.to_atom(node_name), true) # monitor this newly connected node
+      node_name = node_name |> String.to_atom()#IO.puts "connecting to node #{node_name}"
+      Node.ping(node_name)
+      Node.monitor(node_name, true) # monitor this newly connected node
       
       # request backup from newly connected node
       IO.puts "Checking information about #{node_name}"
-      case net_state[String.to_atom(node_name)] do
+      case net_state[node_name] do
         nil -> 
           IO.puts "No information available about #{node_name}"
           {requested_state, _ignored} = multi_call_request_backup(node_name, node_name)
-          net_state = Map.put(net_state, String.to_atom(node_name), requested_state[String.to_atom(node_name)])
+          net_state = Map.put(net_state, node_name, requested_state[node_name])
           IO.puts "Requested state:"
           IO.inspect requested_state
-          IO.puts "My current map"
+          IO.puts "My current mapezo"
           IO.inspect net_state
 
           # request info about node_name to own net_state
         _ ->
           IO.puts "Here you go"
-          IO.inspect net_state[String.to_atom(node_name)]
+          node_state = List.first(net_state[node_name])
+          net_state = Map.replace(net_state, node_name, [node_state, true])
+          IO.inspect net_state[node_name]
           return_cab_orders(node_name, net_state)
       end
       multi_call_update_backup(net_state[Node.self()])
@@ -307,20 +310,25 @@ defmodule NetworkHandler do
   end
       
   def handle_info({:nodedown, node_name}, net_state) do
-    active_orders_of_node = List.first(net_state[String.to_atom(node_name)]).active_orders
-    net_state = Map.replace(net_state, node_name, [active_orders_of_node, false])
     IO.puts "Node down"
-    IO.puts "ORDERS TO BE REDISTRIBUTED:"
-    IO.inspect net_state[node_name]
-    redistribute_orders(node_name, net_state)
+    node_state = List.first(net_state[node_name])
+    
+    net_state = Map.replace(net_state, node_name, [node_state, false])
+
+    IO.puts "My current map: "
+    IO.inspect net_state
+
+    active_orders_of_node = node_state.active_orders
+    redistribute_orders(active_orders_of_node)
     {:noreply, net_state}
   end
 
   def return_cab_orders(node_name, net_state) do
-    active_orders_of_node = List.first(net_state[String.to_atom(node_name)]).active_orders
+    active_orders_of_node = List.first(net_state[node_name]).active_orders
+    IO.inspect active_orders_of_node
     Enum.each(active_orders_of_node, fn(order) -> 
       if order.type == :cab do
-        export_order({:external_order, order, String.to_atom(node_name)})
+        export_order({:external_order, order, node_name})
       end
     end)
 
