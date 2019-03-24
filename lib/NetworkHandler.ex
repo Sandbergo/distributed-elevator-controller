@@ -265,8 +265,8 @@ defmodule NetworkHandler do
    
   def test do
     IO.puts "Leggo my eggo"
-    NetworkHandler.start_link()
     DriverInterface.start()
+    NetworkHandler.start_link()
     OrderHandler.start_link()
     Poller.start_link()
     WatchDog.start_link()
