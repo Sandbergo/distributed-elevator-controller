@@ -28,6 +28,7 @@ defmodule Poller do
         GenServer.cast DriverInterface, {:set_order_button_light, button_type, floor, :off }
       end)
     end)
+    DriverInterface.set_door_open_light DriverInterface, :off
     Process.spawn(Poller, :floor_poller, [:between_floors], [:link])
     Process.spawn(Poller, :button_poller, [], [:link])
     {:ok, _mock}
@@ -50,7 +51,7 @@ defmodule Poller do
           1 ->
             set_order(floor, button_type)
             IO.puts "Noticed press: #{button_type} on floor: #{floor}"
-            :timer.sleep(100)  ## DOUBLE SLEEP
+            #:timer.sleep(100)  ## DOUBLE SLEEP
           0 ->
             {:no_orders}
         end
@@ -68,9 +69,9 @@ defmodule Poller do
     GenServer.cast StateMachine, {:at_floor, floor}
   end
 
-  def test do
-    DriverInterface.start()
-    init([])
-    StateMachine.start_link()
-  end
+  #def test do
+  #  DriverInterface.start()
+  #  init([])
+  #  StateMachine.start_link()
+  #end
 end
