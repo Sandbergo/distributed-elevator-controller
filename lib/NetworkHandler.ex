@@ -23,7 +23,7 @@ defmodule NetworkHandler do
   #@offline_sleep 5000
   #@listen_timeout 2000
   @node_dead_time 6000
-  @broadcast {10, 100, 23, 255}#{10,42,0,255} #{10, 100, 23, 255} # {10,24,31,255}
+  @broadcast {255, 255, 255, 255}#{10,42,0,255} #{10, 100, 23, 255} # {10,24,31,255}
   @cookie :penis
 
   def start_link([send_port, recv_port] \\ [@broadcast_port,@receive_port]) do
@@ -231,9 +231,12 @@ defmodule NetworkHandler do
 
   def handle_cast({:motorstop}, net_state) do
     IO.puts "RESTART REQUIRED"
-    System.cmd("kill", ["-l"])
-    #redistribute_orders(Node.self(), net_state) # except self?
-    # kill own process? nope
+    #System.cmd("kill", ["-l"])
+    send(self(), {:kill, "kys"})
+    #IO.puts "time to die"
+    #exit({:shutdown, 1})
+    #IO.puts "dead?"
+    IO.puts "DEAD?"
     {:noreply, net_state}
   end
 
@@ -268,7 +271,11 @@ defmodule NetworkHandler do
     Poller.start_link()
     WatchDog.start_link()
     StateMachine.start_link()
-    
+    receive do
+      {:kill, msg}-> 
+        "Guess I'll die :("
+    end
+    "receiving open for business"
   end
 
   def redistribute_orders(order_list) do

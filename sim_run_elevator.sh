@@ -10,7 +10,7 @@ cd ..
 # compile
 mix compile
 
-# run boy
+# run boy ruuuuuuun
 while ! iex -S mix run -e NetworkHandler.test
 do 
   sleep 5
