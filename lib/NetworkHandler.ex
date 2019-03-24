@@ -3,7 +3,23 @@ defmodule NetworkHandler do
   Module for handling and setting up the Node Network, and communication between nodes
 
   ### State: 
-  * A map with the connected nodes as keys and a backup of the node's elevator state as the respective value.
+  * A map with the connected nodes as keys and a backup of the node's elevator state as the respective value,
+  as well as a boolean value indicating their ability to accept new orders.
+  The entire state for three connected nodes will look like this:
+  %{
+    "elev@10.100.23.197": [
+      %State{active_orders: [], direction: :stop, floor: 0},
+      true
+    ],
+    "elev@10.100.23.233": [
+      %State{active_orders: [], direction: :stop, floor: 1},
+      true
+    ],
+    "elev@10.100.23.253": [
+      %State{active_orders: [], direction: :stop, floor: 1},
+      true
+    ]
+  }
 
   ### Tasks: 
   * Initializes all modules for one computer, broadcasts own IP and listnes, making a Peer-to-peer network 
