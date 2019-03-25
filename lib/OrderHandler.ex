@@ -26,7 +26,6 @@ defmodule OrderHandler do
 
   #---------------------------------CASTS/CALLS-----------------------------------#
 
-
   @doc """
   distribute order from Poller or NetworkHandler, sending hall orders to NetworkHandler if it has not been chosen
   and passing the other orders to own elevator
@@ -56,7 +55,7 @@ defmodule OrderHandler do
   Handle a new order from Poller, add if it is not already in the order list
   """
   def handle_cast({:register_order, floor, button_type}, order_list) do
-    new_order = %Order{type: button_type, floor: floor}
+    new_order = Order.order(button_type, floor)
     order_list = if not Enum.member?(order_list, new_order) do
       sync_order(order_list++[new_order])
       distribute_order(new_order)

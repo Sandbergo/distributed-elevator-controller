@@ -17,31 +17,43 @@ defmodule StateMachine do
   """
   use GenServer
 
-  #--------------------------------INITIALIZATION---------------------------------#
+  @motorstop_timeout WatchDog.get_motorstop_timeout
+  @door_open_timer 3000
 
+  #--------------------------------INITIALIZATION---------------------------------#
   def start_link _mock do
     GenServer.start_link(__MODULE__, :down, [{:name, __MODULE__}])
   end
 
   @doc """
-  drive downwards to closest floor and initialize the state
+  Drive downwards to closest floor and initialize the state
   """
   def init(direction) do
+    IO.puts "Statemachine init"
     start_motor_timer()
+    Process.spawn(StateMachine, :initialize_to_floor, [self()], [])
     DriverInterface.set_motor_direction(DriverInterface, direction)
-    floor = initialize_to_floor()
-    DriverInterface.set_motor_direction(DriverInterface, :stop)
-    state = %State{floor: floor, direction: :stop, active_orders: []}
-    stop_motor_timer()
+    state = receive do
+      {:initialized, floor} ->
+        DriverInterface.set_motor_direction(DriverInterface, :stop)
+        stop_motor_timer()
+        backup_state(State.state_machine(:stop, floor, []))
+        State.state_machine(:stop, floor, [])
+      after
+        @motorstop_timeout+1000 ->
+          IO.puts "Not able to initialize"
+          nil
+    end
     {:ok, state}
   end
 
-  def initialize_to_floor do
+  def initialize_to_floor pid do
     cond do
       is_atom(DriverInterface.get_floor_sensor_state DriverInterface) ->
-        initialize_to_floor()
+        initialize_to_floor(pid)
       true ->
-        DriverInterface.get_floor_sensor_state DriverInterface
+        floor = DriverInterface.get_floor_sensor_state DriverInterface
+        send(pid, {:initialized, floor})
     end
   end
 
@@ -168,15 +180,24 @@ defmodule StateMachine do
   """
   def execute_order_on_floor(state) do
     if should_stop?(state) do
+      Process.send_after(self(), :doors_closed, @door_open_timer)
       DriverInterface.set_motor_direction(DriverInterface, :stop)
+      DriverInterface.set_door_open_light(DriverInterface, :on)
       update_state_direction(:stop)
+      receive do
+        :doors_closed ->
+          IO.puts "Doors closed"
+          DriverInterface.set_door_open_light(DriverInterface, :off)
+        after
+          @door_open_timer*3 ->
+            IO.puts "ERROR"
+            GenServer.cast(NetworkHandler, {:error})
+      end
       Enum.each(state.active_orders, fn(order)->
         if order.floor == state.floor do
-          #IO.puts "Delete this bitch"
           delete_active_order(order)
         end
       end)
-      open_doors(state)
     end
   end
 
@@ -206,10 +227,11 @@ defmodule StateMachine do
   @doc """
   Opens and closes doors and sleeps for the duration
   """
-  def open_doors(state) do
+  def open_doors(pid) do
+    IO.puts "Opening doors"
     DriverInterface.set_door_open_light DriverInterface, :on
-    :timer.sleep(1000) 
     DriverInterface.set_door_open_light DriverInterface, :off
+    send(pid, :doors_closed)
   end
 
   @doc """

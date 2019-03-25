@@ -1,6 +1,7 @@
 defmodule DriverInterface do
   @moduledoc """
-  Module is an interface between elevator server and executable 
+  Module is an interface between elevator server and executable. This module is not written by us, 
+  and thus has little documentation
   
   ### State: 
   * No state

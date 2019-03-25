@@ -20,7 +20,7 @@ defmodule WatchDog do
 
   #--------------------------------INITIALIZATION---------------------------------#
   def start_link _mock do
-    GenServer.start_link(__MODULE__, [nil, %State{}], [{:name, __MODULE__}])
+    GenServer.start_link(__MODULE__, [nil, State.state_machine(:stop, 0, [])], [{:name, __MODULE__}])
   end
 
   def init([overwatch, backup]) do
@@ -42,7 +42,8 @@ defmodule WatchDog do
         watchdog_loop()
       after
         @motorstop_timeout ->
-        send_motorstop()
+          IO.puts "MOTORSTOP"
+          send_motorstop()
     end
   end
 
@@ -104,6 +105,10 @@ defmodule WatchDog do
   end
 
   def send_motorstop do
-    GenServer.cast NetworkHandler, {:motorstop}
+    GenServer.cast NetworkHandler, {:error}
+  end
+
+  def get_motorstop_timeout do
+    @motorstop_timeout
   end
 end

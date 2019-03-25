@@ -22,18 +22,25 @@ defmodule Poller do
     GenServer.start_link(__MODULE__, [], [{:name, __MODULE__}])
   end
 
-  def init _mock do ## REMOVE MOCK?
+  @doc """
+  Initialize by turning off all lights and spawning one process for button polling and one for floor polling
+  """  
+  def init _mock do 
     Enum.each(@floors, fn(floor) ->
       Enum.each(@button_types, fn(button_type)->
         GenServer.cast DriverInterface, {:set_order_button_light, button_type, floor, :off }
       end)
     end)
+    DriverInterface.set_door_open_light(DriverInterface, :off)
     Process.spawn(Poller, :floor_poller, [:between_floors], [:link])
     Process.spawn(Poller, :button_poller, [], [:link])
     {:ok, _mock}
   end
 
-  def floor_poller floor do
+  @doc """
+  Loop and send when a new floor is reached 20 times per second
+  """  
+  defp floor_poller floor do
     new_floor = DriverInterface.get_floor_sensor_state(DriverInterface)
     if new_floor != floor && new_floor != :between_floors do
       DriverInterface.set_floor_indicator(DriverInterface, new_floor)
@@ -43,7 +50,10 @@ defmodule Poller do
     :timer.sleep(50) 
   end
 
-  def button_poller do
+  @doc """
+  Initialize by turning off all lights
+  """  
+  defp button_poller do
     Enum.each(@floors, fn(floor) ->
       Enum.each(@button_types, fn(button_type)->
         case DriverInterface.get_order_button_state(DriverInterface, floor, button_type) do
@@ -60,17 +70,18 @@ defmodule Poller do
     button_poller()
   end
 
-  def set_order floor, button_type do
+  @doc """
+  Cast the registered order to the order Handler
+  """  
+  defp set_order floor, button_type do
     GenServer.cast OrderHandler, {:register_order, floor, button_type}
   end
 
-  def send_floor floor do
+  @doc """
+  Cast the changed floor to the state machine
+  """  
+  defp send_floor floor do
     GenServer.cast StateMachine, {:at_floor, floor}
   end
 
-  def test do
-    DriverInterface.start()
-    init([])
-    StateMachine.start_link()
-  end
 end

@@ -27,7 +27,7 @@ defmodule Overseer do
         Supervisor.init(children, strategy: :one_for_all)
     end
 
-    # -------------------LOCAL --------------------------------#
+    # ---------------------------LOCAL--------------------------------#
     def start_link(send_port, recv_port, elev_port, name) do
         Supervisor.start_link(__MODULE__, [send_port, recv_port, elev_port, name], name: __MODULE__)
     end
@@ -42,7 +42,7 @@ defmodule Overseer do
             WatchDog,
             StateMachine
         ]
-        Supervisor.init(children, strategy: :one_for_all)
+        Supervisor.init(children, strategy: :one_for_all, max_restarts: 100)
     end
 
 end
