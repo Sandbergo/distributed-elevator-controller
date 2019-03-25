@@ -18,8 +18,8 @@ defmodule DriverInterface do
   @state_map  %{:on => 1, :off => 0}
   @direction_map %{:up => 1, :down => 255, :stop => 0}
 
-  def start_link _mock do
-    start_link {127,0,0,1}, 15657
+  def start_link [ip, port]\\[{127,0,0,1}, 15657] do
+    start_link ip, port
   end
 
   def start_link address, port do

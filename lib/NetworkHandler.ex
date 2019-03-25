@@ -23,7 +23,7 @@ defmodule NetworkHandler do
   #@offline_sleep 5000
   #@listen_timeout 2000
   @node_dead_time 6000
-  @broadcast {10, 100, 23, 255}#{10,42,0,255} #{10, 100, 23, 255} # {10,24,31,255}
+  @broadcast {192,168,1,255}#{10, 100, 23, 255}#{10,42,0,255} #{10, 100, 23, 255} # {10,24,31,255}
   @cookie :penis
 
   def start_link([send_port, recv_port] \\ [@broadcast_port,@receive_port]) do
@@ -34,8 +34,6 @@ defmodule NetworkHandler do
   Boot Node with name "elev@ip" and spawn listen and receive processes based on UDP broadcasting
   """
   def init([send_port, recv_port]) do
-    guard = false
-    net_state = %{}
     IO.puts "Booting distributed node"
     name = "#{"elev@"}#{get_my_ip() |> ip_to_string()}"
     case Node.start(String.to_atom(name), :longnames, @node_dead_time) do
@@ -72,13 +70,16 @@ defmodule NetworkHandler do
   end
 
   def init [send_port, recv_port, name] do
-    IO.puts "NetworkHandler init"
+    IO.puts "NetworkHandler init local"
+    boot_node(name, @node_dead_time)
+    Node.set_cookie(Node.self(), @cookie)
+
     {:ok, broadcast_socket} = :gen_udp.open(send_port, [:list, {:active, false}, {:broadcast, true}])
-    node_name = "#{name}#{get_my_ip() |> ip_to_string()}"
-    Node.start(String.to_atom(node_name), :longnames, @node_dead_time)
-    Node.set_cookie(String.to_atom(node_name), @cookie)
-    Process.spawn(__MODULE__, :broadcast_local, [broadcast_socket, node_name], [:link])
+    
+    Process.spawn(__MODULE__, :broadcast_local, [broadcast_socket, to_string(Node.self())], [:link])
+    
     {:ok, listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
+    
     Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
     net_state = %{Node.self() => [%State{}, true]}
     IO.inspect net_state
@@ -98,11 +99,11 @@ defmodule NetworkHandler do
     def test(broadcast_port, receive_port, name, elev_port) do
       IO.puts "Leggo my eggo"
       NetworkHandler.start_link([broadcast_port, receive_port, name])
-      DriverInterface.start({127,0,0,1}, elev_port)
-      OrderHandler.start_link()
-      Poller.start_link()
-      StateMachine.start_link()
-      WatchDog.start_link()
+      DriverInterface.start_link({127,0,0,1}, elev_port)
+      OrderHandler.start_link([])
+      Poller.start_link([])
+      StateMachine.start_link([])
+      WatchDog.start_link([])
     end
   #--------------------------Non-communicative functions----------------------------#
   def cost_function(state, order) do
@@ -255,14 +256,11 @@ defmodule NetworkHandler do
 
   def handle_cast({:motorstop}, net_state) do
     IO.puts "RESTART REQUIRED"
-    node_state = List.first(net_state[Node.self()])
-    net_state = Map.replace(net_state, Node.self(), [node_state, false])
-    IO.inspect net_state
-    Enum.each(Node.list(), fn(node) -> 
-      Node.monitor(node, false) end)
     Node.stop()
-    pid = Process.spawn(NetworkHandler, :recover_from_error_mode, [Node.self(), net_state], [])
-    Process.send_after(pid, :motorstop, 7000)
+    Process.exit(self(), :kill)
+    #pid = Process.spawn(NetworkHandler, :recover_from_error_mode, [Node.self(), net_state], [])
+    #Process.send_after(pid, :motorstop, 7000)
+    #Supervisor.stop(Overseer, :shutdown)
     {:noreply, net_state}
   end
 
@@ -380,8 +378,7 @@ defmodule NetworkHandler do
           end
         end)
       :motorstop ->
-        boot_node("elev", 6000)
-        Node.set_cookie(@cookie)
+        #Process.spawn(Overseer, :start_link, [20088,20089,20001,"elev2"], [])
       after
         10_000 ->
           IO.puts "Resend timeout"
