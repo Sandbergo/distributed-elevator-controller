@@ -37,7 +37,7 @@ defmodule NetworkHandler do
   @broadcast_port 20087
   @broadcast_freq 5000
   @node_dead_time 6000
-  @broadcast {172,20,10,15}#{192,168,1,255}#{10, 100, 23, 255}#{10,42,0,255} #{10, 100, 23, 255} # {10,24,31,255}
+  @broadcast {10,42,0,255}#{192,168,1,255}#{10, 100, 23, 255} #{10, 100, 23, 255} # {10,24,31,255}
   @cookie :cookie
 
   def start_link([send_port, recv_port] \\ [@broadcast_port,@receive_port]) do
@@ -253,7 +253,7 @@ defmodule NetworkHandler do
   @doc """
   An elevator is chosen for the specific order, using the cost function
   """
-  def handle_call({:choose_elevator, order}, _from, net_state) do
+  def handle_cast({:choose_elevator, order}, net_state) do
     IO.puts("find the right elevator for this order")
     IO.puts "This is the current state map"
     IO.inspect net_state
@@ -273,7 +273,7 @@ defmodule NetworkHandler do
     else
         export_order({:external_order, order, chosen_node})
     end
-    {:reply, net_state, net_state}
+    {:noreply, net_state}
   end
 
   @doc """

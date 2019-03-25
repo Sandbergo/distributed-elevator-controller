@@ -18,13 +18,23 @@ defmodule Overseer do
     Process.flag(:trap_exit,true)
     children = [
       {NetworkHandler, [send_port,recv_port]},
-      DriverInterface,
+      {DriverInterface, [{127,0,0,1}, 15657]},
       OrderHandler,
       Poller,
       WatchDog,
       StateMachine
     ]
     Supervisor.init(children, strategy: :one_for_all)
+  end
+
+  def test do
+    Overseer.start_link()
+    loop()
+  end
+
+  def loop do
+    :timer.sleep(10000)
+    loop
   end
 
   # ---------------------------LOCAL--------------------------------#

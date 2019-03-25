@@ -95,25 +95,20 @@ defmodule StateMachine do
   @doc """
   A new order is accepted, the light is set and in case this is the first order, is executed directly
   """
-  def handle_call({:neworder, order}, _from, state) do
+  def handle_cast({:neworder, order}, state) do
     IO.puts "new order"
     IO.inspect order
-    state = if order not in state.active_orders do
-      state = %{state | active_orders: state.active_orders ++ [order]}
-      backup_state(state)
-      sync_order_lights(order, :on)
-      DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
-      IO.puts "length of active orders:"
-      IO.inspect length(state.active_orders)
-      if length(state.active_orders)==1 do
-        start_motor_timer()
-        execute_order(state)
-      end
-      state
-    else 
-      state
+    state = %{state | active_orders: state.active_orders ++ [order]}
+    backup_state(state)
+    sync_order_lights(order, :on)
+    DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
+    IO.puts "length of active orders:"
+    IO.inspect length(state.active_orders)
+    if length(state.active_orders)==1 do
+      start_motor_timer()
+      execute_order(state)
     end
-    {:reply, state, state}
+    {:noreply, state}
   end
 
   @doc """

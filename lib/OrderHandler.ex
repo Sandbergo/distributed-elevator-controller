@@ -33,11 +33,11 @@ defmodule OrderHandler do
   def distribute_order(order, chosen \\ false) do
     cond do
       order.type == :cab ->
-        GenServer.call(StateMachine, {:neworder, order}, 10000)
+        GenServer.cast(StateMachine, {:neworder, order})
       chosen ->
-        GenServer.call(StateMachine, {:neworder, order}, 10000)
+        GenServer.cast(StateMachine, {:neworder, order})
       true -> 
-        GenServer.call(NetworkHandler, {:choose_elevator, order}, 10000)
+        GenServer.cast(NetworkHandler, {:choose_elevator, order})
     end
   end
 
@@ -56,9 +56,9 @@ defmodule OrderHandler do
   """
   def handle_cast({:register_order, floor, button_type}, order_list) do
     new_order = Order.order(button_type, floor)
-    distribute_order(new_order)
     order_list = if not Enum.member?(order_list, new_order) do
       sync_order(order_list++[new_order])
+      distribute_order(new_order)
       order_list ++ [new_order]
     else                 
       order_list         
