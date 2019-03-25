@@ -181,6 +181,16 @@ defmodule NetworkHandler do
     GenServer.multi_call([from_node_name], NetworkHandler, {:request_backup, about_node}, 1000)
   end
 
+  def sync_lights_after_reconnection(for_node, net_state) do
+    Enum.each(Node.list--[for_node], fn(node) ->
+      Enum.each(List.first(net_state[node]).active_orders, fn(order)->
+          if order.type != :cab do
+            GenServer.multi_call([for_node], {:sync_elev_lights, order, :on})
+          end
+      end)
+    end)
+  end
+
   #------------------------------HANDLE CASTS/CALLS-------------------------------#
 
   @doc """
@@ -350,8 +360,8 @@ defmodule NetworkHandler do
     if node_name not in ([Node.self | [:nonode@nohost | Node.list]]|> Enum.map(&(to_string(&1)))) do
       node_name = node_name |> String.to_atom()#IO.puts "connecting to node #{node_name}"
       
-      Node.monitor(node_name, true) # monitor this newly connected node
       Node.ping(node_name)
+      Node.monitor(node_name, true) # monitor this newly connected node
       monitor_me_back(node_name)
       # request backup from newly connected node
       IO.puts "Checking information about #{node_name}"
@@ -369,6 +379,7 @@ defmodule NetworkHandler do
           IO.puts "Here you go"
           node_state = List.first(net_state[node_name])
           IO.inspect net_state[node_name]
+          sync_lights_after_reconnection(node_name, net_state)
           backup = Map.replace(net_state, node_name, [node_state, true])
           pid = Process.spawn(NetworkHandler, :recover_from_error_mode, [node_name, backup], [])
           Process.send_after(pid, :send_cab_orders, 3000)
@@ -378,6 +389,7 @@ defmodule NetworkHandler do
     end
     {:noreply, net_state}
   end
+
       
   def handle_info({:nodedown, node_name}, net_state) do
     net_state = case length(Node.list()) do

@@ -18,7 +18,7 @@ defmodule StateMachine do
   use GenServer
 
   @motorstop_timeout WatchDog.get_motorstop_timeout
-  @door_open_timer 3000
+  @door_open_timer 1000
 
   #--------------------------------INITIALIZATION---------------------------------#
   def start_link _mock do
