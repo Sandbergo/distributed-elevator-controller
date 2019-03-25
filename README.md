@@ -14,7 +14,7 @@ The elevator project, specified in the [specification](SPECIFICATION.md), is to 
 How to use
 ---
 
-Clone the repo and run the bash scripts in /bin, [for elevator](/bin/run_elevator.sh) and [for simulator](/bin/sim_run_elevator.sh). Changes in NetworkHandler for IP-adresses etc. may be needed.
+Clone the repo and run the bash scripts in /bin, [for elevator](run_elevator.sh) and [for simulator](sim_run_elevator.sh). Changes in NetworkHandler for IP-adresses etc. may be needed.
 
 
 Design
@@ -28,8 +28,6 @@ Documentation
 
 Documentation is compiled using HexDocs, you can use a browser to read it, starting from the [main page](/doc/index.html)
 
-
-Contributors:
+Contributors
 ---
- - Lars Sandberg ([Sandbergo](https://github.com/sandbergo))
- - Sjur Wroldsen ([Sjurinho](https://github.com/sjurinho))
+The Simulator and DriverInterface is given as part of the assignment, and some functions are courtesy of student assistant @jostlowe (thank you), this is mentioned in the documentation for the relevant functions. Everything else is written by us.

@@ -99,14 +99,20 @@ defmodule StateMachine do
     {:noreply, state}
   end
 
+  @doc """
+  A new floor is reached, change state and reset motorstop timer
+  """
   def handle_cast({:at_floor, floor}, state) do
     state = %{state | floor: floor}
     backup_state(state)
-    reset_motor_timer() ## WHAT?
+    reset_motor_timer()
     execute_order_on_floor(state)
     {:noreply, state}
   end
 
+  @doc """
+  A order is executed, turn lights off and communicate this to other modules
+  """
   def handle_cast({:order_executed, order}, state) do
     state = %{state | active_orders: Enum.reject(state.active_orders, fn(order) -> order.floor == state.floor end)}
     backup_state(state)
@@ -116,6 +122,9 @@ defmodule StateMachine do
     {:noreply, state}
   end
 
+  @doc """
+  update the direction state
+  """
   def handle_cast({:update_direction, direction}, state) do
     state = %{state | direction: direction}
     backup_state(state)
@@ -130,9 +139,9 @@ defmodule StateMachine do
   #-------------------------------HELPER FUNCTIONS--------------------------------#
 
   @doc """
-  function for controlling elevator direction
+  function for controlling elevator direction based on orders 
   """
-  def execute_order(state) do ## TOO COMPLICATED, WHY FIRST?
+  def execute_order(state) do
     order = List.first(state.active_orders)
     if order != nil  do
       direction = cond do
@@ -194,18 +203,25 @@ defmodule StateMachine do
     end
   end
 
+  @doc """
+  Opens and closes doors and sleeps for the duration
+  """
   def open_doors(state) do
     DriverInterface.set_door_open_light DriverInterface, :on
-    :timer.sleep(3000) ## alternative
+    :timer.sleep(1000) 
     DriverInterface.set_door_open_light DriverInterface, :off
-    #execute_order(state)
-    true ## WHAT?
-end
+  end
 
+  @doc """
+  Function courtesy of @Jostlowe
+  """
   def order_type_to_int(elevator_order) do
     %{hall_up: 1, cab: 0, hall_down: -1}[elevator_order.type]
   end
 
+  @doc """
+  Function courtesy of @Jostlowe
+  """
   def direction_to_int(elevator_state) do
     %{up: 1, stop: 0, down: -1}[elevator_state.direction]
   end
@@ -213,6 +229,10 @@ end
 end
 
 defmodule State do
+  @moduledoc """
+  A struct for the State of the elevator, direction and (last registered) floor
+  Basis courtesy of @jostlowe, modified by us.
+  """
   @valid_dirns [:up, :stop, :down]
   defstruct floor: 0, direction: :stop, active_orders: []
   

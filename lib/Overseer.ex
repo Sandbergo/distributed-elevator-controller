@@ -1,6 +1,7 @@
 defmodule Overseer do
     @moduledoc """
-    Keeps track and restarts entire program upon request or crash
+    A Supervisor that keeps track and restarts entire program upon request or crash, using the one_for_all
+    strategy, as well as being the entry point for the entire program
     """
     use Supervisor
     @receive_port 20086
@@ -9,8 +10,12 @@ defmodule Overseer do
     def start_link() do
         Supervisor.start_link(__MODULE__, [@broadcast_port, @receive_port], name: __MODULE__)
     end
-    
+
+    @doc """
+    Initialization starting all modules, calling the relevant 
+    """
     def init([send_port, recv_port]) do
+        Process.flag(:trap_exit,true)
         children = [
             {NetworkHandler, [send_port,recv_port]},
             DriverInterface,
@@ -21,13 +26,7 @@ defmodule Overseer do
         ]
         Supervisor.init(children, strategy: :one_for_all)
     end
-    def test do
-        {:ok, pid} = start_link()
-        receive do
-            :restart ->
-                Supervisor.restart_child(Overseer, NetworkHandler)
-        end
-    end
+
     # -------------------LOCAL --------------------------------#
     def start_link(send_port, recv_port, elev_port, name) do
         Supervisor.start_link(__MODULE__, [send_port, recv_port, elev_port, name], name: __MODULE__)

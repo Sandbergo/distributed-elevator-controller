@@ -3,7 +3,23 @@ defmodule NetworkHandler do
   Module for handling and setting up the Node Network, and communication between nodes
 
   ### State: 
-  * A map with the connected nodes as keys and a backup of the node's elevator state as the respective value.
+  * A map with the connected nodes as keys and a backup of the node's elevator state as the respective value,
+  as well as a boolean indicating whether the node is ready to receive orders
+   The entire state for three connected nodes will look like this:
+  %{
+    "elev@10.100.23.197": [
+      %State{active_orders: [], direction: :stop, floor: 0},
+      true
+    ],
+    "elev@10.100.23.233": [
+      %State{active_orders: [], direction: :stop, floor: 1},
+      true
+    ],
+    "elev@10.100.23.253": [
+      %State{active_orders: [], direction: :stop, floor: 1},
+      true
+    ]
+  }
 
   ### Tasks: 
   * Initializes all modules for one computer, broadcasts own IP and listnes, making a Peer-to-peer network 
@@ -20,11 +36,9 @@ defmodule NetworkHandler do
   @receive_port 20086
   @broadcast_port 20087
   @broadcast_freq 5000
-  #@offline_sleep 5000
-  #@listen_timeout 2000
   @node_dead_time 6000
   @broadcast {192,168,1,255}#{10, 100, 23, 255}#{10,42,0,255} #{10, 100, 23, 255} # {10,24,31,255}
-  @cookie :penis
+  @cookie :cookie
 
   def start_link([send_port, recv_port] \\ [@broadcast_port,@receive_port]) do
     GenServer.start_link(__MODULE__, [send_port, recv_port], [{:name, __MODULE__}])
@@ -69,8 +83,10 @@ defmodule NetworkHandler do
     GenServer.start_link(__MODULE__, [send_port, recv_port, name], [{:name, __MODULE__}])
   end
 
+  @doc """
+  Alternative init for running on a single computer
+  """
   def init [send_port, recv_port, name] do
-    IO.puts "NetworkHandler init local"
     boot_node(name, @node_dead_time)
     Node.set_cookie(Node.self(), @cookie)
 
@@ -93,34 +109,12 @@ defmodule NetworkHandler do
     :timer.sleep(@broadcast_freq)
     broadcast_local(socket, name)
   end
-
-    # -----------------LOCAL TEST----------------#
-
-    def test(broadcast_port, receive_port, name, elev_port) do
-      IO.puts "Leggo my eggo"
-      NetworkHandler.start_link([broadcast_port, receive_port, name])
-      DriverInterface.start_link({127,0,0,1}, elev_port)
-      OrderHandler.start_link([])
-      Poller.start_link([])
-      StateMachine.start_link([])
-      WatchDog.start_link([])
-    end
-  #--------------------------Non-communicative functions----------------------------#
-  def cost_function(state, order) do
-    IO.inspect state
-    cost = if List.last(state) do
-      length(List.first(state).active_orders) + abs(distance_to_order(order, List.first(state)))
-    else
-      100000
-    end
-  end
-
-  def distance_to_order(elevator_order, elevator_state) do
-    elevator_order.floor - elevator_state.floor
-  end
+ 
   #--------------------------Network functions and node connections----------------------------#
+  @doc """
+  Continously broadcasting own name with UDP
+  """
   def broadcast_self(socket, recv_port, name) do
-    #IO.puts "broadcasting to my dudes"
     :gen_udp.send(socket, @broadcast, recv_port, name)
     :timer.sleep(@broadcast_freq)
     broadcast_self(socket, recv_port, name)
@@ -132,9 +126,9 @@ defmodule NetworkHandler do
     GenServer.cast(OrderHandler, {:sync_order_list, ext_order_list})
   end
 
-  def single_elevator_mode() do
-    GenServer.cast(NetworkHandler, {:lost_network})
-  end
+  #def single_elevator_mode() do
+  #  GenServer.cast(NetworkHandler, {:lost_network})
+  #end
 
   def monitor_me_back(node_name) do
     GenServer.multi_call([node_name], NetworkHandler, {:monitor_me_back, Node.self()}, 1000)
@@ -156,27 +150,18 @@ defmodule NetworkHandler do
     GenServer.multi_call(Node.list(), NetworkHandler, {:update_backup, backup, Node.self()}, 1000)
   end
 
-  def multi_call_request_backup(from_node_name, about_node) do ## get info from other node about own node
+  @doc """
+  Get info about a node in  another node's state map
+  """
+  def multi_call_request_backup(from_node_name, about_node) do
     GenServer.multi_call([from_node_name], NetworkHandler, {:request_backup, about_node}, 1000)
   end
 
-  def multi_call_request_order_rank(order) do
-    GenServer.multi_call(Node.list(), NetworkHandler, {:request_order_rank, order}, 1000)
-  end
-
   #------------------------------HANDLE CASTS/CALLS-------------------------------#
-  """
-  def handle_cast {:lost_network}, net_state do
-    IO.puts("Disconnected from network, single elevator mode activated")
-    IO.inspect net_state
-    {:noreply, net_state}
-  end
-  """
 
   def handle_cast({:sync_order_lists, order_list}, net_state) do
     synchronize_order_lists(order_list)
     {:noreply, net_state}
-    #multicast
   end
 
   def handle_cast({:send_state_backup, backup}, net_state)  do
@@ -205,8 +190,6 @@ defmodule NetworkHandler do
       _ -> 
         net_state[about_node]
     end
-    IO.puts "Here you have my backup"
-    IO.inspect requested_state
     {:reply, requested_state, net_state}
   end
 
@@ -245,10 +228,8 @@ defmodule NetworkHandler do
     {chosen_node, _node_state} = List.keyfind(Map.to_list(net_state), best_cost, 1)
 
     if chosen_node == Node.self() do
-        IO.puts "I've got it"
         export_order({:internal_order, order, chosen_node})
     else
-        IO.puts "Send that shit"
         export_order({:external_order, order, chosen_node})
     end
     {:noreply, net_state}
@@ -258,18 +239,11 @@ defmodule NetworkHandler do
     IO.puts "RESTART REQUIRED"
     Node.stop()
     Process.exit(self(), :kill)
-    #pid = Process.spawn(NetworkHandler, :recover_from_error_mode, [Node.self(), net_state], [])
-    #Process.send_after(pid, :motorstop, 7000)
-    #Supervisor.stop(Overseer, :shutdown)
     {:noreply, net_state}
   end
 
   def handle_call({:update_backup, backup, from_node}, _from, net_state) do
-    IO.puts "Incoming backup"
-    IO.inspect backup
     net_state = Map.put(net_state, from_node, backup)
-    IO.puts "My current map"
-    IO.inspect net_state
     {:reply, net_state, net_state}
   end
 
@@ -280,37 +254,30 @@ defmodule NetworkHandler do
 
   def handle_call({:external_order, order}, _from, net_state) do
     OrderHandler.distribute_order(order, true)
-    IO.puts "Incoming order: "
-    IO.inspect order
     {:reply, net_state, net_state}
   end
 
   #-------------------------------HELPER FUNCTIONS--------------------------------#
    
-  def test do
-    IO.puts "Leggo my eggo"
-    """
-    Overseer.start_link()
-    NetworkHandler.start_link()
-    DriverInterface.start()
-    OrderHandler.start_link()
-    Poller.start_link()
-    WatchDog.start_link()
-    StateMachine.start_link()
-    """
-    Overseer.start_link
-  end
-
-  def redistribute_orders(order_list) do
-    IO.puts "ORDERS TO BE REDISTRIBUTED:"
-    IO.inspect order_list
+  defp redistribute_orders(order_list) do
     Enum.each(order_list, fn(order) ->
       if order.type != :cab do
         export_order({:internal_order, order, Node.self()})
-        #GenServer.cast(NetworkHandler, {:choose_elevator, order})
       end
     end)
-    
+  end
+
+  defp cost_function(state, order) do
+    IO.inspect state
+    cost = if List.last(state) do
+      length(List.first(state).active_orders) + abs(distance_to_order(order, List.first(state)))
+    else
+      100000
+    end
+  end
+
+  defp distance_to_order(elevator_order, elevator_state) do
+    elevator_order.floor - elevator_state.floor
   end
 
   def handle_info({:request_connection, node_name}, net_state) do
@@ -349,7 +316,6 @@ defmodule NetworkHandler do
   def handle_info({:nodedown, node_name}, net_state) do
     net_state = case length(Node.list()) do
       0 -> 
-        IO.puts "Mr.Lonely"
         %{Node.self() => net_state[Node.self()]}
       _->
         IO.puts "Node down"
@@ -386,7 +352,6 @@ defmodule NetworkHandler do
   end
 
   def listen(socket, network_handler_pid) do
-    #IO.puts "STOP, collaborate and listen"
     case :gen_udp.recv(socket, 0, 3*@broadcast_freq) do
       {:ok, {_ip,_port,node_name}} ->
         node_name = to_string(node_name)
@@ -395,19 +360,18 @@ defmodule NetworkHandler do
       {:error, reason} ->
         IO.inspect reason
         IO.puts "I am so lonely"
-        #single_elevator_mode()
         listen(socket,network_handler_pid)
-        #Reset node?
     end
   end
 
       @doc """
+  Courtesy of @jostlowe
   Returns (hopefully) the ip address of your network interface.
   ## Examples
       iex> NetworkStuff.get_my_ip
       {10, 100, 23, 253}
   """
-  def get_my_ip do
+  defp get_my_ip do
     {:ok, socket} = :gen_udp.open(5678, [active: false, broadcast: true])
     :ok = :gen_udp.send(socket, @broadcast, 5678, "test packet")
     ip = case :gen_udp.recv(socket, 100, 1000) do
@@ -419,42 +383,14 @@ defmodule NetworkHandler do
   end
 
   @doc """
+  Courtesy of @jostlowe
   formats an ip address on tuple format to a bytestring
   ## Examples
       iex> NetworkStuff.ip_to_string {10, 100, 23, 253}
       '10.100.23.253'
   """
-  def ip_to_string ip do
+  defp ip_to_string ip do
     :inet.ntoa(ip) |> to_string()
-  end
-
-  @doc """
-  Returns all nodes in the current cluster. Returns a list of nodes or an error message
-  ## Examples
-      iex> NetworkStuff.all_nodes
-      [:'heis@10.100.23.253', :'heis@10.100.23.226']
-      iex> NetworkStuff.all_nodes
-      {:error, :node_not_running}
-  """
-
-  def all_nodes do
-    case [Node.self | Node.list] do
-      [:nonode@nohost] -> {:error, :node_not_running}
-      nodes -> nodes
-    end
-  end
-
-  @doc """
-  boots a node with a specified tick time. node_name sets the node name before @. The IP-address is
-  automatically imported
-      iex> NetworkStuff.boot_node "frank"
-      {:ok, #PID<0.12.2>}
-      iex(frank@10.100.23.253)> _
-  """
-  def boot_node(node_name, tick_time \\ 15000) do
-    ip = get_my_ip() |> ip_to_string()
-    full_name = node_name <> "@" <> ip
-    Node.start(String.to_atom(full_name), :longnames, tick_time)
   end
 
 end
