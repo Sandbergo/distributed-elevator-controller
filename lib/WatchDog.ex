@@ -111,4 +111,5 @@ defmodule WatchDog do
   def get_motorstop_timeout do
     @motorstop_timeout
   end
+
 end

@@ -6,21 +6,21 @@ Real Time Programming, NTNU Spring 2019
 Introduction
 ---
 
-The complete code for the Elevator Project in TTK4145, Real Time Programming, NTNU Spring 2019, as well as solutions to the exercises. 
+The complete code for the Elevator Project in TTK4145, Real Time Programming, NTNU Spring 2019.
 
 The elevator project, specified in the [specification](SPECIFICATION.md), is to create a fault-tolerant distributed  system of multiple elevators cooperating to provide a seemless user experience, even with packet loss, power outages, crashes and loss of network connectivity.
 
 
-How to use
+How to run
 ---
 
-Clone the repo and run the bash scripts in /bin, [for elevator](run_elevator.sh) and [for simulator](sim_run_elevator.sh). Changes in NetworkHandler for IP-adresses etc. may be needed.
+Relies on Elixir 1.8.1 and Erlang/OTP 20. Clone the repo and run the bash scripts [for elevator](run_elevator.sh) and [for simulator](sim_run_elevator.sh). Changes in NetworkHandler for IP-adresses etc. may be needed.
 
 
 Design
 ---
 
-The code is written in Elixir and uses prominently the Node and GenServer libraries to communicate between the network and modules, respectively. The network is peer-to-peer based, and uses UDP for connecting to nodes and TCP for passing messages. 
+The code is written in Elixir and uses prominently the Node and GenServer libraries to communicate between the network and modules, respectively. The network is peer-to-peer based, and uses UDP for connecting to nodes and TCP for passing messages. The system consists of the modules DriverInterface, Poller, StateMachine, OrderHandler, WatchDog, Overseer and NetworkHandler. All communication between nodes is executed in the NetworkHandler.
 
 
 Documentation

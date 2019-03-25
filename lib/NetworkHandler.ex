@@ -250,11 +250,10 @@ defmodule NetworkHandler do
     {:reply, net_state, net_state}
   end
   
-
   @doc """
   An elevator is chosen for the specific order, using the cost function
   """
-  def handle_cast({:choose_elevator, order}, net_state) do
+  def handle_call({:choose_elevator, order}, _from, net_state) do
     IO.puts("find the right elevator for this order")
     IO.puts "This is the current state map"
     IO.inspect net_state
@@ -274,7 +273,7 @@ defmodule NetworkHandler do
     else
         export_order({:external_order, order, chosen_node})
     end
-    {:noreply, net_state}
+    {:reply, net_state, net_state}
   end
 
   @doc """
@@ -287,16 +286,25 @@ defmodule NetworkHandler do
     {:noreply, net_state}
   end
 
+  @doc """
+  Handle a request to update own backup about another node
+  """
   def handle_call({:update_backup, backup, from_node}, _from, net_state) do
     net_state = Map.put(net_state, from_node, backup)
     {:reply, net_state, net_state}
   end
 
+  @doc """
+  Alternative init for running on a single computer
+  """
   def handle_cast({:internal_order, order}, net_state) do
     OrderHandler.distribute_order(order, true)
     {:noreply, net_state}
   end
 
+  @doc """
+  Handle call for receiving a order from external node to be assigned to own state machine
+  """
   def handle_call({:external_order, order}, _from, net_state) do
     OrderHandler.distribute_order(order, true)
     {:reply, net_state, net_state}
@@ -304,6 +312,9 @@ defmodule NetworkHandler do
 
   #-------------------------------HELPER FUNCTIONS--------------------------------#
    
+  @doc """
+  Iterate through an order list and send all orders to own state machine
+  """
   defp redistribute_orders(order_list) do
     Enum.each(order_list, fn(order) ->
       if order.type != :cab do
@@ -312,7 +323,11 @@ defmodule NetworkHandler do
     end)
   end
 
-  defp cost_function(state, order) do
+  @doc """
+  Cost function for assigning a cost for an elevator to execute an order,
+  considering both the distance to the order and the number of orders already assigned
+  """
+  defp cost_function(state, order) when state != :not_valid do
     IO.inspect state
     if List.last(state) do
       3*length(List.first(state).active_orders) + abs(distance_to_order(order, List.first(state)))
@@ -320,7 +335,13 @@ defmodule NetworkHandler do
       100000
     end
   end
+  defp cost_function(state, order) when state == :not_valid do
+    10000000
+  end
 
+  @doc """
+  Calculates the distance to the order
+  """
   defp distance_to_order(elevator_order, elevator_state) do
     elevator_order.floor - elevator_state.floor
   end
@@ -379,6 +400,9 @@ defmodule NetworkHandler do
     {:noreply, net_state}
   end
 
+  @doc """
+  Handling error CHANGE 
+  """
   def recover_from_error_mode(node_name, net_state) do
     receive do
       :send_cab_orders -> 
@@ -398,7 +422,8 @@ defmodule NetworkHandler do
   end
 
   @doc """
-  Continously listen for messages broadcasted, 
+  Continously listen for messages broadcasted, request connection to the node with the name
+  received
   """  
   def listen(socket, network_handler_pid) do
     case :gen_udp.recv(socket, 0, 3*@broadcast_freq) do

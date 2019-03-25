@@ -40,7 +40,7 @@ defmodule Poller do
   @doc """
   Loop and send when a new floor is reached 20 times per second
   """  
-  defp floor_poller floor do
+  def floor_poller floor do
     new_floor = DriverInterface.get_floor_sensor_state(DriverInterface)
     if new_floor != floor && new_floor != :between_floors do
       DriverInterface.set_floor_indicator(DriverInterface, new_floor)
@@ -53,7 +53,7 @@ defmodule Poller do
   @doc """
   Initialize by turning off all lights
   """  
-  defp button_poller do
+  def button_poller do
     Enum.each(@floors, fn(floor) ->
       Enum.each(@button_types, fn(button_type)->
         case DriverInterface.get_order_button_state(DriverInterface, floor, button_type) do
