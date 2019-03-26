@@ -11,4 +11,4 @@ gnome-terminal -x ~/.cargo/bin/ElevatorServer & disown
 mix compile
 
 # run
-iex -S mix run -e Overseer.start_link
+iex -S mix run -e Overseer.test
