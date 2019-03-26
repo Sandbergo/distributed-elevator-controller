@@ -23,6 +23,9 @@ defmodule WatchDog do
     GenServer.start_link(__MODULE__, [nil, State.state_machine(:stop, 0, [])], [{:name, __MODULE__}])
   end
 
+  @doc """
+  Initialize by sending backup
+  """
   def init([overwatch, backup]) do
     backup = %{backup | floor: DriverInterface.get_floor_sensor_state(DriverInterface)}
     {:ok, [overwatch, backup]}

@@ -42,7 +42,6 @@ defmodule StateMachine do
       after
         @motorstop_timeout+10 ->
           IO.puts "Not able to initialize"
-          #:not_valid
           State.state_machine(:stop, 0, [])
     end
     {:ok, state}
@@ -87,7 +86,7 @@ defmodule StateMachine do
 
   def sync_order_lights(order, light_state) do
     if order.type != :cab do
-      GenServer.cast(NetworkHandler, {:sync_lights, order, light_state})
+      GenServer.cast(NetworkHandler, {:sync_elev_lights_externally, order, light_state})
     end
   end
 
@@ -97,14 +96,10 @@ defmodule StateMachine do
   A new order is accepted, the light is set and in case this is the first order, is executed directly
   """
   def handle_cast({:neworder, order}, state) do
-    IO.puts "new order"
-    IO.inspect order
     state = %{state | active_orders: state.active_orders ++ [order]}
     backup_state(state)
     sync_order_lights(order, :on)
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
-    IO.puts "length of active orders:"
-    IO.inspect length(state.active_orders)
     if length(state.active_orders)==1 do
       start_motor_timer()
       execute_order(state)
@@ -142,10 +137,6 @@ defmodule StateMachine do
     state = %{state | direction: direction}
     backup_state(state)
     {:noreply, state}
-  end
-
-  def handle_call({:request_backup},_from, state) do
-    {:reply, state, state}
   end
 
 
@@ -187,7 +178,6 @@ defmodule StateMachine do
       update_state_direction(:stop)
       receive do
         :doors_closed ->
-          IO.puts "Doors closed"
           DriverInterface.set_door_open_light(DriverInterface, :off)
         after
           @door_open_timer*3 ->
@@ -205,34 +195,32 @@ defmodule StateMachine do
   @doc """
   Logic for deciding whether the elevator should stop at that specific floor
   """
-  def should_stop?(state) do ## CLEANUP REQUIRED
+  def should_stop?(state) do 
     cond do
       state.direction == :stop ->
         true
+
+      # Checking if there is another order with the same direction or cab on the floor
       Enum.any?(state.active_orders, fn(other_order) ->
       other_order.floor == state.floor and
       (order_type_to_int(other_order) == direction_to_int(state) or
       other_order.type == :cab) end) ->
         true
+
+      # Checking whether there are orders better suited to be executed first
       Enum.any?(state.active_orders, fn(other_order) ->
       other_order.floor == state.floor + direction_to_int(state) end) ->
         false
+      
+      # Lastly, if there are orders on the floor that are in the opposite direction
       Enum.any?(state.active_orders, fn(other_order) ->
       other_order.floor == state.floor end) ->
         true
+
+      # Else, there are no orders to be executed here
       true ->
         false
     end
-  end
-
-  @doc """
-  Opens and closes doors and sleeps for the duration
-  """
-  def open_doors(pid) do
-    IO.puts "Opening doors"
-    DriverInterface.set_door_open_light DriverInterface, :on
-    DriverInterface.set_door_open_light DriverInterface, :off
-    send(pid, :doors_closed)
   end
 
   @doc """

@@ -5,7 +5,7 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.19.3">
-    <title>WatchDog — Elevator v1.0.0</title>
+    <title>Overseer — Elevator v1.0.0</title>
     <link rel="stylesheet" href="dist/html-399e30b9b028e3059575.css" />
     <script src="dist/sidebar_items-039db8312e.js"></script>
     <script async src="dist/html-399e30b9b028e3059575.js"></script>
@@ -59,44 +59,12 @@ Elevator      </h1>
 
       <h1>
         <small class="visible-xs">Elevator v1.0.0</small>
-WatchDog              </h1>
+Overseer              </h1>
 
 
         <section id="moduledoc">
-<p>Module for backing up the state of an individual elevator and updating the NetworkHandler when this state changes, 
-and sending a request to the NetworkHandler.
-If the elevator has become inactive for more than 5 seconds, e.g. because of a motor stop.</p>
-<h3 id="module-state" class="section-heading">
-  <a href="#module-state" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
-  State:
-</h3>
-
-<ul>
-<li>No state
-</li>
-</ul>
-<h3 id="module-tasks" class="section-heading">
-  <a href="#module-tasks" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
-  Tasks:
-</h3>
-
-<ul>
-<li>Send elevator state info to NetworkHandler
-</li>
-<li>Detect failiure to complete active orders for elevator
-</li>
-</ul>
-<h3 id="module-communication" class="section-heading">
-  <a href="#module-communication" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
-  Communication:
-</h3>
-
-<ul>
-<li>Sends to: NetworkHandler
-</li>
-<li>Receives from: StateMachine
-</li>
-</ul>
+<p>A Supervisor that keeps track and restarts entire program upon request or crash, using the one_for_all
+strategy, as well as being the entry point for the entire program</p>
         </section>
 
         <section id="summary" class="details-list">
@@ -120,47 +88,29 @@ If the elevator has become inactive for more than 5 seconds, e.g. because of a m
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#get_motorstop_timeout/0">get_motorstop_timeout()</a>
-  </div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#handle_cast/2">handle_cast(msg, state)</a>
-  </div>
-    <div class="summary-synopsis"><p>Handles a external override of backup state</p>
-</div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="#init/1">init(list)</a>
   </div>
-    <div class="summary-synopsis"><p>Initialize by sending backup</p>
+    <div class="summary-synopsis"><p>Initialization starting all modules under a Supervisor with one_for_all strategy</p>
 </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#send_backup/1">send_backup(backup)</a>
+    <a href="#loop/0">loop()</a>
   </div>
-    <div class="summary-synopsis"><p>Sends backup of coupled elevator to NetworkHandler</p>
+    <div class="summary-synopsis"><p>loop to keep executable running</p>
 </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#send_motorstop/0">send_motorstop()</a>
+    <a href="#main/0">main()</a>
   </div>
+    <div class="summary-synopsis"><p>Entry point for running entire program, starts Overseer which subsequently starts all other modules</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#start_link/1">start_link(mock)</a>
+    <a href="#start_link/0">start_link()</a>
   </div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#watchdog_loop/0">watchdog_loop()</a>
-  </div>
-    <div class="summary-synopsis"><p>Will send an error message to NetworkHandler if it is initialized and receives no sign of life
-within a set time</p>
-</div>
 </div>
   </div>
         </section>
@@ -186,29 +136,6 @@ Functions          </h1>
 <p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="get_motorstop_timeout/0">
-    <div class="detail-header">
-    <a href="#get_motorstop_timeout/0" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature">get_motorstop_timeout()</span>
-          </div>
-  <section class="docstring">
-  </section>
-</section>
-<section class="detail" id="handle_cast/2">
-    <div class="detail-header">
-    <a href="#handle_cast/2" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature">handle_cast(msg, state)</span>
-          </div>
-  <section class="docstring">
-<p>Handles a external override of backup state</p>
-  </section>
-</section>
 <section class="detail" id="init/1">
     <div class="detail-header">
     <a href="#init/1" class="detail-link" title="Link to this function">
@@ -218,54 +145,42 @@ Functions          </h1>
     <h1 class="signature">init(list)</span>
           </div>
   <section class="docstring">
-<p>Initialize by sending backup</p>
+<p>Initialization starting all modules under a Supervisor with one_for_all strategy</p>
   </section>
 </section>
-<section class="detail" id="send_backup/1">
+<section class="detail" id="loop/0">
     <div class="detail-header">
-    <a href="#send_backup/1" class="detail-link" title="Link to this function">
+    <a href="#loop/0" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">send_backup(backup)</span>
+    <h1 class="signature">loop()</span>
           </div>
   <section class="docstring">
-<p>Sends backup of coupled elevator to NetworkHandler </p>
+<p>loop to keep executable running</p>
   </section>
 </section>
-<section class="detail" id="send_motorstop/0">
+<section class="detail" id="main/0">
     <div class="detail-header">
-    <a href="#send_motorstop/0" class="detail-link" title="Link to this function">
+    <a href="#main/0" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">send_motorstop()</span>
+    <h1 class="signature">main()</span>
           </div>
   <section class="docstring">
+<p>Entry point for running entire program, starts Overseer which subsequently starts all other modules</p>
   </section>
 </section>
-<section class="detail" id="start_link/1">
+<section class="detail" id="start_link/0">
     <div class="detail-header">
-    <a href="#start_link/1" class="detail-link" title="Link to this function">
+    <a href="#start_link/0" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">start_link(mock)</span>
+    <h1 class="signature">start_link()</span>
           </div>
   <section class="docstring">
-  </section>
-</section>
-<section class="detail" id="watchdog_loop/0">
-    <div class="detail-header">
-    <a href="#watchdog_loop/0" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature">watchdog_loop()</span>
-          </div>
-  <section class="docstring">
-<p>Will send an error message to NetworkHandler if it is initialized and receives no sign of life
-within a set time</p>
   </section>
 </section>
           </div>

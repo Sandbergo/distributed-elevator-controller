@@ -1,6 +1,6 @@
 #!/bin/bash
 
-epmd -daemon # fix erlang issue
+epmd -daemon # fix erlang issue. Import pack of inet_tcp
 
 # run
-iex -S mix run -e Overseer.test
+iex -S mix run -e Overseer.main

@@ -14,7 +14,9 @@ The elevator project, specified in the [specification](SPECIFICATION.md), is to 
 How to run
 ---
 
-Relies on Elixir 1.8.1 and Erlang/OTP 20. Clone the repo and run the bash scripts [for elevator](run_elevator.sh) and [for simulator](sim_run_elevator.sh). Changes in NetworkHandler for IP-adresses etc. may be needed.
+Relies on Elixir 1.8.1 and Erlang/OTP 20. Clone the repo and run the bash scripts [./run_elevator.sh](run_elevator.sh) and [./sim_run_elevator](sim_run_elevator.sh). Changes in NetworkHandler for IP-adresses etc. may be needed. can also be run directly with
+
+`iex -S mix run -e Overseer.main`
 
 
 Design

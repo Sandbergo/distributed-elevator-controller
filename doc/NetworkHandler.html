@@ -5,9 +5,9 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.19.3">
-    <title>NetworkHandler — elevator v0.1.0</title>
+    <title>NetworkHandler — Elevator v1.0.0</title>
     <link rel="stylesheet" href="dist/html-399e30b9b028e3059575.css" />
-    <script src="dist/sidebar_items-a3353d255e.js"></script>
+    <script src="dist/sidebar_items-039db8312e.js"></script>
     <script async src="dist/html-399e30b9b028e3059575.js"></script>
     
   </head>
@@ -24,12 +24,12 @@
 </button>
 <section class="sidebar">
 
-  <a href="api-reference.html" class="sidebar-projectLink">
+  <a href="README.md.html" class="sidebar-projectLink">
     <div class="sidebar-projectDetails">
       <h1 class="sidebar-projectName">
-elevator      </h1>
+Elevator      </h1>
       <h2 class="sidebar-projectVersion">
-        v0.1.0
+        v1.0.0
       </h2>
     </div>
   </a>
@@ -58,7 +58,7 @@ elevator      </h1>
 
 
       <h1>
-        <small class="visible-xs">elevator v0.1.0</small>
+        <small class="visible-xs">Elevator v1.0.0</small>
 NetworkHandler              </h1>
 
 
@@ -70,18 +70,23 @@ NetworkHandler              </h1>
 </h3>
 
 <ul>
-<li>A map with the connected nodes as keys and a backup of the node&#39;s elevator state as the respective value.
+<li>A map with the connected nodes as keys and a backup of the node&#39;s elevator state as the respective value,
+as well as a boolean indicating whether the node is ready to receive orders
+ The entire state for three connected nodes will look like this:
 </li>
 </ul>
+<p> <code class="inline">&quot;elev@10.100.23.197&quot;: [ %State{active_orders: [], direction: :stop, floor: 0}, true ], &quot;elev@10.100.23.233&quot;: [ %State{active_orders: [], direction: :stop, floor: 1}, true ], &quot;elev@10.100.23.253&quot;: [ %State{active_orders: [], direction: :stop, floor: 1}, true ]</code></p>
 <h3 id="module-tasks" class="section-heading">
   <a href="#module-tasks" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
   Tasks:
 </h3>
 
 <ul>
-<li>Initializes all modules for one computer, broadcasts own IP and listnes, making a Peer-to-peer network of NetworkModules
+<li>Initializes all modules for one computer, broadcasts own IP and listnes, making a Peer-to-peer network 
+of NetworkModules
 </li>
-<li>Decides the recipient of Hall orders based on a cost function, considering number of orders and distance to order.
+<li>Decides the recipient of Hall orders based on a cost function, considering number of orders and 
+distance to order.
 </li>
 <li>Is responsible for restarting nodes and redistributing orders that are not executed by assigned elevator
 </li>
@@ -92,7 +97,7 @@ NetworkHandler              </h1>
 </h3>
 
 <ul>
-<li>Receives from: OrderHandler, WatchDog, (other nodes&#39;) NetworkModule(s)
+<li>Receives from: OrderHandler, WatchDog, StateMachine, (other nodes&#39;) NetworkModule(s)
 </li>
 <li>Sends to: OrderHandler,  (other nodes&#39;) NetworkModule(s)
 </li>
@@ -113,31 +118,10 @@ NetworkHandler              </h1>
     </h2>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#all_nodes/0">all_nodes()</a>
+    <a href="#broadcast_self/3">broadcast_self(socket, recv_port, name)</a>
   </div>
-    <div class="summary-synopsis"><p>Returns all nodes in the current cluster. Returns a list of nodes or an error message</p>
-<h2>Examples</h2>
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">all_nodes</span><span class="w">
-</span><span class="p" data-group-id="8571328822-1">[</span><span class="ss">:&#39;heis@10.100.23.253&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">:&#39;heis@10.100.23.226&#39;</span><span class="p" data-group-id="8571328822-1">]</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">all_nodes</span><span class="w">
-</span><span class="p" data-group-id="8571328822-2">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:node_not_running</span><span class="p" data-group-id="8571328822-2">}</span></code></pre>
+    <div class="summary-synopsis"><p>Continously broadcasting own name with UDP</p>
 </div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#boot_node/2">boot_node(node_name, tick_time \\ 15000)</a>
-  </div>
-    <div class="summary-synopsis"><p>boots a node with a specified tick time. node_name sets the node name before @. The IP-address is
-automatically imported</p>
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">boot_node</span><span class="w"> </span><span class="s">&quot;frank&quot;</span><span class="w">
-</span><span class="p" data-group-id="5447781178-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="5447781178-2">#</span><span class="nc" data-group-id="5447781178-2">PID</span><span class="p" data-group-id="5447781178-2">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">12</span><span class="o">.</span><span class="mi">2</span><span class="p" data-group-id="5447781178-2">&gt;</span><span class="p" data-group-id="5447781178-1">}</span><span class="w">
-</span><span class="n">iex</span><span class="p" data-group-id="5447781178-3">(</span><span class="n">frank</span><span class="err">@</span><span class="mf">10.100</span><span class="o">.</span><span class="mf">23.253</span><span class="p" data-group-id="5447781178-3">)</span><span class="o">&gt;</span><span class="w"> </span><span class="bp">_</span></code></pre>
-</div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#broadcast_self/3">broadcast_self(socket, recv_PORT, name)</a>
-  </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
@@ -148,82 +132,110 @@ automatically imported</p>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#cost_function/2">cost_function(state, order)</a>
-  </div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
     <a href="#export_order/1">export_order(arg)</a>
   </div>
+    <div class="summary-synopsis"><p>Send assigned order to other node</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#get_my_ip/0">get_my_ip()</a>
+    <a href="#handle_call/3">handle_call(msg, from, state)</a>
   </div>
-    <div class="summary-synopsis"><p>Returns (hopefully) the ip address of your network interface.</p>
-<h2>Examples</h2>
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">get_my_ip</span><span class="w">
-</span><span class="p" data-group-id="5802405610-1">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">253</span><span class="p" data-group-id="5802405610-1">}</span></code></pre>
+    <div class="summary-synopsis"><p>Handle call for receiving a order from external node to be assigned to own state machine</p>
 </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#handle_cast/2">handle_cast(msg, state)</a>
   </div>
-    <div class="summary-synopsis"><p>An elevator is chosen for the specific order, using the cost function</p>
+    <div class="summary-synopsis"><p>Alternative init for running on a single computer</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#handle_info/2">handle_info(msg, state)</a>
+  </div>
+    <div class="summary-synopsis"><p>Handle event of node going down</p>
 </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#init/1">init(list)</a>
   </div>
-    <div class="summary-synopsis"><p>Boot Node with name &quot;elev@ip&quot; and spawn listen and receive processes based on UDP</p>
-</div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#ip_to_string/1">ip_to_string(ip)</a>
-  </div>
-    <div class="summary-synopsis"><p>formats an ip address on tuple format to a bytestring</p>
-<h2>Examples</h2>
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">ip_to_string</span><span class="w"> </span><span class="p" data-group-id="9984839948-1">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">253</span><span class="p" data-group-id="9984839948-1">}</span><span class="w">
-</span><span class="sc">&#39;10.100.23.253&#39;</span></code></pre>
+    <div class="summary-synopsis"><p>Boot Node with name &quot;elev@ip&quot; and spawn listen and receive processes based on UDP broadcasting</p>
 </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#listen/2">listen(socket, network_handler_pid)</a>
   </div>
+    <div class="summary-synopsis"><p>Continously listen for messages broadcasted, request connection to the node with the name
+received</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#multi_call_request_order_rank/1">multi_call_request_order_rank(order)</a>
+    <a href="#monitor_me_back/1">monitor_me_back(node_name)</a>
   </div>
+    <div class="summary-synopsis"><p>Set up two-way monitoring</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#multi_call_request_backup/2">multi_call_request_backup(from_node_name, about_node)</a>
+  </div>
+    <div class="summary-synopsis"><p>Get info about a node in another node&#39;s state map</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#multi_call_update_backup/1">multi_call_update_backup(backup)</a>
   </div>
+    <div class="summary-synopsis"><p>Send own updated backup to all other nodes</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#start_link/1">start_link(list \\ [20088, 20086])</a>
+    <a href="#recover_from_error_mode/2">recover_from_error_mode(node_name, net_state)</a>
+  </div>
+    <div class="summary-synopsis"><p>Process to be spawned for delaying error recovery. 
+Example
+  iex&gt; pid = Process.spawn(NetworkHandler, :recover_from_error_mode, [node_name, net_state], [])
+  iex&gt; Process.send_after(pid, :resend_cab_orders, 3000)</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#start_link/1">start_link(list \\ [20087, 20086])</a>
   </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#sync/1">sync(ext_order_list)</a>
+    <a href="#sync_order_list_internally/1">sync_order_list_internally(ext_order_list)</a>
   </div>
+    <div class="summary-synopsis"><p>Synchronize local order list with an external order list</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#synchronize_order_lists/1">synchronize_order_lists(order_list)</a>
+    <a href="#synchronize_order_lists_externally/1">synchronize_order_lists_externally(order_list)</a>
   </div>
+    <div class="summary-synopsis"><p>Synchronize order lists between nodes</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#test/0">test()</a>
+    <a href="#toggle_lights_externally/2">toggle_lights_externally(order, light_state)</a>
   </div>
+    <div class="summary-synopsis"><p>Synchronize lights with other elevators</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#toggle_lights_internally/2">toggle_lights_internally(order, light_state)</a>
+  </div>
+    <div class="summary-synopsis"><p>Toggle lights in own OrderHandler</p>
+</div>
 </div>
   </div>
         </section>
@@ -236,54 +248,16 @@ automatically imported</p>
             </a>
 Functions          </h1>
           <div class="functions-list">
-<section class="detail" id="all_nodes/0">
-    <div class="detail-header">
-    <a href="#all_nodes/0" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature">all_nodes()</span>
-          </div>
-  <section class="docstring">
-<p>Returns all nodes in the current cluster. Returns a list of nodes or an error message</p>
-<h2 id="all_nodes/0-examples" class="section-heading">
-  <a href="#all_nodes/0-examples" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
-  Examples
-</h2>
-
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">all_nodes</span><span class="w">
-</span><span class="p" data-group-id="1169605300-1">[</span><span class="ss">:&#39;heis@10.100.23.253&#39;</span><span class="p">,</span><span class="w"> </span><span class="ss">:&#39;heis@10.100.23.226&#39;</span><span class="p" data-group-id="1169605300-1">]</span><span class="w">
-</span><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">all_nodes</span><span class="w">
-</span><span class="p" data-group-id="1169605300-2">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="ss">:node_not_running</span><span class="p" data-group-id="1169605300-2">}</span></code></pre>
-  </section>
-</section>
-<section class="detail" id="boot_node/2">
-  
-    <span id="boot_node/1"></span>
-  <div class="detail-header">
-    <a href="#boot_node/2" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature">boot_node(node_name, tick_time \\ 15000)</span>
-          </div>
-  <section class="docstring">
-<p>boots a node with a specified tick time. node_name sets the node name before @. The IP-address is
-automatically imported</p>
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">boot_node</span><span class="w"> </span><span class="s">&quot;frank&quot;</span><span class="w">
-</span><span class="p" data-group-id="6436669535-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="6436669535-2">#</span><span class="nc" data-group-id="6436669535-2">PID</span><span class="p" data-group-id="6436669535-2">&lt;</span><span class="mi">0</span><span class="o">.</span><span class="mi">12</span><span class="o">.</span><span class="mi">2</span><span class="p" data-group-id="6436669535-2">&gt;</span><span class="p" data-group-id="6436669535-1">}</span><span class="w">
-</span><span class="n">iex</span><span class="p" data-group-id="6436669535-3">(</span><span class="n">frank</span><span class="err">@</span><span class="mf">10.100</span><span class="o">.</span><span class="mf">23.253</span><span class="p" data-group-id="6436669535-3">)</span><span class="o">&gt;</span><span class="w"> </span><span class="bp">_</span></code></pre>
-  </section>
-</section>
 <section class="detail" id="broadcast_self/3">
     <div class="detail-header">
     <a href="#broadcast_self/3" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">broadcast_self(socket, recv_PORT, name)</span>
+    <h1 class="signature">broadcast_self(socket, recv_port, name)</span>
           </div>
   <section class="docstring">
+<p>Continously broadcasting own name with UDP</p>
   </section>
 </section>
 <section class="detail" id="child_spec/1">
@@ -299,17 +273,6 @@ automatically imported</p>
 <p>See <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="cost_function/2">
-    <div class="detail-header">
-    <a href="#cost_function/2" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature">cost_function(state, order)</span>
-          </div>
-  <section class="docstring">
-  </section>
-</section>
 <section class="detail" id="export_order/1">
     <div class="detail-header">
     <a href="#export_order/1" class="detail-link" title="Link to this function">
@@ -319,25 +282,19 @@ automatically imported</p>
     <h1 class="signature">export_order(arg)</span>
           </div>
   <section class="docstring">
+<p>Send assigned order to other node</p>
   </section>
 </section>
-<section class="detail" id="get_my_ip/0">
+<section class="detail" id="handle_call/3">
     <div class="detail-header">
-    <a href="#get_my_ip/0" class="detail-link" title="Link to this function">
+    <a href="#handle_call/3" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">get_my_ip()</span>
+    <h1 class="signature">handle_call(msg, from, state)</span>
           </div>
   <section class="docstring">
-<p>Returns (hopefully) the ip address of your network interface.</p>
-<h2 id="get_my_ip/0-examples" class="section-heading">
-  <a href="#get_my_ip/0-examples" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
-  Examples
-</h2>
-
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">get_my_ip</span><span class="w">
-</span><span class="p" data-group-id="6832079344-1">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">253</span><span class="p" data-group-id="6832079344-1">}</span></code></pre>
+<p>Handle call for receiving a order from external node to be assigned to own state machine</p>
   </section>
 </section>
 <section class="detail" id="handle_cast/2">
@@ -349,7 +306,19 @@ automatically imported</p>
     <h1 class="signature">handle_cast(msg, state)</span>
           </div>
   <section class="docstring">
-<p>An elevator is chosen for the specific order, using the cost function</p>
+<p>Alternative init for running on a single computer</p>
+  </section>
+</section>
+<section class="detail" id="handle_info/2">
+    <div class="detail-header">
+    <a href="#handle_info/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">handle_info(msg, state)</span>
+          </div>
+  <section class="docstring">
+<p>Handle event of node going down.</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -361,26 +330,7 @@ automatically imported</p>
     <h1 class="signature">init(list)</span>
           </div>
   <section class="docstring">
-<p>Boot Node with name &quot;elev@ip&quot; and spawn listen and receive processes based on UDP</p>
-  </section>
-</section>
-<section class="detail" id="ip_to_string/1">
-    <div class="detail-header">
-    <a href="#ip_to_string/1" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature">ip_to_string(ip)</span>
-          </div>
-  <section class="docstring">
-<p>formats an ip address on tuple format to a bytestring</p>
-<h2 id="ip_to_string/1-examples" class="section-heading">
-  <a href="#ip_to_string/1-examples" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
-  Examples
-</h2>
-
-<pre><code class="nohighlight makeup elixir"><span class="gp unselectable">iex&gt; </span><span class="nc">NetworkStuff</span><span class="o">.</span><span class="n">ip_to_string</span><span class="w"> </span><span class="p" data-group-id="9839868976-1">{</span><span class="mi">10</span><span class="p">,</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mi">253</span><span class="p" data-group-id="9839868976-1">}</span><span class="w">
-</span><span class="sc">&#39;10.100.23.253&#39;</span></code></pre>
+<p>Boot Node with name &quot;elev@ip&quot; and spawn listen and receive processes based on UDP broadcasting</p>
   </section>
 </section>
 <section class="detail" id="listen/2">
@@ -392,17 +342,32 @@ automatically imported</p>
     <h1 class="signature">listen(socket, network_handler_pid)</span>
           </div>
   <section class="docstring">
+<p>Continously listen for messages broadcasted, request connection to the node with the name
+received</p>
   </section>
 </section>
-<section class="detail" id="multi_call_request_order_rank/1">
+<section class="detail" id="monitor_me_back/1">
     <div class="detail-header">
-    <a href="#multi_call_request_order_rank/1" class="detail-link" title="Link to this function">
+    <a href="#monitor_me_back/1" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">multi_call_request_order_rank(order)</span>
+    <h1 class="signature">monitor_me_back(node_name)</span>
           </div>
   <section class="docstring">
+<p>Set up two-way monitoring</p>
+  </section>
+</section>
+<section class="detail" id="multi_call_request_backup/2">
+    <div class="detail-header">
+    <a href="#multi_call_request_backup/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">multi_call_request_backup(from_node_name, about_node)</span>
+          </div>
+  <section class="docstring">
+<p>Get info about a node in another node&#39;s state map</p>
   </section>
 </section>
 <section class="detail" id="multi_call_update_backup/1">
@@ -414,6 +379,22 @@ automatically imported</p>
     <h1 class="signature">multi_call_update_backup(backup)</span>
           </div>
   <section class="docstring">
+<p>Send own updated backup to all other nodes</p>
+  </section>
+</section>
+<section class="detail" id="recover_from_error_mode/2">
+    <div class="detail-header">
+    <a href="#recover_from_error_mode/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">recover_from_error_mode(node_name, net_state)</span>
+          </div>
+  <section class="docstring">
+<p>Process to be spawned for delaying error recovery. 
+Example
+  iex&gt; pid = Process.spawn(NetworkHandler, :recover_from_error_mode, [node_name, net_state], [])
+  iex&gt; Process.send_after(pid, :resend_cab_orders, 3000) </p>
   </section>
 </section>
 <section class="detail" id="start_link/1">
@@ -424,42 +405,57 @@ automatically imported</p>
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">start_link(list \\ [20088, 20086])</span>
+    <h1 class="signature">start_link(list \\ [20087, 20086])</span>
           </div>
   <section class="docstring">
   </section>
 </section>
-<section class="detail" id="sync/1">
+<section class="detail" id="sync_order_list_internally/1">
     <div class="detail-header">
-    <a href="#sync/1" class="detail-link" title="Link to this function">
+    <a href="#sync_order_list_internally/1" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">sync(ext_order_list)</span>
+    <h1 class="signature">sync_order_list_internally(ext_order_list)</span>
           </div>
   <section class="docstring">
+<p>Synchronize local order list with an external order list</p>
   </section>
 </section>
-<section class="detail" id="synchronize_order_lists/1">
+<section class="detail" id="synchronize_order_lists_externally/1">
     <div class="detail-header">
-    <a href="#synchronize_order_lists/1" class="detail-link" title="Link to this function">
+    <a href="#synchronize_order_lists_externally/1" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">synchronize_order_lists(order_list)</span>
+    <h1 class="signature">synchronize_order_lists_externally(order_list)</span>
           </div>
   <section class="docstring">
+<p>Synchronize order lists between nodes</p>
   </section>
 </section>
-<section class="detail" id="test/0">
+<section class="detail" id="toggle_lights_externally/2">
     <div class="detail-header">
-    <a href="#test/0" class="detail-link" title="Link to this function">
+    <a href="#toggle_lights_externally/2" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">test()</span>
+    <h1 class="signature">toggle_lights_externally(order, light_state)</span>
           </div>
   <section class="docstring">
+<p>Synchronize lights with other elevators</p>
+  </section>
+</section>
+<section class="detail" id="toggle_lights_internally/2">
+    <div class="detail-header">
+    <a href="#toggle_lights_internally/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">toggle_lights_internally(order, light_state)</span>
+          </div>
+  <section class="docstring">
+<p>Toggle lights in own OrderHandler</p>
   </section>
 </section>
           </div>

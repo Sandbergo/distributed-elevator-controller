@@ -6,21 +6,21 @@ defmodule NetworkHandler do
   * A map with the connected nodes as keys and a backup of the node's elevator state as the respective value,
   as well as a boolean indicating whether the node is ready to receive orders
    The entire state for three connected nodes will look like this:
-  %{
+
+   `
     "elev@10.100.23.197": [
       %State{active_orders: [], direction: :stop, floor: 0},
       true
     ],
-    "elev@10.100.23.233": [
+     "elev@10.100.23.233": [
       %State{active_orders: [], direction: :stop, floor: 1},
       true
     ],
-    "elev@10.100.23.253": [
+     "elev@10.100.23.253": [
       %State{active_orders: [], direction: :stop, floor: 1},
       true
     ]
-  }
-
+`
   ### Tasks: 
   * Initializes all modules for one computer, broadcasts own IP and listnes, making a Peer-to-peer network 
   of NetworkModules
@@ -37,7 +37,7 @@ defmodule NetworkHandler do
   @broadcast_port 20087
   @broadcast_freq 5000
   @node_dead_time 6000
-  @broadcast {10, 100, 23, 255}#{192,168,1,255}#{10, 100, 23, 255} #{10, 100, 23, 255} # {10,24,31,255}
+  @broadcast {10, 100, 23, 255}
   @cookie :cookie
 
   def start_link([send_port, recv_port] \\ [@broadcast_port,@receive_port]) do
@@ -76,51 +76,9 @@ defmodule NetworkHandler do
         Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
     end
     net_state = %{Node.self() => [%State{}, true]}
-    IO.inspect net_state
     {:ok, net_state}
   end
 
-  # -------------------------For driving 3 local elevator simulators ---------------#
-  def start_link([send_port, recv_port, name]) do
-    GenServer.start_link(__MODULE__, [send_port, recv_port, name], [{:name, __MODULE__}])
-  end
-
-  @doc """
-  Alternative init for running on a single computer
-  """
-  def init [send_port, recv_port, name] do
-    name = "#{name}#{"@"}#{get_my_ip() |> ip_to_string()}"
-    IO.puts name
-    case Node.start(String.to_atom(name), :longnames, @node_dead_time) do
-      {:ok, _} -> 
-        IO.puts "Node started"
-      {:error, reason} ->
-        IO.inspect reason
-    end
-    IO.puts Node.self
-
-    Node.set_cookie(Node.self(), @cookie)
-
-    {:ok, broadcast_socket} = :gen_udp.open(send_port, [:list, {:active, false}, {:broadcast, true}])
-    Process.spawn(__MODULE__, :broadcast_local, [broadcast_socket, to_string(Node.self())], [:link])
-
-    {:ok, listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
-    Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
-
-    net_state = %{Node.self() => [%State{}, true]}
-    IO.inspect net_state
-    {:ok, net_state}
-  end
-  
-  def broadcast_local(socket, name) do
-    :gen_udp.send(socket, @broadcast, 20087, name)
-    :gen_udp.send(socket, @broadcast, 20089, name)
-    :gen_udp.send(socket, @broadcast, 20091, name)
-    :timer.sleep(@broadcast_freq)
-    broadcast_local(socket, name)
-  end
- 
-  #-------------------NETWORK FUNCTIONS AND NODE CONNECTIONS----------------------#
   @doc """
   Continously broadcasting own name with UDP
   """
@@ -135,7 +93,7 @@ defmodule NetworkHandler do
   @doc """
   Synchronize local order list with an external order list
   """
-  def sync(ext_order_list) do
+  def sync_order_list_internally(ext_order_list) do
     GenServer.cast(OrderHandler, {:sync_order_list, ext_order_list})
   end
 
@@ -154,6 +112,21 @@ defmodule NetworkHandler do
   end
 
   @doc """
+  Toggle lights in own OrderHandler
+  """
+  def toggle_lights_internally(order, light_state) do
+    GenServer.cast(OrderHandler, {:toggle_light, order, light_state})
+  end
+
+  @doc """
+  Synchronize lights with other elevators
+  """
+
+  def toggle_lights_externally(order, light_state) do
+    GenServer.multi_call(Node.list(), NetworkHandler, {:sync_elev_lights_internally, order, light_state})
+  end
+
+  @doc """
   Send assigned order to other node
   """
   def export_order({:external_order, order, chosen_node }) do
@@ -161,12 +134,13 @@ defmodule NetworkHandler do
   end
 
   @doc """
-  Send assigned order to other node
+  Synchronize order lists between nodes
   """
-  def synchronize_order_lists(order_list) do
+  def synchronize_order_lists_externally(order_list) do
     GenServer.multi_call(Node.list(), NetworkHandler, {:sync_orders, order_list}, 1000)
   end
 
+  
   @doc """
   Send own updated backup to all other nodes
   """
@@ -175,20 +149,10 @@ defmodule NetworkHandler do
   end
 
   @doc """
-  Get info about a node in  another node's state map
+  Get info about a node in another node's state map
   """
   def multi_call_request_backup(from_node_name, about_node) do
     GenServer.multi_call([from_node_name], NetworkHandler, {:request_backup, about_node}, 1000)
-  end
-
-  def sync_lights_after_reconnection(for_node, net_state) do
-    Enum.each(Node.list--[for_node], fn(node) ->
-      Enum.each(List.first(net_state[node]).active_orders, fn(order)->
-          if order.type != :cab do
-            GenServer.multi_call([for_node], {:sync_elev_lights, order, :on})
-          end
-      end)
-    end)
   end
 
   #------------------------------HANDLE CASTS/CALLS-------------------------------#
@@ -197,7 +161,7 @@ defmodule NetworkHandler do
   Handle a newly received order list from OrderHandler to be synchronized
   """
   def handle_cast({:sync_order_lists, order_list}, net_state) do
-    synchronize_order_lists(order_list)
+    synchronize_order_lists_externally(order_list)
     {:noreply, net_state}
   end
 
@@ -214,7 +178,7 @@ defmodule NetworkHandler do
   Handle a request from other nodes to synchronize orders
   """
   def handle_call({:sync_orders, ext_order_list}, _from, net_state) do
-    sync(ext_order_list)
+    sync_order_list_internally(ext_order_list)
     {:reply, net_state, net_state}
   end
 
@@ -224,33 +188,36 @@ defmodule NetworkHandler do
   def handle_call({:request_backup, about_node}, _from, net_state) do
     IO.puts "Backup requested"
     about_node = to_string(about_node) |> String.to_atom()
+    IO.puts "this is the requested state:"
+    IO.inspect net_state[about_node]
     requested_state = case net_state[about_node] do 
       nil ->
-        [%State{}, true]
+        [State.state_machine(:stop, 0, []), true]
       _ -> 
         net_state[about_node]
     end
+    IO.inspect requested_state
     {:reply, requested_state, net_state}
   end
-
+  
   @doc """
-  Handle a request to synchronize the lights internally
+  Handle a request to synchronize the lights externally
   """  
-  def handle_cast({:sync_lights, order, light_state}, net_state) do
-    GenServer.multi_call(Node.list(), NetworkHandler, {:sync_elev_lights, order, light_state}, 1000)
+  def handle_cast({:sync_elev_lights_externally, order, light_state}, net_state) do
+    toggle_lights_externally(order, light_state)
     {:noreply, net_state}
   end
 
   @doc """
   Handle a request to synchronize the lights from external node
   """  
-  def handle_call({:sync_elev_lights, order, light_state}, _from, net_state) do
-    DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, light_state)
+  def handle_call({:sync_elev_lights_internally, order, light_state}, _from, net_state) do
+    toggle_lights_internally(order, light_state)
     {:reply, net_state, net_state}
   end
 
   @doc """
-  Handle a request to monitor back a node
+  Handle a request to monitor a node back
   """  
   def handle_call({:monitor_me_back, node}, _from, net_state) do
     node_name = node
@@ -265,19 +232,14 @@ defmodule NetworkHandler do
   """
   def handle_cast({:choose_elevator, order}, net_state) do
     IO.puts("find the right elevator for this order")
-    IO.puts "This is the current state map"
-    IO.inspect net_state
     
     #Retrieve best cost function
-    IO.write "Calculate best cost"
     best_cost = Enum.min_by(Map.values(net_state),
      fn(node_state) -> cost_function(node_state, order) end)
 
-    IO.inspect best_cost
     #Find the node with this cost
     {chosen_node, _node_state} = List.keyfind(Map.to_list(net_state), best_cost, 1)
-    IO.puts "Chosen node"
-    IO.inspect chosen_node
+    
     if chosen_node == Node.self() do
         export_order({:internal_order, order, chosen_node})
     else
@@ -298,9 +260,13 @@ defmodule NetworkHandler do
 
   @doc """
   Handle a request to update own backup about another node
+  Illustration
+  My_backup --> external_backup
   """
   def handle_call({:update_backup, backup, from_node}, _from, net_state) do
     net_state = Map.put(net_state, from_node, backup)
+    IO.puts "Updating my backup"
+    IO.inspect net_state
     {:reply, net_state, net_state}
   end
 
@@ -345,57 +311,64 @@ defmodule NetworkHandler do
       100000
     end
   end
-  defp cost_function(state, order) when state == :not_valid do
-    10000000
-  end
 
   @doc """
   Calculates the distance to the order
+  Example
+    iex> distance_to_order(%Order{floor: 1, type: hall_up}, %State{floor: 3, direction: :up, active_orders: []})
+    2
   """
   defp distance_to_order(elevator_order, elevator_state) do
     elevator_order.floor - elevator_state.floor
   end
 
+  @doc """
+  Handle info for a requested connection message, requesting information about the net_state from other node, or 
+  sending this information when the other node has no information
+  """
   def handle_info({:request_connection, node_name}, net_state) do
     net_state = if node_name not in ([Node.self | [:nonode@nohost | Node.list]]|> Enum.map(&(to_string(&1)))) do
-      node_name = node_name |> String.to_atom()#IO.puts "connecting to node #{node_name}"
+      node_name = node_name |> String.to_atom()
       
-      Node.ping(node_name)
+      case Node.ping(node_name) do
+        :pong -> 
+          IO.puts "Successful connection"
+        :pang -> 
+          IO.puts "Error in node connection"
+      end
       Node.monitor(node_name, true) # monitor this newly connected node
       monitor_me_back(node_name)
       # request backup from newly connected node
       IO.puts "Checking information about #{node_name}"
       net_state = case net_state[node_name] do
         nil -> 
-          IO.puts "No information available about #{node_name}"
-          {requested_state, _ignored} = multi_call_request_backup(node_name, node_name)
-          IO.puts "Requested state:"
-          IO.inspect requested_state
-          IO.puts "My current mapezo"
-          IO.inspect requested_state[node_name]
+          IO.puts "no info about node, let's ask"
+          IO.inspect multi_call_request_backup(node_name, node_name)
+          {requested_state, _bad_node} = multi_call_request_backup(node_name, node_name)
           IO.inspect Map.put(net_state, node_name, requested_state[node_name])
           Map.put(net_state, node_name, requested_state[node_name])
           # request info about node_name to own net_state
         _ ->
-          IO.puts "Here you go"
+          IO.puts "I have info about this node, set availability to true"
           node_state = List.first(net_state[node_name])
-          IO.inspect net_state[node_name]
-          sync_lights_after_reconnection(node_name, net_state)
           backup = Map.replace(net_state, node_name, [node_state, true])
           pid = Process.spawn(NetworkHandler, :recover_from_error_mode, [node_name, backup], [])
-          Process.send_after(pid, :send_cab_orders, 3000)
+          Process.send_after(pid, :resend_cab_orders, 3000)
           backup
       end
-      multi_call_update_backup(net_state[Node.self()])
+      Enum.each(Node.list, fn(node) -> multi_call_update_backup(net_state[node]) end)
+      net_state
     else
       net_state
     end
-    IO.puts "after scopefixx, map is:"
+    IO.puts "State Map:"
     IO.inspect net_state
     {:noreply, net_state}
   end
 
-      
+  @doc """
+  Handle event of node going down.
+  """      
   def handle_info({:nodedown, node_name}, net_state) do
     net_state = case length(Node.list()) do
       0 -> 
@@ -418,11 +391,14 @@ defmodule NetworkHandler do
   end
 
   @doc """
-  Handling error CHANGE 
+  Process to be spawned for delaying error recovery. 
+  Example
+    iex> pid = Process.spawn(NetworkHandler, :recover_from_error_mode, [node_name, net_state], [])
+    iex> Process.send_after(pid, :resend_cab_orders, 3000) 
   """
   def recover_from_error_mode(node_name, net_state) do
     receive do
-      :send_cab_orders -> 
+      :resend_cab_orders -> 
         active_orders_of_node = List.first(net_state[node_name]).active_orders
         IO.inspect active_orders_of_node
         Enum.each(active_orders_of_node, fn(order) -> 
@@ -430,8 +406,6 @@ defmodule NetworkHandler do
             export_order({:external_order, order, node_name})
           end
         end)
-      :motorstop ->
-        #Process.spawn(Overseer, :start_link, [20088,20089,20001,"elev2"], [])
       after
         10_000 ->
           IO.puts "Resend timeout"

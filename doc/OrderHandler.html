@@ -5,9 +5,9 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.19.3">
-    <title>OrderHandler — elevator v0.1.0</title>
+    <title>OrderHandler — Elevator v1.0.0</title>
     <link rel="stylesheet" href="dist/html-399e30b9b028e3059575.css" />
-    <script src="dist/sidebar_items-a3353d255e.js"></script>
+    <script src="dist/sidebar_items-039db8312e.js"></script>
     <script async src="dist/html-399e30b9b028e3059575.js"></script>
     
   </head>
@@ -24,12 +24,12 @@
 </button>
 <section class="sidebar">
 
-  <a href="api-reference.html" class="sidebar-projectLink">
+  <a href="README.md.html" class="sidebar-projectLink">
     <div class="sidebar-projectDetails">
       <h1 class="sidebar-projectName">
-elevator      </h1>
+Elevator      </h1>
       <h2 class="sidebar-projectVersion">
-        v0.1.0
+        v1.0.0
       </h2>
     </div>
   </a>
@@ -58,7 +58,7 @@ elevator      </h1>
 
 
       <h1>
-        <small class="visible-xs">elevator v0.1.0</small>
+        <small class="visible-xs">Elevator v1.0.0</small>
 OrderHandler              </h1>
 
 
@@ -126,6 +126,13 @@ and passing the other orders to own elevator</p>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
+    <a href="#handle_cast/2">handle_cast(msg, state)</a>
+  </div>
+    <div class="summary-synopsis"><p>Handle a new order from Poller, add if it is not already in the order list</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
     <a href="#init/1">init(order_list \\ [])</a>
   </div>
     <div class="summary-synopsis"><p>Invoked when the server is started. <code class="inline">start_link/3</code> or <code class="inline">start/3</code> will
@@ -134,13 +141,15 @@ block until it returns</p>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#start_link/0">start_link()</a>
+    <a href="#start_link/1">start_link(mock)</a>
   </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#sync_order/1">sync_order(order_list)</a>
   </div>
+    <div class="summary-synopsis"><p>synchronize non-cab orders to other nodes&#39; order lists</p>
+</div>
 </div>
   </div>
         </section>
@@ -179,6 +188,18 @@ Functions          </h1>
   <section class="docstring">
 <p>distribute order from Poller or NetworkHandler, sending hall orders to NetworkHandler if it has not been chosen
 and passing the other orders to own elevator</p>
+  </section>
+</section>
+<section class="detail" id="handle_cast/2">
+    <div class="detail-header">
+    <a href="#handle_cast/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">handle_cast(msg, state)</span>
+          </div>
+  <section class="docstring">
+<p>Handle a new order from Poller, add if it is not already in the order list</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -230,13 +251,13 @@ entering the loop or calling <code class="inline">c:terminate/2</code>.</p>
 <p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
   </section>
 </section>
-<section class="detail" id="start_link/0">
+<section class="detail" id="start_link/1">
     <div class="detail-header">
-    <a href="#start_link/0" class="detail-link" title="Link to this function">
+    <a href="#start_link/1" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">start_link()</span>
+    <h1 class="signature">start_link(mock)</span>
           </div>
   <section class="docstring">
   </section>
@@ -250,6 +271,7 @@ entering the loop or calling <code class="inline">c:terminate/2</code>.</p>
     <h1 class="signature">sync_order(order_list)</span>
           </div>
   <section class="docstring">
+<p>synchronize non-cab orders to other nodes&#39; order lists</p>
   </section>
 </section>
           </div>

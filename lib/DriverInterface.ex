@@ -31,7 +31,9 @@ defmodule DriverInterface do
     GenServer.stop pid
   end
 
+
   def init [address, port] do
+    # added for server restart upon exit 
     "pkill ElevatorServer" |> String.to_charlist |> :os.cmd
     "gnome-terminal -x ~/.cargo/bin/ElevatorServer" |> String.to_charlist |> :os.cmd
     {:ok, socket} =:gen_tcp.connect(address, port, [{:active, false}])

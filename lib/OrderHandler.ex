@@ -67,11 +67,19 @@ defmodule OrderHandler do
   end
 
   @doc """
-  Handle executed order from StateMachine
+  Handle executed order from StateMachine. Delete in order list and sync with other elevators
   """
   def handle_cast({:order_executed, order}, order_list) do
     order_list = Enum.reject(order_list, fn(other_order) -> other_order.floor == order.floor end)
     sync_order(order_list) 
+    {:noreply, order_list}
+  end
+
+  @doc """
+  Toggle light of order executed in another elevator
+  """
+  def handle_cast({:toggle_light, order, light_state}, order_list) do
+    DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, light_state)
     {:noreply, order_list}
   end
 

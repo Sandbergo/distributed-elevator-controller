@@ -51,7 +51,7 @@ defmodule Poller do
   end
 
   @doc """
-  Initialize by turning off all lights
+  Polling buttons 20 times per second, sending the order to OrderHandler if registered press
   """  
   def button_poller do
     Enum.each(@floors, fn(floor) ->
@@ -60,7 +60,7 @@ defmodule Poller do
           1 ->
             set_order(floor, button_type)
             IO.puts "Noticed press: #{button_type} on floor: #{floor}"
-            :timer.sleep(100)  ## DOUBLE SLEEP
+            :timer.sleep(100)  
           0 ->
             {:no_orders}
         end

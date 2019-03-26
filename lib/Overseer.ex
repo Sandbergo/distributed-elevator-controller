@@ -27,32 +27,20 @@ defmodule Overseer do
     Supervisor.init(children, strategy: :one_for_all)
   end
 
-  def test do
+  @doc """
+  Entry point for running entire program, starts Overseer which subsequently starts all other modules
+  """
+  def main do
     Overseer.start_link()
     loop()
   end
 
+  @doc """
+  loop to keep executable running
+  """
   def loop do
     :timer.sleep(10000)
     loop
-  end
-
-  # ---------------------------LOCAL--------------------------------#
-  def start_link(send_port, recv_port, elev_port, name) do
-    Supervisor.start_link(__MODULE__, [send_port, recv_port, elev_port, name], name: __MODULE__)
-  end
-
-  def init [send_port, recv_port, elev_port, name] do
-    Process.flag(:trap_exit,true)
-    children = [
-      {NetworkHandler, [send_port,recv_port, name]},
-      {DriverInterface, [{127,0,0,1}, elev_port]},
-      OrderHandler,
-      Poller,
-      WatchDog,
-      StateMachine
-    ]
-    Supervisor.init(children, strategy: :one_for_all, max_restarts: 100)
   end
 
 end

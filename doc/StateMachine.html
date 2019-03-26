@@ -5,9 +5,9 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.19.3">
-    <title>StateMachine — elevator v0.1.0</title>
+    <title>StateMachine — Elevator v1.0.0</title>
     <link rel="stylesheet" href="dist/html-399e30b9b028e3059575.css" />
-    <script src="dist/sidebar_items-a3353d255e.js"></script>
+    <script src="dist/sidebar_items-039db8312e.js"></script>
     <script async src="dist/html-399e30b9b028e3059575.js"></script>
     
   </head>
@@ -24,12 +24,12 @@
 </button>
 <section class="sidebar">
 
-  <a href="api-reference.html" class="sidebar-projectLink">
+  <a href="README.md.html" class="sidebar-projectLink">
     <div class="sidebar-projectDetails">
       <h1 class="sidebar-projectName">
-elevator      </h1>
+Elevator      </h1>
       <h2 class="sidebar-projectVersion">
-        v0.1.0
+        v1.0.0
       </h2>
     </div>
   </a>
@@ -58,7 +58,7 @@ elevator      </h1>
 
 
       <h1>
-        <small class="visible-xs">elevator v0.1.0</small>
+        <small class="visible-xs">Elevator v1.0.0</small>
 StateMachine              </h1>
 
 
@@ -92,7 +92,7 @@ and a list of active orders it has accepted
 </h3>
 
 <ul>
-<li>Sends to: DriverInterface, WatchDog
+<li>Sends to: DriverInterface, WatchDog, NetworkHandler
 </li>
 <li>Receives from: OrderHandler, Poller
 </li>
@@ -132,12 +132,14 @@ and a list of active orders it has accepted
   <div class="summary-signature">
     <a href="#direction_to_int/1">direction_to_int(elevator_state)</a>
   </div>
+    <div class="summary-synopsis"><p>Function courtesy of @Jostlowe</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#execute_order/1">execute_order(state)</a>
   </div>
-    <div class="summary-synopsis"><p>function for controlling elevator direction</p>
+    <div class="summary-synopsis"><p>function for controlling elevator direction based on orders</p>
 </div>
 </div>
 <div class="summary-row">
@@ -151,30 +153,34 @@ and a list of active orders it has accepted
   <div class="summary-signature">
     <a href="#handle_cast/2">handle_cast(msg, state)</a>
   </div>
-    <div class="summary-synopsis"><p>A new order is accepted, the light is set and in case this is the first order, is executed directly</p>
+    <div class="summary-synopsis"><p>update the direction state</p>
 </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#init/1">init(direction)</a>
   </div>
-    <div class="summary-synopsis"><p>drive downwards to closest floor and initialize the state</p>
+    <div class="summary-synopsis"><p>Drive downwards to closest floor and initialize the state</p>
 </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#initialize_to_floor/0">initialize_to_floor()</a>
+    <a href="#initialize_to_floor/1">initialize_to_floor(pid)</a>
   </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#open_doors/0">open_doors()</a>
+    <a href="#open_doors/1">open_doors(pid)</a>
   </div>
+    <div class="summary-synopsis"><p>Opens and closes doors and sleeps for the duration</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#order_type_to_int/1">order_type_to_int(elevator_order)</a>
   </div>
+    <div class="summary-synopsis"><p>Function courtesy of @Jostlowe</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
@@ -190,7 +196,7 @@ and a list of active orders it has accepted
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#start_link/0">start_link()</a>
+    <a href="#start_link/1">start_link(mock)</a>
   </div>
 </div>
 <div class="summary-row">
@@ -201,6 +207,11 @@ and a list of active orders it has accepted
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#stop_motor_timer/0">stop_motor_timer()</a>
+  </div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#sync_order_lights/2">sync_order_lights(order, light_state)</a>
   </div>
 </div>
 <div class="summary-row">
@@ -263,6 +274,7 @@ Functions          </h1>
     <h1 class="signature">direction_to_int(elevator_state)</span>
           </div>
   <section class="docstring">
+<p>Function courtesy of @Jostlowe</p>
   </section>
 </section>
 <section class="detail" id="execute_order/1">
@@ -274,7 +286,7 @@ Functions          </h1>
     <h1 class="signature">execute_order(state)</span>
           </div>
   <section class="docstring">
-<p>function for controlling elevator direction</p>
+<p>function for controlling elevator direction based on orders </p>
   </section>
 </section>
 <section class="detail" id="execute_order_on_floor/1">
@@ -298,7 +310,7 @@ Functions          </h1>
     <h1 class="signature">handle_cast(msg, state)</span>
           </div>
   <section class="docstring">
-<p>A new order is accepted, the light is set and in case this is the first order, is executed directly</p>
+<p>update the direction state</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -310,29 +322,30 @@ Functions          </h1>
     <h1 class="signature">init(direction)</span>
           </div>
   <section class="docstring">
-<p>drive downwards to closest floor and initialize the state</p>
+<p>Drive downwards to closest floor and initialize the state</p>
   </section>
 </section>
-<section class="detail" id="initialize_to_floor/0">
+<section class="detail" id="initialize_to_floor/1">
     <div class="detail-header">
-    <a href="#initialize_to_floor/0" class="detail-link" title="Link to this function">
+    <a href="#initialize_to_floor/1" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">initialize_to_floor()</span>
+    <h1 class="signature">initialize_to_floor(pid)</span>
           </div>
   <section class="docstring">
   </section>
 </section>
-<section class="detail" id="open_doors/0">
+<section class="detail" id="open_doors/1">
     <div class="detail-header">
-    <a href="#open_doors/0" class="detail-link" title="Link to this function">
+    <a href="#open_doors/1" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">open_doors()</span>
+    <h1 class="signature">open_doors(pid)</span>
           </div>
   <section class="docstring">
+<p>Opens and closes doors and sleeps for the duration</p>
   </section>
 </section>
 <section class="detail" id="order_type_to_int/1">
@@ -344,6 +357,7 @@ Functions          </h1>
     <h1 class="signature">order_type_to_int(elevator_order)</span>
           </div>
   <section class="docstring">
+<p>Function courtesy of @Jostlowe</p>
   </section>
 </section>
 <section class="detail" id="reset_motor_timer/0">
@@ -369,13 +383,13 @@ Functions          </h1>
 <p>Logic for deciding whether the elevator should stop at that specific floor</p>
   </section>
 </section>
-<section class="detail" id="start_link/0">
+<section class="detail" id="start_link/1">
     <div class="detail-header">
-    <a href="#start_link/0" class="detail-link" title="Link to this function">
+    <a href="#start_link/1" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">start_link()</span>
+    <h1 class="signature">start_link(mock)</span>
           </div>
   <section class="docstring">
   </section>
@@ -398,6 +412,17 @@ Functions          </h1>
       <span class="sr-only">Link to this function</span>
     </a>
     <h1 class="signature">stop_motor_timer()</span>
+          </div>
+  <section class="docstring">
+  </section>
+</section>
+<section class="detail" id="sync_order_lights/2">
+    <div class="detail-header">
+    <a href="#sync_order_lights/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">sync_order_lights(order, light_state)</span>
           </div>
   <section class="docstring">
   </section>
