@@ -286,6 +286,12 @@ defmodule NetworkHandler do
     {:reply, net_state, net_state}
   end
 
+  def handle_cast {:transmit_backup, backup, name}, net_state do
+    from_node = name |> to_string() |> String.to_atom()
+    net_state = Map.put(net_state, from_node, backup)
+    {:noreply, net_state}
+  end
+
   #-------------------------------HELPER FUNCTIONS--------------------------------#
    
   @doc """
@@ -327,8 +333,9 @@ defmodule NetworkHandler do
   sending this information when the other node has no information
   """
   def handle_info({:request_connection, node_name}, net_state) do
-    net_state = if node_name not in ([Node.self | [:nonode@nohost | Node.list]]|> Enum.map(&(to_string(&1)))) do
-      node_name = node_name |> String.to_atom()
+    IO.puts "Node #{node_name} trying to connect to me"
+    if node_name not in ([Node.self | [:nonode@nohost | Node.list]]|> Enum.map(&(to_string(&1)))) do
+      node_name = node_name |> String.to_atom()#IO.puts "connecting to node #{node_name}"
       
       case Node.ping(node_name) do
         :pong -> 
@@ -342,9 +349,11 @@ defmodule NetworkHandler do
       IO.puts "Checking information about #{node_name}"
       net_state = case net_state[node_name] do
         nil -> 
-          IO.puts "no info about node, let's ask"
-          IO.inspect multi_call_request_backup(node_name, node_name)
-          {requested_state, _bad_node} = multi_call_request_backup(node_name, node_name)
+          IO.puts "No information available about #{node_name}, we have not been connected since restart"
+          {requested_state, _ignored} = multi_call_request_backup(node_name, node_name)
+          IO.puts "Requested state:"
+          IO.inspect requested_state
+          IO.puts "My current mapezo"
           IO.inspect Map.put(net_state, node_name, requested_state[node_name])
           Map.put(net_state, node_name, requested_state[node_name])
           # request info about node_name to own net_state
@@ -356,13 +365,8 @@ defmodule NetworkHandler do
           Process.send_after(pid, :resend_cab_orders, 3000)
           backup
       end
-      Enum.each(Node.list, fn(node) -> multi_call_update_backup(net_state[node]) end)
-      net_state
-    else
-      net_state
     end
-    IO.puts "State Map:"
-    IO.inspect net_state
+    Enum.each(Node.list, fn(node) -> GenServer.cast({NetworkHandler, node}, {:transmit_backup, net_state[Node.self()], Node.self()})end)
     {:noreply, net_state}
   end
 
@@ -376,6 +380,12 @@ defmodule NetworkHandler do
         %{Node.self() => net_state[Node.self()]}
       _->
         IO.puts "Node down"
+        net_state = case net_state[node_name] do
+          nil ->
+            Map.put(net_state, node_name, [State.state_machine(0, :stop, []), false])
+          _ ->
+            net_state
+        end
         node_state = List.first(net_state[node_name])
         
         net_state = Map.replace(net_state, node_name, [node_state, false])
