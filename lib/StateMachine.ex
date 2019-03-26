@@ -40,9 +40,10 @@ defmodule StateMachine do
         backup_state(State.state_machine(:stop, floor, []))
         State.state_machine(:stop, floor, [])
       after
-        @motorstop_timeout+1000 ->
+        @motorstop_timeout+10 ->
           IO.puts "Not able to initialize"
-          :not_valid
+          #:not_valid
+          State.state_machine(:stop, 0, [])
     end
     {:ok, state}
   end

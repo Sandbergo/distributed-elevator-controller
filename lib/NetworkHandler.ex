@@ -357,7 +357,7 @@ defmodule NetworkHandler do
   end
 
   def handle_info({:request_connection, node_name}, net_state) do
-    if node_name not in ([Node.self | [:nonode@nohost | Node.list]]|> Enum.map(&(to_string(&1)))) do
+    net_state = if node_name not in ([Node.self | [:nonode@nohost | Node.list]]|> Enum.map(&(to_string(&1)))) do
       node_name = node_name |> String.to_atom()#IO.puts "connecting to node #{node_name}"
       
       Node.ping(node_name)
@@ -372,6 +372,7 @@ defmodule NetworkHandler do
           IO.puts "Requested state:"
           IO.inspect requested_state
           IO.puts "My current mapezo"
+          IO.inspect requested_state[node_name]
           IO.inspect Map.put(net_state, node_name, requested_state[node_name])
           Map.put(net_state, node_name, requested_state[node_name])
           # request info about node_name to own net_state
@@ -386,7 +387,11 @@ defmodule NetworkHandler do
           backup
       end
       multi_call_update_backup(net_state[Node.self()])
+    else
+      net_state
     end
+    IO.puts "after scopefixx, map is:"
+    IO.inspect net_state
     {:noreply, net_state}
   end
 

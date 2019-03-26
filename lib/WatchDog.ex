@@ -105,7 +105,7 @@ defmodule WatchDog do
   end
 
   def send_motorstop do
-    GenServer.cast StateMachine, {:error}
+    GenServer.cast NetworkHandler, {:error}
   end
 
   def get_motorstop_timeout do
