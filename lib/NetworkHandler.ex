@@ -36,7 +36,7 @@ defmodule NetworkHandler do
   @receive_port 20086
   @broadcast_port 20087
   @broadcast_freq 5000
-  @node_dead_time 12000
+  @node_dead_time 6000
   @broadcast {10, 100, 23, 255}#{192,168,1,255}#{10, 100, 23, 255} #{10, 100, 23, 255} # {10,24,31,255}
   @cookie :cookie
 
@@ -52,7 +52,6 @@ defmodule NetworkHandler do
     name = "#{"elev@"}#{get_my_ip() |> ip_to_string()}"
     case Node.start(String.to_atom(name), :longnames, @node_dead_time) do
       {:error, reason} -> 
-        IO.inspect reason
         IO.puts("Unable to start node")
         GenServer.cast(NetworkHandler, {:error})
       _ -> 

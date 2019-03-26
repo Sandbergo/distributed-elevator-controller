@@ -15,10 +15,6 @@ defmodule Overseer do
   Initialization starting all modules under a Supervisor with one_for_all strategy
   """
   def init([send_port, recv_port]) do
-    "pkill ElevatorServer" |> String.to_charlist |> :os.cmd
-    "gnome-terminal -x ~/.cargo/bin/ElevatorServer" |> String.to_charlist |> :os.cmd
-    IO.puts "init from supervisor"
-    :timer.sleep(100)
     Process.flag(:trap_exit,true)
     children = [
       {NetworkHandler, [send_port,recv_port]},
@@ -32,8 +28,6 @@ defmodule Overseer do
   end
 
   def test do
-    "pkill ElevatorServer"  |> String.to_charlist |> :os.cmd
-    "gnome-terminal -x ~/.cargo/bin/ElevatorServer"   |> String.to_charlist |> :os.cmd
     Overseer.start_link()
     loop()
   end
