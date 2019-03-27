@@ -18,8 +18,8 @@ defmodule DriverInterface do
   @state_map  %{:on => 1, :off => 0}
   @direction_map %{:up => 1, :down => 255, :stop => 0}
 
-  def start do
-    start {127,0,0,1}, 15657
+  def start_link [ip, port]\\[{127,0,0,1}, 15657] do
+    start ip, port
   end
 
   def start address, port do
@@ -31,6 +31,9 @@ defmodule DriverInterface do
   end
 
   def init [address, port] do
+    # added for server restart upon exit 
+    "pkill ElevatorServer" |> String.to_charlist |> :os.cmd
+    "gnome-terminal -x ~/.cargo/bin/ElevatorServer" |> String.to_charlist |> :os.cmd
     {:ok, socket} =:gen_tcp.connect(address, port, [{:active, false}])
     {:ok, socket}
   end

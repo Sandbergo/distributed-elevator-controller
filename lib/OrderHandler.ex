@@ -16,7 +16,7 @@ defmodule OrderHandler do
   use GenServer
   
   #--------------------------------INITIALIZATION---------------------------------#
-  def start_link do
+  def start_link(_init_args) do
     GenServer.start_link(__MODULE__, [], [{:name, __MODULE__}])
   end
 

@@ -37,7 +37,7 @@ defmodule NetworkHandler do
   @broadcast_port 20087
   @broadcast_freq 5000
   #@offline_sleep 5000
-  #@listen_timeout 2000
+  @call_timeout 5000
   @node_dead_time 6000
   @broadcast {10, 100, 23, 255}#{10,42,0,255} #{10, 100, 23, 255} # {10,24,31,255}
   @cookie :penis
@@ -124,7 +124,7 @@ defmodule NetworkHandler do
   def cost_function(state, order) do
     IO.inspect state
     cost = if List.last(state) do
-      length(List.first(state).active_orders) + abs(distance_to_order(order, List.first(state)))
+      3*length(List.first(state).active_orders) + abs(distance_to_order(order, List.first(state)))
     else
       100000
     end
@@ -152,27 +152,42 @@ defmodule NetworkHandler do
   end
 
   def export_order({:external_order, order, chosen_node }) do
-    GenServer.multi_call([chosen_node], NetworkHandler, {:external_order, order}, 1000)
+    case GenServer.call({NetworkHandler, chosen_node}, {:external_order, order}, @call_timeout) do
+      {:error, :timeout} -> 
+        IO.puts "Can't reach others, ill take the order"
+        export_order({:internal_order, order, Node.self()})
+      _ -> 
+        IO.puts "Order executed normally"
+    end
   end
 
   def monitor_me_back(node_name) do
-    GenServer.multi_call([node_name], NetworkHandler, {:monitor_me_back, Node.self()}, 1000)
+    case GenServer.call({NetworkHandler, node_name}, {:monitor_me_back, Node.self()}, @call_timeout) do
+      {:error, reason} ->
+        IO.puts "Could not establish connection, retrying"
+        IO.inspect reason
+        monitor_me_back(node_name)
+      _ ->
+        IO.puts "OK, ill monitor back"
+    end
   end
 
   def synchronize_order_lists(order_list) do
-    GenServer.multi_call(Node.list(), NetworkHandler, {:sync_orders, order_list}, 1000)
+    case GenServer.multi_call(Node.list(), NetworkHandler, {:sync_orders, order_list}, @call_timeout) do
+      {replies, _bad_nodes} when length(replies) > 0 ->
+        IO.puts "Orders synced"
+        IO.inspect order_list
+      _ ->
+        IO.puts "timeout"
+    end
   end
 
   def multi_call_update_backup(backup) do
-    GenServer.multi_call(Node.list(), NetworkHandler, {:update_backup, backup, Node.self()}, 1000)
+    GenServer.multi_call(Node.list(), NetworkHandler, {:update_backup, backup, Node.self()}, @call_timeout)
   end
 
   def multi_call_request_backup(from_node_name, about_node) do ## get info from other node about own node
-    GenServer.multi_call([from_node_name], NetworkHandler, {:request_backup, about_node}, 1000)
-  end
-
-  def multi_call_request_order_rank(order) do
-    GenServer.multi_call(Node.list(), NetworkHandler, {:request_order_rank, order}, 1000)
+    GenServer.multi_call([from_node_name], NetworkHandler, {:request_backup, about_node}, @call_timeout)
   end
 
   #------------------------------HANDLE CASTS/CALLS-------------------------------#
@@ -260,11 +275,8 @@ defmodule NetworkHandler do
 
   def handle_cast({:motorstop}, net_state) do
     IO.puts "RESTART REQUIRED"
-    #System.cmd("kill", ["-l"])
-    send(self(), {:kill, "kys"})
-    #IO.puts "time to die"
-    #exit({:shutdown, 1})
-    #IO.puts "dead?"
+    Node.stop()
+    Process.exit(self(), :kill)
     IO.puts "DEAD?"
     {:noreply, net_state}
   end
@@ -300,11 +312,6 @@ defmodule NetworkHandler do
     Poller.start_link()
     WatchDog.start_link()
     StateMachine.start_link()
-    receive do
-      {:kill, msg}-> 
-        "Guess I'll die :("
-    end
-    "receiving open for business"
   end
 
   def redistribute_orders(order_list) do

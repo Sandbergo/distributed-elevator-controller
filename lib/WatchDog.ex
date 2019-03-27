@@ -19,7 +19,7 @@ defmodule WatchDog do
   @motorstop_timeout 5000
 
   #--------------------------------INITIALIZATION---------------------------------#
-  def start_link do
+  def start_link(_init_args) do
     GenServer.start_link(__MODULE__, [nil, %State{}], [{:name, __MODULE__}])
   end
 
