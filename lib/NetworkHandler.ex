@@ -82,44 +82,6 @@ defmodule NetworkHandler do
     {:ok, net_state}
   end
 
-  # -------------------------For driving 3 local elevator simulators ---------------#
-  def start_link([send_port, recv_port, name]) do
-    GenServer.start_link(__MODULE__, [send_port, recv_port, name], [{:name, __MODULE__}])
-  end
-
-  def init [send_port, recv_port, name] do
-    IO.puts "NetworkHandler init"
-    {:ok, broadcast_socket} = :gen_udp.open(send_port, [:list, {:active, false}, {:broadcast, true}])
-    node_name = "#{name}#{get_my_ip() |> ip_to_string()}"
-    Node.start(String.to_atom(node_name), :longnames, @node_dead_time)
-    Node.set_cookie(String.to_atom(node_name), @cookie)
-    Process.spawn(__MODULE__, :broadcast_local, [broadcast_socket, node_name], [:link])
-    {:ok, listen_socket} = :gen_udp.open(recv_port, [:list, {:active, false}])
-    Process.spawn(__MODULE__, :listen, [listen_socket, self()], [:link])
-    net_state = %{Node.self() => [%State{}, true]}
-    IO.inspect net_state
-    {:ok, net_state}
-  end
-  
-  def broadcast_local(socket, name) do
-    :gen_udp.send(socket, @broadcast, 20087, name)
-    :gen_udp.send(socket, @broadcast, 20089, name)
-    :gen_udp.send(socket, @broadcast, 20091, name)
-    :timer.sleep(@broadcast_freq)
-    broadcast_local(socket, name)
-  end
-
-    # -----------------LOCAL TEST----------------#
-
-    def test(broadcast_port, receive_port, name, elev_port) do
-      IO.puts "Leggo my eggo"
-      NetworkHandler.start_link([broadcast_port, receive_port, name])
-      DriverInterface.start({127,0,0,1}, elev_port)
-      OrderHandler.start_link()
-      Poller.start_link()
-      StateMachine.start_link()
-      WatchDog.start_link()
-    end
   #--------------------------Non-communicative functions----------------------------#
   def cost_function(state, order) do
     IO.inspect state
@@ -253,10 +215,8 @@ defmodule NetworkHandler do
   An elevator is chosen for the specific order, using the cost function
   """
   def handle_cast({:choose_elevator, order}, net_state) do
-    IO.puts("find the right elevator for this order")
     
     #Retrieve best cost function
-    IO.puts "Calculate best cost"
     best_cost = Enum.min_by(Map.values(net_state),
      fn(node_state) -> cost_function(node_state, order) end)
 
@@ -264,10 +224,8 @@ defmodule NetworkHandler do
     {chosen_node, _node_state} = List.keyfind(Map.to_list(net_state), best_cost, 1)
 
     if chosen_node == Node.self() do
-        IO.puts "I've got it"
         export_order({:internal_order, order, chosen_node})
     else
-        IO.puts "Send that shit"
         export_order({:external_order, order, chosen_node})
     end
     {:noreply, net_state}
@@ -290,6 +248,11 @@ defmodule NetworkHandler do
     {:reply, net_state, net_state}
   end
 
+  def handle_cast({:cast_backup, backup, name}, net_state) do
+    net_state = Map.put(net_state, name, backup)
+    {:noreply, net_state}
+  end
+
   def handle_cast({:internal_order, order}, net_state) do
     OrderHandler.distribute_order(order, true)
     {:noreply, net_state}
@@ -303,16 +266,6 @@ defmodule NetworkHandler do
   end
 
   #-------------------------------HELPER FUNCTIONS--------------------------------#
-   
-  def test do
-    IO.puts "Leggo my eggo"
-    DriverInterface.start()
-    NetworkHandler.start_link()
-    OrderHandler.start_link()
-    Poller.start_link()
-    WatchDog.start_link()
-    StateMachine.start_link()
-  end
 
   def redistribute_orders(order_list) do
     IO.puts "ORDERS TO BE REDISTRIBUTED:"
@@ -331,18 +284,13 @@ defmodule NetworkHandler do
       node_name = node_name |> String.to_atom()#IO.puts "connecting to node #{node_name}"
       Node.ping(node_name)
       Node.monitor(node_name, true) # monitor this newly connected node
-      #monitor_me_back(Node.self())
+      monitor_me_back(node_name)
       # request backup from newly connected node
       IO.puts "Checking information about #{node_name}"
       net_state = case net_state[node_name] do
         nil -> 
           IO.puts "No information available about #{node_name}"
           {requested_state, _ignored} = multi_call_request_backup(node_name, node_name)
-          IO.puts "Requested state:"
-          IO.inspect requested_state
-          IO.puts "My current mapezo"
-          monitor_me_back(node_name)
-          IO.inspect Map.put(net_state, node_name, requested_state[node_name])
           Map.put(net_state, node_name, requested_state[node_name])
           # request info about node_name to own net_state
         _ ->
@@ -354,8 +302,8 @@ defmodule NetworkHandler do
           Process.send_after(pid, :send_cab_orders, 3000)
           backup
       end
-      multi_call_update_backup(net_state[Node.self()])
     end
+    Enum.each(Node.list, fn(node) -> GenServer.cast({NetworkHandler, node}, {:cast_backup, net_state[Node.self()], Node.self}) end)
     {:noreply, net_state}
   end
       

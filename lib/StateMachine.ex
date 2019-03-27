@@ -90,8 +90,6 @@ defmodule StateMachine do
     backup_state(state)
     sync_order_lights(order, :on)
     DriverInterface.set_order_button_light(DriverInterface, order.type, order.floor, :on)
-    IO.puts "length of active orders:"
-    IO.inspect length(state.active_orders)
     if length(state.active_orders)==1 do
       start_motor_timer()
       execute_order(state)

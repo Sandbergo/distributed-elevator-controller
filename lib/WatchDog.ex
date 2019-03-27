@@ -25,7 +25,7 @@ defmodule WatchDog do
 
   def init([overwatch, backup]) do
     backup = %{backup | floor: DriverInterface.get_floor_sensor_state(DriverInterface)}
-    #send_backup(backup)
+    send_backup(backup)
     {:ok, [overwatch, backup]}
   end
 
@@ -34,10 +34,8 @@ defmodule WatchDog do
   def watchdog_loop do
     receive do
       {:elev_going_inactive} ->
-        IO.puts "stop watchin"
         Process.exit(self(), :normal)
       {:floor_changed} ->
-        IO.puts "changin floor in WatchDog"
         watchdog_loop()
       after
         @motorstop_timeout ->
@@ -49,7 +47,6 @@ defmodule WatchDog do
   #------------------------------HANDLE CASTS/CALLS-------------------------------#
 
   def handle_cast({:elev_going_active}, [overwatch, backup]) do
-    IO.puts "watch it boy"
     overwatch = Process.spawn(WatchDog, :watchdog_loop, [], [])
     {:noreply, [overwatch, backup]}
   end
