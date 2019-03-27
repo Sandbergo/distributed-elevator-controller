@@ -201,7 +201,12 @@ defmodule NetworkHandler do
 
   
   def handle_cast({:sync_lights, order, light_state}, net_state) do ## CHANGE NAME
-    GenServer.multi_call(Node.list(), NetworkHandler, {:sync_elev_lights, order, light_state}, 1000)
+    case GenServer.multi_call(Node.list(), NetworkHandler, {:sync_elev_lights, order, light_state}, @call_timeout) do
+      {reply, _bad_nodes} when reply > 0 ->
+        IO.puts "Lights synchronized"
+      _ -> 
+        IO.puts "Timeout in light synchronization"
+    end
     {:noreply, net_state}
   end
 
