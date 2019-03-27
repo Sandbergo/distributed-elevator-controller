@@ -155,6 +155,10 @@ defmodule NetworkHandler do
     GenServer.multi_call([chosen_node], NetworkHandler, {:external_order, order}, 1000)
   end
 
+  def monitor_me_back(node_name) do
+    GenServer.multi_call([node_name], NetworkHandler, {:monitor_me_back, Node.self()}, 1000)
+  end
+
   def synchronize_order_lists(order_list) do
     GenServer.multi_call(Node.list(), NetworkHandler, {:sync_orders, order_list}, 1000)
   end
@@ -189,6 +193,15 @@ defmodule NetworkHandler do
     {:reply, net_state, net_state}
 
   end
+
+  def handle_call({:monitor_me_back, node}, _from, net_state) do
+    node_name = node
+    |> to_string() 
+    |> String.to_atom()
+    Node.monitor(node_name, true)
+    {:reply, net_state, net_state}
+  end
+
 
   def handle_call({:request_order_rank, order}, _from, net_state) do
     my_order_rank = cost_function(net_state[Node.self()], order)
@@ -321,6 +334,7 @@ defmodule NetworkHandler do
           IO.puts "Requested state:"
           IO.inspect requested_state
           IO.puts "My current mapezo"
+          monitor_me_back(node_name)
           IO.inspect Map.put(net_state, node_name, requested_state[node_name])
           Map.put(net_state, node_name, requested_state[node_name])
           # request info about node_name to own net_state
