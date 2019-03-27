@@ -18,7 +18,7 @@ defmodule StateMachine do
   use GenServer
 
   #--------------------------------INITIALIZATION---------------------------------#
-
+  @door_open_timer 1000
   def start_link(_init_args) do
     GenServer.start_link(__MODULE__, :down, [{:name, __MODULE__}])
   end
@@ -192,13 +192,12 @@ defmodule StateMachine do
     if should_stop?(state) do
       DriverInterface.set_motor_direction(DriverInterface, :stop)
       update_state_direction(:stop)
+      open_doors
       Enum.each(state.active_orders, fn(order)->
         if order.floor == state.floor do
-          #IO.puts "Delete this bitch"
           delete_active_order(order)
         end
       end)
-      open_doors(state)
     end
   end
 
@@ -225,7 +224,7 @@ defmodule StateMachine do
     end
   end
 
-  def open_doors(state) do
+  def open_doors() do
     DriverInterface.set_door_open_light DriverInterface, :on
     :timer.sleep(1000)
     DriverInterface.set_door_open_light DriverInterface, :off

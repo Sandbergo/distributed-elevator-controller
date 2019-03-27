@@ -91,7 +91,7 @@ defmodule NetworkHandler do
   def cost_function(state, order) do
     IO.inspect state
     cost = if List.last(state) do
-      3*length(List.first(state).active_orders) + abs(distance_to_order(order, List.first(state)))
+      3*(length(List.first(state).active_orders)) + abs(distance_to_order(order, List.first(state)))
     else
       100000
     end
