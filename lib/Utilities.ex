@@ -1,7 +1,7 @@
 defmodule State do
   @moduledoc """
-  A struct for the State used in StateMachine, constaining A struct consisting of a floor (the last floor), 
-  a direction (:up, :down, :stop) and a list of active orders it has accepted
+  A struct for the State of the elevator, direction and (last registered) floor
+  Basis co urtesy of @jostlowe, modified by us.
   """
   @valid_dirns [:up, :stop, :down]
   defstruct floor: 0, direction: :stop, active_orders: []
@@ -18,7 +18,8 @@ end
 
 defmodule Order do
   @moduledoc """
-  A struct for the orders handled, with a direction and a floor number
+  A struct for the orders handled, with a direction and a floor number.
+  Basis courtesy of @jostlowe, modified by us
   """
   @valid_order [:hall_up, :hall_down, :cab]
   @floors [0, 1, 2, 3]

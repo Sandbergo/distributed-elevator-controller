@@ -6,6 +6,7 @@ defmodule NetworkHandler do
   * A map with the connected nodes as keys and a backup of the node's elevator state as the respective value,
   as well as a boolean value indicating their ability to accept new orders.
   The entire state for three connected nodes will look like this:
+  `
   %{
     "elev@10.100.23.197": [
       %State{active_orders: [], direction: :stop, floor: 0},
@@ -20,6 +21,7 @@ defmodule NetworkHandler do
       true
     ]
   }
+  `
 
   ### Tasks: 
   * Initializes all modules for one computer, broadcasts own IP and listnes, making a Peer-to-peer network 
@@ -36,7 +38,6 @@ defmodule NetworkHandler do
   @receive_port 20086
   @broadcast_port 20087
   @broadcast_freq 5000
-  #@offline_sleep 5000
   @call_timeout 5000
   @node_dead_time 6000
   @broadcast {10, 100, 23, 255}#{10,42,0,255} #{10, 100, 23, 255} # {10,24,31,255}
@@ -114,12 +115,12 @@ defmodule NetworkHandler do
   end
 
   def export_order({:external_order, order, chosen_node }) do
-    case GenServer.call({NetworkHandler, chosen_node}, {:external_order, order}, @call_timeout) do
-      {:error, :timeout} -> 
+    case GenServer.multi_call([chosen_node],NetworkHandler, {:external_order, order}, @call_timeout) do
+      {replies, _bad_nodes} when length(replies) >0 -> 
+        IO.puts "Order executed normally"
+      _ -> 
         IO.puts "Can't reach others, ill take the order"
         export_order({:internal_order, order, Node.self()})
-      _ -> 
-        IO.puts "Order executed normally"
     end
   end
 
@@ -156,7 +157,6 @@ defmodule NetworkHandler do
   def handle_cast({:sync_order_lists, order_list}, net_state) do
     synchronize_order_lists(order_list)
     {:noreply, net_state}
-    #multicast
   end
 
   def handle_cast({:send_state_backup, backup}, net_state)  do
@@ -235,7 +235,6 @@ defmodule NetworkHandler do
     IO.puts "RESTART REQUIRED"
     Node.stop()
     Process.exit(self(), :kill)
-    IO.puts "DEAD?"
     {:noreply, net_state}
   end
 
@@ -262,7 +261,7 @@ defmodule NetworkHandler do
     OrderHandler.distribute_order(order, true)
     IO.puts "Incoming order: "
     IO.inspect order
-    {:reply, net_state, net_state}
+    {:reply, :deliver, net_state}
   end
 
   #-------------------------------HELPER FUNCTIONS--------------------------------#
@@ -273,7 +272,6 @@ defmodule NetworkHandler do
     Enum.each(order_list, fn(order) ->
       if order.type != :cab do
         export_order({:internal_order, order, Node.self()})
-        #GenServer.cast(NetworkHandler, {:choose_elevator, order})
       end
     end)
     
@@ -281,7 +279,7 @@ defmodule NetworkHandler do
 
   def handle_info({:request_connection, node_name}, net_state) do
     if node_name not in ([Node.self|Node.list]|> Enum.map(&(to_string(&1)))) do
-      node_name = node_name |> String.to_atom()#IO.puts "connecting to node #{node_name}"
+      node_name = node_name |> String.to_atom()
       Node.ping(node_name)
       Node.monitor(node_name, true) # monitor this newly connected node
       monitor_me_back(node_name)
@@ -347,11 +345,11 @@ defmodule NetworkHandler do
       {:error, reason} ->
         IO.inspect reason
         IO.puts "I am so lonely"
-        #Reset node?
     end
   end
 
-      @doc """
+  @doc """
+  Courtesy of @jostlowe
   Returns (hopefully) the ip address of your network interface.
   ## Examples
       iex> NetworkStuff.get_my_ip
@@ -369,6 +367,7 @@ defmodule NetworkHandler do
   end
 
   @doc """
+  Courtesy of @jostlowe
   formats an ip address on tuple format to a bytestring
   ## Examples
       iex> NetworkStuff.ip_to_string {10, 100, 23, 253}
@@ -379,6 +378,7 @@ defmodule NetworkHandler do
   end
 
   @doc """
+  Courtesy of @jostlowe
   Returns all nodes in the current cluster. Returns a list of nodes or an error message
   ## Examples
       iex> NetworkStuff.all_nodes
@@ -395,6 +395,7 @@ defmodule NetworkHandler do
   end
 
   @doc """
+  Courtesy of @jostlowe
   boots a node with a specified tick time. node_name sets the node name before @. The IP-address is
   automatically imported
       iex> NetworkStuff.boot_node "frank"

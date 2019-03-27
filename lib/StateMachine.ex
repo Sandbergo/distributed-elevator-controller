@@ -194,10 +194,8 @@ defmodule StateMachine do
 
   def open_doors(state) do
     DriverInterface.set_door_open_light DriverInterface, :on
-    :timer.sleep(1000) ## alternative
+    :timer.sleep(1000)
     DriverInterface.set_door_open_light DriverInterface, :off
-    #execute_order(state)
-    true ## WHAT?
 end
 
   def order_type_to_int(elevator_order) do
@@ -209,16 +207,3 @@ end
   end
 
 end
-
-#defmodule State do
-#  @valid_dirns [:up, :stop, :down]
-#  defstruct floor: 0, direction: :stop, active_orders: []
-#  
-#  def state_machine(direction, floor, active_orders) when direction in @valid_dirns do
-#      %State{floor: floor, direction: direction, active_orders: active_orders}
-#  end
-#  
-#  def get_valid_dirns do
-#      @valid_dirns
-#  end
-#end
