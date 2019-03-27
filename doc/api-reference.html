@@ -5,9 +5,9 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.19.3">
-    <title>API Reference — elevator v0.1.0</title>
+    <title>API Reference — Elevator v0.1.0</title>
     <link rel="stylesheet" href="dist/html-399e30b9b028e3059575.css" />
-    <script src="dist/sidebar_items-a3353d255e.js"></script>
+    <script src="dist/sidebar_items-84484ac33b.js"></script>
     <script async src="dist/html-399e30b9b028e3059575.js"></script>
     
   </head>
@@ -24,10 +24,10 @@
 </button>
 <section class="sidebar">
 
-  <a href="api-reference.html" class="sidebar-projectLink">
+  <a href="README.md.html" class="sidebar-projectLink">
     <div class="sidebar-projectDetails">
       <h1 class="sidebar-projectName">
-elevator      </h1>
+Elevator      </h1>
       <h2 class="sidebar-projectVersion">
         v0.1.0
       </h2>
@@ -58,7 +58,7 @@ elevator      </h1>
 
 
 <h1>
-  <small class="visible-xs">elevator v0.1.0</small>
+  <small class="visible-xs">Elevator v0.1.0</small>
   API Reference
 </h1>
 
@@ -87,7 +87,8 @@ elevator      </h1>
   <div class="summary-signature">
     <a href="Order.html">Order</a>
   </div>
-    <div class="summary-synopsis"><p>A struct for the orders handled, with a direction and a floor number</p>
+    <div class="summary-synopsis"><p>A struct for the orders handled, with a direction and a floor number.
+Basis courtesy of @jostlowe, modified by us</p>
 </div>
 </div>
 <div class="summary-row">
@@ -95,6 +96,14 @@ elevator      </h1>
     <a href="OrderHandler.html">OrderHandler</a>
   </div>
     <div class="summary-synopsis"><p>Module for receiving and handling orders form Poller and NetworkHandler and synchronizing orders</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="Overseer.html">Overseer</a>
+  </div>
+    <div class="summary-synopsis"><p>A Supervisor that keeps track and restarts entire program upon request or crash, using the one_for_all
+strategy, as well as being the entry point for the entire program</p>
 </div>
 </div>
 <div class="summary-row">
@@ -108,6 +117,9 @@ elevator      </h1>
   <div class="summary-signature">
     <a href="State.html">State</a>
   </div>
+    <div class="summary-synopsis"><p>A struct for the State of the elevator, direction and (last registered) floor
+Basis co urtesy of @jostlowe, modified by us</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">

@@ -36,6 +36,9 @@ defmodule StateMachine do
     {:ok, state}
   end
 
+  @doc """
+  Drive downwards until it hits a floor
+  """
   def initialize_to_floor do
     cond do
       is_atom(DriverInterface.get_floor_sensor_state DriverInterface) ->
@@ -47,31 +50,52 @@ defmodule StateMachine do
 
   #---------------------------------CASTS/CALLS-----------------------------------#
 
+  @doc """
+  Delete an executed order in OrderHandler and StateMachine
+  """
   def delete_active_order(order) do
     GenServer.cast(OrderHandler, {:order_executed, order})
     GenServer.cast(StateMachine, {:order_executed, order})
   end
 
+  @doc """
+  Update the direction state
+  """
   def update_state_direction(direction) do
     GenServer.cast(StateMachine, {:update_direction, direction})
   end
 
+  @doc """
+  Start a timer for the motor
+  """
   def start_motor_timer do
     GenServer.cast(WatchDog, {:elev_going_active})
   end
 
+  @doc """
+  Stop the timer
+  """
   def stop_motor_timer do
     GenServer.cast(WatchDog, {:elev_going_inactive})
   end
 
+  @doc """
+  Reset the timer
+  """
   def reset_motor_timer do
     GenServer.cast(WatchDog, {:floor_changed})
   end
 
+  @doc """
+  Request the state being backed up 
+  """
   def backup_state(state) do
     GenServer.cast(WatchDog, {:backup, state})
   end
 
+  @doc """
+  Synchronize non-cab lights with other nodes through NetworkHandler
+  """
   def sync_order_lights(order, light_state) do
     if order.type != :cab do
       GenServer.cast(NetworkHandler, {:sync_lights, order, light_state})
@@ -97,6 +121,9 @@ defmodule StateMachine do
     {:noreply, state}
   end
 
+  @doc """
+  A new floor is reached, change state and reset motorstop timer
+  """
   def handle_cast({:at_floor, floor}, state) do
     state = %{state | floor: floor}
     backup_state(state)
@@ -105,6 +132,9 @@ defmodule StateMachine do
     {:noreply, state}
   end
 
+  @doc """
+  A order is executed, turn lights off and communicate this to other modules
+  """
   def handle_cast({:order_executed, order}, state) do
     state = %{state | active_orders: Enum.reject(state.active_orders, fn(order) -> order.floor == state.floor end)}
     backup_state(state)
@@ -114,6 +144,9 @@ defmodule StateMachine do
     {:noreply, state}
   end
 
+  @doc """
+  update the direction state
+  """
   def handle_cast({:update_direction, direction}, state) do
     state = %{state | direction: direction}
     backup_state(state)

@@ -5,9 +5,9 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.19.3">
-    <title>StateMachine — elevator v0.1.0</title>
+    <title>StateMachine — Elevator v0.1.0</title>
     <link rel="stylesheet" href="dist/html-399e30b9b028e3059575.css" />
-    <script src="dist/sidebar_items-a3353d255e.js"></script>
+    <script src="dist/sidebar_items-84484ac33b.js"></script>
     <script async src="dist/html-399e30b9b028e3059575.js"></script>
     
   </head>
@@ -24,10 +24,10 @@
 </button>
 <section class="sidebar">
 
-  <a href="api-reference.html" class="sidebar-projectLink">
+  <a href="README.md.html" class="sidebar-projectLink">
     <div class="sidebar-projectDetails">
       <h1 class="sidebar-projectName">
-elevator      </h1>
+Elevator      </h1>
       <h2 class="sidebar-projectVersion">
         v0.1.0
       </h2>
@@ -58,7 +58,7 @@ elevator      </h1>
 
 
       <h1>
-        <small class="visible-xs">elevator v0.1.0</small>
+        <small class="visible-xs">Elevator v0.1.0</small>
 StateMachine              </h1>
 
 
@@ -92,7 +92,7 @@ and a list of active orders it has accepted
 </h3>
 
 <ul>
-<li>Sends to: DriverInterface, WatchDog
+<li>Sends to: DriverInterface, WatchDog, NetworkHandler
 </li>
 <li>Receives from: OrderHandler, Poller
 </li>
@@ -115,6 +115,8 @@ and a list of active orders it has accepted
   <div class="summary-signature">
     <a href="#backup_state/1">backup_state(state)</a>
   </div>
+    <div class="summary-synopsis"><p>Request the state being backed up</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
@@ -127,6 +129,8 @@ and a list of active orders it has accepted
   <div class="summary-signature">
     <a href="#delete_active_order/1">delete_active_order(order)</a>
   </div>
+    <div class="summary-synopsis"><p>Delete an executed order in OrderHandler and StateMachine</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
@@ -151,7 +155,7 @@ and a list of active orders it has accepted
   <div class="summary-signature">
     <a href="#handle_cast/2">handle_cast(msg, state)</a>
   </div>
-    <div class="summary-synopsis"><p>A new order is accepted, the light is set and in case this is the first order, is executed directly</p>
+    <div class="summary-synopsis"><p>update the direction state</p>
 </div>
 </div>
 <div class="summary-row">
@@ -165,10 +169,12 @@ and a list of active orders it has accepted
   <div class="summary-signature">
     <a href="#initialize_to_floor/0">initialize_to_floor()</a>
   </div>
+    <div class="summary-synopsis"><p>Drive downwards until it hits a floor</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#open_doors/0">open_doors()</a>
+    <a href="#open_doors/1">open_doors(state)</a>
   </div>
 </div>
 <div class="summary-row">
@@ -180,6 +186,8 @@ and a list of active orders it has accepted
   <div class="summary-signature">
     <a href="#reset_motor_timer/0">reset_motor_timer()</a>
   </div>
+    <div class="summary-synopsis"><p>Reset the timer</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
@@ -190,23 +198,36 @@ and a list of active orders it has accepted
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#start_link/0">start_link()</a>
+    <a href="#start_link/1">start_link(init_args)</a>
   </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#start_motor_timer/0">start_motor_timer()</a>
   </div>
+    <div class="summary-synopsis"><p>Start a timer for the motor</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#stop_motor_timer/0">stop_motor_timer()</a>
   </div>
+    <div class="summary-synopsis"><p>Stop the timer</p>
+</div>
+</div>
+<div class="summary-row">
+  <div class="summary-signature">
+    <a href="#sync_order_lights/2">sync_order_lights(order, light_state)</a>
+  </div>
+    <div class="summary-synopsis"><p>Synchronize non-cab lights with other nodes through NetworkHandler</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#update_state_direction/1">update_state_direction(direction)</a>
   </div>
+    <div class="summary-synopsis"><p>Update the direction state</p>
+</div>
 </div>
   </div>
         </section>
@@ -228,6 +249,7 @@ Functions          </h1>
     <h1 class="signature">backup_state(state)</span>
           </div>
   <section class="docstring">
+<p>Request the state being backed up </p>
   </section>
 </section>
 <section class="detail" id="child_spec/1">
@@ -252,6 +274,7 @@ Functions          </h1>
     <h1 class="signature">delete_active_order(order)</span>
           </div>
   <section class="docstring">
+<p>Delete an executed order in OrderHandler and StateMachine</p>
   </section>
 </section>
 <section class="detail" id="direction_to_int/1">
@@ -298,7 +321,7 @@ Functions          </h1>
     <h1 class="signature">handle_cast(msg, state)</span>
           </div>
   <section class="docstring">
-<p>A new order is accepted, the light is set and in case this is the first order, is executed directly</p>
+<p>update the direction state</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -322,15 +345,16 @@ Functions          </h1>
     <h1 class="signature">initialize_to_floor()</span>
           </div>
   <section class="docstring">
+<p>Drive downwards until it hits a floor</p>
   </section>
 </section>
-<section class="detail" id="open_doors/0">
+<section class="detail" id="open_doors/1">
     <div class="detail-header">
-    <a href="#open_doors/0" class="detail-link" title="Link to this function">
+    <a href="#open_doors/1" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">open_doors()</span>
+    <h1 class="signature">open_doors(state)</span>
           </div>
   <section class="docstring">
   </section>
@@ -355,6 +379,7 @@ Functions          </h1>
     <h1 class="signature">reset_motor_timer()</span>
           </div>
   <section class="docstring">
+<p>Reset the timer</p>
   </section>
 </section>
 <section class="detail" id="should_stop?/1">
@@ -369,13 +394,13 @@ Functions          </h1>
 <p>Logic for deciding whether the elevator should stop at that specific floor</p>
   </section>
 </section>
-<section class="detail" id="start_link/0">
+<section class="detail" id="start_link/1">
     <div class="detail-header">
-    <a href="#start_link/0" class="detail-link" title="Link to this function">
+    <a href="#start_link/1" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">start_link()</span>
+    <h1 class="signature">start_link(init_args)</span>
           </div>
   <section class="docstring">
   </section>
@@ -389,6 +414,7 @@ Functions          </h1>
     <h1 class="signature">start_motor_timer()</span>
           </div>
   <section class="docstring">
+<p>Start a timer for the motor</p>
   </section>
 </section>
 <section class="detail" id="stop_motor_timer/0">
@@ -400,6 +426,19 @@ Functions          </h1>
     <h1 class="signature">stop_motor_timer()</span>
           </div>
   <section class="docstring">
+<p>Stop the timer</p>
+  </section>
+</section>
+<section class="detail" id="sync_order_lights/2">
+    <div class="detail-header">
+    <a href="#sync_order_lights/2" class="detail-link" title="Link to this function">
+      <span class="icon-link" aria-hidden="true"></span>
+      <span class="sr-only">Link to this function</span>
+    </a>
+    <h1 class="signature">sync_order_lights(order, light_state)</span>
+          </div>
+  <section class="docstring">
+<p>Synchronize non-cab lights with other nodes through NetworkHandler</p>
   </section>
 </section>
 <section class="detail" id="update_state_direction/1">
@@ -411,6 +450,7 @@ Functions          </h1>
     <h1 class="signature">update_state_direction(direction)</span>
           </div>
   <section class="docstring">
+<p>Update the direction state</p>
   </section>
 </section>
           </div>

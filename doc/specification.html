@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.19.3">
+    <title>Specification — Elevator v0.1.0</title>
+    <link rel="stylesheet" href="dist/html-399e30b9b028e3059575.css" />
+    <script src="dist/sidebar_items-84484ac33b.js"></script>
+    <script async src="dist/html-399e30b9b028e3059575.js"></script>
+    
+  </head>
+  <body data-type="extras">
+    <script>try { if(localStorage.getItem('night-mode')) document.body.className += ' night-mode'; } catch (e) { }</script>
+<div class="main">
+<button class="sidebar-button sidebar-toggle">
+  <span class="icon-menu" aria-hidden="true"></span>
+  <span class="sr-only">Toggle Sidebar</span>
+</button>
+<button class="sidebar-button night-mode-toggle">
+  <span class="icon-theme" aria-hidden="true"></span>
+  <span class="sr-only">Toggle Theme</span>
+</button>
+<section class="sidebar">
+
+  <a href="README.md.html" class="sidebar-projectLink">
+    <div class="sidebar-projectDetails">
+      <h1 class="sidebar-projectName">
+Elevator      </h1>
+      <h2 class="sidebar-projectVersion">
+        v0.1.0
+      </h2>
+    </div>
+  </a>
+
+  <form class="sidebar-search" action="search.html">
+    <button type="submit" class="search-button">
+      <span class="icon-search" aria-hidden="true"></span>
+    </button>
+    <input name="q" type="text" id="search-list" class="search-input" placeholder="Search" aria-label="Search" autocomplete="off" />
+  </form>
+
+  <ul class="sidebar-listNav">
+    <li><a id="extras-list" href="#full-list">Pages</a></li>
+
+      <li><a id="modules-list" href="#full-list">Modules</a></li>
+
+
+  </ul>
+  <div class="gradient"></div>
+  <ul id="full-list" class="sidebar-fullList"></ul>
+</section>
+
+<section class="content">
+  <div class="content-outer">
+    <div id="content" class="content-inner">
+
+
+<h1>Specification</h1>
+<h2 id="summary" class="section-heading">
+  <a href="#summary" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Summary
+</h2>
+
+<p>Create software for controlling <code class="inline">n</code> elevators working in parallel across <code class="inline">m</code> floors.</p>
+<h2 id="main-requirements" class="section-heading">
+  <a href="#main-requirements" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Main requirements
+</h2>
+
+<p>Be reasonable: There may be semantic hoops that you can jump through to create something that is &quot;technically correct&quot;. Do not hesitate to contact us if you feel that something is ambiguous or missing from these requirements.</p>
+<h3 id="no-orders-are-lost" class="section-heading">
+  <a href="#no-orders-are-lost" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  No orders are lost
+</h3>
+
+<ul>
+<li>Once the light on a hall call button (buttons for calling an elevator to that floor; top 6 buttons on the control panel) is turned on, an elevator should arrive at that floor
+</li>
+<li>Similarly for a cab call (for telling the elevator what floor you want to exit at; front 4 buttons on the control panel), but only the elevator at that specific workspace should take the order
+</li>
+<li><p>This means handling network packet loss, losing network connection entirely, software that crashes, and losing power - both to the elevator motor and the machine that controls the elevator</p>
+<ul>
+<li>For cab orders, handling loss of power/software crash implies that the orders are executed once service is restored
+</li>
+<li>The time used to detect these failures should be reasonable, ie. on the order of magnitude of seconds (not minutes)
+</li>
+<li>Network packet loss is not an error, and can occur at any time
+</li>
+</ul>
+</li>
+<li><p>If the elevator is disconnected from the network, it should still serve all the currently active orders (ie. whatever lights are showing)</p>
+<ul>
+<li>It should also keep taking new cab calls, so that people can exit the elevator even if it is disconnected from the network
+</li>
+<li>The elevator software should not require reinitialization (manual restart) after intermittent network or motor power loss
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="multiple-elevators-should-be-more-efficient-than-one" class="section-heading">
+  <a href="#multiple-elevators-should-be-more-efficient-than-one" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Multiple elevators should be more efficient than one
+</h3>
+
+<ul>
+<li><p>The orders should be distributed across the elevators in a reasonable way</p>
+<ul>
+<li>Ex: If all three elevators are idle and two of them are at the bottom floor, then a new order at the top floor should be handled by the closest elevator (ie. neither of the two at the bottom).
+</li>
+</ul>
+</li>
+<li>You are free to choose and design your own &quot;cost function&quot; of some sort: Minimal movement, minimal waiting time, etc.
+</li>
+<li>The project is not about creating the &quot;best&quot; or &quot;optimal&quot; distribution of orders. It only has to be clear that the elevators are cooperating and communicating.
+</li>
+</ul>
+<h3 id="an-individual-elevator-should-behave-sensibly-and-efficiently" class="section-heading">
+  <a href="#an-individual-elevator-should-behave-sensibly-and-efficiently" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  An individual elevator should behave sensibly and efficiently
+</h3>
+
+<ul>
+<li>No stopping at every floor &quot;just to be safe&quot;
+</li>
+<li><p>The hall &quot;call upward&quot; and &quot;call downward&quot; buttons should behave differently</p>
+<ul>
+<li>Ex: If the elevator is moving from floor 1 up to floor 4 and there is a downward order at floor 3, then the elevator should not stop on its way upward, but should return back to floor 3 on its way down
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="the-lights-and-buttons-should-function-as-expected" class="section-heading">
+  <a href="#the-lights-and-buttons-should-function-as-expected" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  The lights and buttons should function as expected
+</h3>
+
+<ul>
+<li>The hall call buttons on all workspaces should let you summon an elevator
+</li>
+<li><p>Under normal circumstances, the lights on the hall buttons should show the same thing on all workspaces </p>
+<ul>
+<li>Under circumstances with high packet loss, at least one light must work as expected
+</li>
+</ul>
+</li>
+<li>The cab button lights should not be shared between elevators
+</li>
+<li><p>The cab and hall button lights should turn on as soon as is reasonable after the button has been pressed</p>
+<ul>
+<li>Not ever turning on the button lights because &quot;no guarantee is offered&quot; is not a valid solution
+</li>
+<li>You are allowed to expect the user to press the button again if it does not light up
+</li>
+</ul>
+</li>
+<li>The cab and hall button lights should turn off when the corresponding order has been serviced
+</li>
+<li><p>The &quot;door open&quot; lamp should be used as a substitute for an actual door, and as such should not be switched on while the elevator is moving</p>
+<ul>
+<li>The duration for keeping the door open should be in the 1-5 second range
+</li>
+</ul>
+</li>
+</ul>
+<p>Start with <code class="inline">1 &lt;= n &lt;= 3</code> elevators, and <code class="inline">m == 4</code> floors. Try to avoid hard-coding these values: You should be able to add a fourth elevator with no extra configuration, or change the number of floors with minimal configuration. You do, however, not need to test for <code class="inline">n &gt; 3</code> and <code class="inline">m != 4</code>.</p>
+<h2 id="unspecified-behaviour" class="section-heading">
+  <a href="#unspecified-behaviour" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Unspecified behaviour
+</h2>
+
+<p>Some things are left intentionally unspecified. Their implementation will not be tested, and are therefore up to you.</p>
+<p>Which orders are cleared when stopping at a floor</p>
+<ul>
+<li>You can clear only the orders in the direction of travel, or assume that everyone enters/exits the elevator when the door opens
+</li>
+</ul>
+<p>How the elevator behaves when it cannot connect to the network (router) during initialization</p>
+<ul>
+<li>You can either enter a &quot;single-elevator&quot; mode, or refuse to start
+</li>
+</ul>
+<p>How the hall (call up, call down) buttons work when the elevator is disconnected from the network</p>
+<ul>
+<li>You can optionally refuse to take these new orders
+</li>
+</ul>
+<p>Stop button &amp; obstruction switch are disabled</p>
+<ul>
+<li>Their functionality (if/when implemented) is up to you.
+</li>
+</ul>
+<h2 id="permitted-assumptions" class="section-heading">
+  <a href="#permitted-assumptions" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
+  Permitted assumptions
+</h2>
+
+<p>The following assumptions will always be true during testing:</p>
+<ul>
+<li>At least one elevator is always working normally
+</li>
+<li><p>No multiple simultaneous errors: Only one error happens at a time, but the system must still return to a fail-safe state after this error</p>
+<ul>
+<li>(Recall that network packet loss is <em>not</em> an error in this context, and must be considered regardless of any other (single) error that can occur)
+</li>
+</ul>
+</li>
+<li>No network partitioning: There will never be a situation where there are multiple sets of two or more elevators with no connection between them
+</li>
+</ul>
+      <footer class="footer">
+        <p>
+          <span class="line">
+            Built using
+            <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener">ExDoc</a> (v0.19.3),
+          </span>
+          <span class="line">
+            designed by
+            <a href="https://twitter.com/dignifiedquire" target="_blank" rel="noopener" title="@dignifiedquire">Friedel Ziegelmayer</a>.
+            </span>
+        </p>
+      </footer>
+    </div>
+  </div>
+</section>
+</div>
+  
+  </body>
+</html>
+

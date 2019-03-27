@@ -22,6 +22,9 @@ defmodule Poller do
     GenServer.start_link(__MODULE__, [], [{:name, __MODULE__}])
   end
 
+  @doc """
+  Initialize by turning off all lights and spawning one process for button polling and one for floor polling
+  """ 
   def init _mock do ## REMOVE MOCK?
     Enum.each(@floors, fn(floor) ->
       Enum.each(@button_types, fn(button_type)->
@@ -34,6 +37,9 @@ defmodule Poller do
     {:ok, _mock}
   end
 
+  @doc """
+  Loop and send when a new floor is reached 20 times per second
+  """ 
   def floor_poller floor do
     new_floor = DriverInterface.get_floor_sensor_state(DriverInterface)
     if new_floor != floor && new_floor != :between_floors do
@@ -44,6 +50,9 @@ defmodule Poller do
     :timer.sleep(50) 
   end
 
+  @doc """
+  Loop and send when a new button is pressed 20 times per second
+  """ 
   def button_poller do
     Enum.each(@floors, fn(floor) ->
       Enum.each(@button_types, fn(button_type)->
@@ -51,7 +60,6 @@ defmodule Poller do
           1 ->
             set_order(floor, button_type)
             IO.puts "Noticed press: #{button_type} on floor: #{floor}"
-            #:timer.sleep(100)  ## DOUBLE SLEEP
           0 ->
             {:no_orders}
         end
@@ -69,9 +77,4 @@ defmodule Poller do
     GenServer.cast StateMachine, {:at_floor, floor}
   end
 
-  #def test do
-  #  DriverInterface.start()
-  #  init([])
-  #  StateMachine.start_link()
-  #end
 end

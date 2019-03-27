@@ -5,9 +5,9 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.19.3">
-    <title>Poller — elevator v0.1.0</title>
+    <title>Poller — Elevator v0.1.0</title>
     <link rel="stylesheet" href="dist/html-399e30b9b028e3059575.css" />
-    <script src="dist/sidebar_items-a3353d255e.js"></script>
+    <script src="dist/sidebar_items-84484ac33b.js"></script>
     <script async src="dist/html-399e30b9b028e3059575.js"></script>
     
   </head>
@@ -24,10 +24,10 @@
 </button>
 <section class="sidebar">
 
-  <a href="api-reference.html" class="sidebar-projectLink">
+  <a href="README.md.html" class="sidebar-projectLink">
     <div class="sidebar-projectDetails">
       <h1 class="sidebar-projectName">
-elevator      </h1>
+Elevator      </h1>
       <h2 class="sidebar-projectVersion">
         v0.1.0
       </h2>
@@ -58,7 +58,7 @@ elevator      </h1>
 
 
       <h1>
-        <small class="visible-xs">elevator v0.1.0</small>
+        <small class="visible-xs">Elevator v0.1.0</small>
 Poller              </h1>
 
 
@@ -112,6 +112,8 @@ to the OrderHandler and StateMachine
   <div class="summary-signature">
     <a href="#button_poller/0">button_poller()</a>
   </div>
+    <div class="summary-synopsis"><p>Loop and send when a new button is pressed 20 times per second</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
@@ -124,13 +126,14 @@ to the OrderHandler and StateMachine
   <div class="summary-signature">
     <a href="#floor_poller/1">floor_poller(floor)</a>
   </div>
+    <div class="summary-synopsis"><p>Loop and send when a new floor is reached 20 times per second</p>
+</div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#init/1">init(mock)</a>
   </div>
-    <div class="summary-synopsis"><p>Invoked when the server is started. <code class="inline">start_link/3</code> or <code class="inline">start/3</code> will
-block until it returns</p>
+    <div class="summary-synopsis"><p>Initialize by turning off all lights and spawning one process for button polling and one for floor polling</p>
 </div>
 </div>
 <div class="summary-row">
@@ -145,12 +148,7 @@ block until it returns</p>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#start_link/0">start_link()</a>
-  </div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#test/0">test()</a>
+    <a href="#start_link/1">start_link(init_args)</a>
   </div>
 </div>
   </div>
@@ -173,6 +171,7 @@ Functions          </h1>
     <h1 class="signature">button_poller()</span>
           </div>
   <section class="docstring">
+<p>Loop and send when a new button is pressed 20 times per second</p>
   </section>
 </section>
 <section class="detail" id="child_spec/1">
@@ -197,6 +196,7 @@ Functions          </h1>
     <h1 class="signature">floor_poller(floor)</span>
           </div>
   <section class="docstring">
+<p>Loop and send when a new floor is reached 20 times per second</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -208,42 +208,7 @@ Functions          </h1>
     <h1 class="signature">init(mock)</span>
           </div>
   <section class="docstring">
-<p>Invoked when the server is started. <code class="inline">start_link/3</code> or <code class="inline">start/3</code> will
-block until it returns.</p>
-<p><code class="inline">init_arg</code> is the argument term (second argument) passed to <code class="inline">start_link/3</code>.</p>
-<p>Returning <code class="inline">{:ok, state}</code> will cause <code class="inline">start_link/3</code> to return
-<code class="inline">{:ok, pid}</code> and the process to enter its loop.</p>
-<p>Returning <code class="inline">{:ok, state, timeout}</code> is similar to <code class="inline">{:ok, state}</code>
-except <code class="inline">handle_info(:timeout, state)</code> will be called after <code class="inline">timeout</code>
-milliseconds if no messages are received within the timeout.</p>
-<p>Returning <code class="inline">{:ok, state, :hibernate}</code> is similar to <code class="inline">{:ok, state}</code>
-except the process is hibernated before entering the loop. See
-<code class="inline">c:handle_call/3</code> for more information on hibernation.</p>
-<p>Returning <code class="inline">{:ok, state, {:continue, continue}}</code> is similar to
-<code class="inline">{:ok, state}</code> except that immediately after entering the loop
-the <code class="inline">c:handle_continue/2</code> callback will be invoked with the value
-<code class="inline">continue</code> as first argument.</p>
-<p>Returning <code class="inline">:ignore</code> will cause <code class="inline">start_link/3</code> to return <code class="inline">:ignore</code> and
-the process will exit normally without entering the loop or calling
-<code class="inline">c:terminate/2</code>. If used when part of a supervision tree the parent
-supervisor will not fail to start nor immediately try to restart the
-<a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a>. The remainder of the supervision tree will be started
-and so the <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a> should not be required by other processes.
-It can be started later with <a href="https://hexdocs.pm/elixir/Supervisor.html#restart_child/2"><code class="inline">Supervisor.restart_child/2</code></a> as the child
-specification is saved in the parent supervisor. The main use cases for
-this are:</p>
-<ul>
-<li>The <a href="https://hexdocs.pm/elixir/GenServer.html"><code class="inline">GenServer</code></a> is disabled by configuration but might be enabled later.
-</li>
-<li>An error occurred and it will be handled by a different mechanism than the
-   <a href="https://hexdocs.pm/elixir/Supervisor.html"><code class="inline">Supervisor</code></a>. Likely this approach involves calling <a href="https://hexdocs.pm/elixir/Supervisor.html#restart_child/2"><code class="inline">Supervisor.restart_child/2</code></a>
-after a delay to attempt a restart.
-</li>
-</ul>
-<p>Returning <code class="inline">{:stop, reason}</code> will cause <code class="inline">start_link/3</code> to return
-<code class="inline">{:error, reason}</code> and the process to exit with reason <code class="inline">reason</code> without
-entering the loop or calling <code class="inline">c:terminate/2</code>.</p>
-<p>Callback implementation for <a href="https://hexdocs.pm/elixir/GenServer.html#c:init/1"><code class="inline">GenServer.init/1</code></a>.</p>
+<p>Initialize by turning off all lights and spawning one process for button polling and one for floor polling</p>
   </section>
 </section>
 <section class="detail" id="send_floor/1">
@@ -268,24 +233,13 @@ entering the loop or calling <code class="inline">c:terminate/2</code>.</p>
   <section class="docstring">
   </section>
 </section>
-<section class="detail" id="start_link/0">
+<section class="detail" id="start_link/1">
     <div class="detail-header">
-    <a href="#start_link/0" class="detail-link" title="Link to this function">
+    <a href="#start_link/1" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">start_link()</span>
-          </div>
-  <section class="docstring">
-  </section>
-</section>
-<section class="detail" id="test/0">
-    <div class="detail-header">
-    <a href="#test/0" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature">test()</span>
+    <h1 class="signature">start_link(init_args)</span>
           </div>
   <section class="docstring">
   </section>

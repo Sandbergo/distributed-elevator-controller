@@ -23,6 +23,9 @@ defmodule WatchDog do
     GenServer.start_link(__MODULE__, [nil, %State{}], [{:name, __MODULE__}])
   end
 
+  @doc """
+  Initialize by sending backup
+  """
   def init([overwatch, backup]) do
     backup = %{backup | floor: DriverInterface.get_floor_sensor_state(DriverInterface)}
     send_backup(backup)
@@ -31,6 +34,10 @@ defmodule WatchDog do
 
   #-------------------------------HELPER FUNCTIONS--------------------------------#
 
+  @doc """
+  Will send an error message to NetworkHandler if it is initialized and receives no sign of life
+  within a set time
+  """
   def watchdog_loop do
     receive do
       {:elev_going_inactive} ->
@@ -45,17 +52,25 @@ defmodule WatchDog do
   end
 
   #------------------------------HANDLE CASTS/CALLS-------------------------------#
-
+  @doc """
+  Spawns a Watchdog process upon request
+  """
   def handle_cast({:elev_going_active}, [overwatch, backup]) do
     overwatch = Process.spawn(WatchDog, :watchdog_loop, [], [])
     {:noreply, [overwatch, backup]}
   end
   
+  @doc """
+  Kills watchdog process upon request
+  """
   def handle_cast({:elev_going_inactive}, [overwatch, backup]) do
     send(overwatch, {:elev_going_inactive})
     {:noreply, [overwatch, backup]}
   end
   
+  @doc """
+  Handles floorchange, meaning the elevator is not inactive
+  """
   def handle_cast({:floor_changed}, [overwatch, backup]) do
     case overwatch do
       nil -> 
@@ -66,12 +81,18 @@ defmodule WatchDog do
     {:noreply, [overwatch, backup]}
   end
 
+  @doc """
+  Handles changes in elevator state, sending an updated backup
+  """
   def handle_cast({:backup, state}, [overwatch, backup]) do
     backup = state
     send_backup(backup)
     {:noreply, [overwatch, backup]}
   end
 
+  @doc """
+  Handles a external override of backup state
+  """
   def handle_cast({:backup_updated, ext_backup}, [overwatch, backup]) do
     backup = ext_backup;
     {:noreply, [overwatch, backup]}
@@ -79,11 +100,14 @@ defmodule WatchDog do
   
   #---------------------------------CASTS/CALLS-----------------------------------#
 
+  @doc """
+  Sends backup of coupled elevator to NetworkHandler 
+  """
   def send_backup(backup) do
     GenServer.cast NetworkHandler, {:send_state_backup, backup}
   end
 
   def send_motorstop do
-    GenServer.cast NetworkHandler, {:motorstop}
+    GenServer.cast NetworkHandler, {:error}
   end
 end
