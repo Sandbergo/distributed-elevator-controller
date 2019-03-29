@@ -26,7 +26,6 @@ defmodule OrderHandler do
 
   #---------------------------------CASTS/CALLS-----------------------------------#
 
-
   @doc """
   distribute order from Poller or NetworkHandler, sending hall orders to NetworkHandler if it has not been chosen
   and passing the other orders to own elevator
@@ -63,8 +62,8 @@ defmodule OrderHandler do
       sync_order(order_list++[new_order])
       distribute_order(new_order)
       order_list ++ [new_order]
-    else                 ## FJERN?
-      order_list         ## FJERN?
+    else               
+      order_list       
     end
     IO.puts "Here is the order list"
     IO.inspect order_list
@@ -76,7 +75,7 @@ defmodule OrderHandler do
   """
   def handle_cast({:order_executed, order}, order_list) do
     order_list = Enum.reject(order_list, fn(other_order) -> other_order.floor == order.floor end)
-    sync_order(order_list)  ## PEPELINE?
+    sync_order(order_list) 
     {:noreply, order_list}
   end
 
@@ -85,8 +84,7 @@ defmodule OrderHandler do
   """
   def handle_cast({:sync_order_list, ext_order_list}, order_list) do
     cab_orders = Enum.reject(order_list, fn(int_order)-> int_order.type != :cab end)
-    order_list = ext_order_list ++ cab_orders ## PIPELINE?
-    IO.inspect order_list
+    order_list = ext_order_list ++ cab_orders 
     {:noreply, order_list}
   end
 

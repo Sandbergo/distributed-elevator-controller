@@ -5,9 +5,9 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.19.3">
-    <title>Elevator project — Elevator v0.1.0</title>
+    <title>Elevator project — Elevator v1.0.0</title>
     <link rel="stylesheet" href="dist/html-399e30b9b028e3059575.css" />
-    <script src="dist/sidebar_items-84484ac33b.js"></script>
+    <script src="dist/sidebar_items-d1c0933379.js"></script>
     <script async src="dist/html-399e30b9b028e3059575.js"></script>
     
   </head>
@@ -24,12 +24,12 @@
 </button>
 <section class="sidebar">
 
-  <a href="README.md.html" class="sidebar-projectLink">
+  <a href="api-reference.html" class="sidebar-projectLink">
     <div class="sidebar-projectDetails">
       <h1 class="sidebar-projectName">
 Elevator      </h1>
       <h2 class="sidebar-projectVersion">
-        v0.1.0
+        v1.0.0
       </h2>
     </div>
   </a>
@@ -64,37 +64,35 @@ Elevator      </h1>
   Introduction
 </h2>
 
-<p>The complete code for the Elevator Project in TTK4145, Real Time Programming, NTNU Spring 2019, as well as solutions to the exercises. </p>
-<p>The elevator project, specified in the <a href="SPECIFICATION.md">specification</a>, is to create a fault-tolerant distributed system of multiple elevators cooperating to provide a seemless user experience, even with packet loss, power outages, crashes and loss of network connectivity.</p>
+<p>The complete code for the Elevator Project in TTK4145, Real Time Programming, NTNU Spring 2019.</p>
+<p>The elevator project, specified in the <a href="SPECIFICATION.md">specification</a>, is to create a fault-tolerant distributed  system of multiple elevators cooperating to provide a seemless user experience, even with packet loss, power outages, crashes and loss of network connectivity.</p>
 <h2 id="how-to-run" class="section-heading">
   <a href="#how-to-run" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
   How to run
 </h2>
 
-<p>Relies on Elixir 1.8.1 and Erlang/OTP 20. Clone the repo and run the bash scripts, <a href="run_elevator.sh">for elevator</a>and <a href="sim_run_elevator.sh">for simulator</a>. Changes in NetworkHandler for IP-adresses etc. may be needed.</p>
+<p>Relies on Elixir 1.8.1 and Erlang/OTP 20. Clone the repository and run the bash scripts <a href="run_elevator.sh">./run_elevator.sh</a> and <a href="sim_run_elevator.sh">./sim_run_elevator</a>. Changes in NetworkHandler for IP-adresses etc. may be needed for your system. The code can also be run directly with the command</p>
+<p><code class="inline">iex -S mix run -e Overseer.main</code></p>
 <h2 id="design" class="section-heading">
   <a href="#design" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
   Design
 </h2>
 
-<p>The code is written in Elixir and uses prominently the Node and GenServer libraries to communicate between the network and modules, respectively. Modules are implemented as GenServers with state info, and uses the GenServer abstraction of server-client interaction. The network is peer-to-peer based, and uses UDP for connecting to nodes and TCP for passing messages. The bash script used for running will restart after a crash after 5 seconds with any exit code except for 0, merging error modes and giving the programmer the opportunity to fix bugs on the go. </p>
+<p>The code is written in Elixir and uses prominently the Node and GenServer libraries to communicate between the network and modules, respectively, as well as a Supervisor. The supervisor utilizes the :one_for_all strategy, restarting every module upon crash. The network is peer-to-peer based, and uses UDP for connecting to nodes and TCP for passing messages. The system consists of the modules DriverInterface, Poller, StateMachine, OrderHandler, WatchDog, Overseer and NetworkHandler. All communication between nodes is executed between their respective NetworkHandler modules.</p>
 <h2 id="documentation" class="section-heading">
   <a href="#documentation" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
   Documentation
 </h2>
 
-<p>Documentation is compiled using HexDocs, you can use a browser to read it, starting from the <a href="/doc/index.html">main page</a></p>
+<p>Documentation is compiled using HexDocs, and can be read on the following webpage:</p>
+<p><code class="inline">https://sandbergo.github.io/elevator-docs</code> </p>
+<p>given that the working directory. If you are reading this from the </p>
 <h2 id="contributors" class="section-heading">
   <a href="#contributors" class="hover-link"><span class="icon-link" aria-hidden="true"></span></a>
-  Contributors:
+  Contributors
 </h2>
 
-<ul>
-<li>Lars Sandberg (<a href="https://github.com/sandbergo">Sandbergo</a>)
-</li>
-<li>Sjur Wroldsen (<a href="https://github.com/sjurinho">Sjurinho</a>)
-</li>
-</ul>
+<p>The Simulator and DriverInterface is given as part of the assignment, and some functions are courtesy of student assistant @jostlowe (thank you), this is mentioned in the documentation for the relevant functions. Everything else is written by us.</p>
       <footer class="footer">
         <p>
           <span class="line">

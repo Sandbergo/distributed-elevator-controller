@@ -4,7 +4,7 @@ defmodule Elevator.MixProject do
   def project do
     [
       app: :elevator,
-      version: "0.1.0",
+      version: "1.0.0",
       elixir: "~> 1.8",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -12,7 +12,7 @@ defmodule Elevator.MixProject do
       # Docs
       name: "Elevator",
       docs: [
-        main: "README.md", # The main page in the docs
+        #main: "Elevator", # The main page in the docs index.html
         extras: ["README.md", "SPECIFICATION.md"]
       ]
     ]

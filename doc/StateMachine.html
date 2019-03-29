@@ -5,9 +5,9 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="generator" content="ExDoc v0.19.3">
-    <title>StateMachine — Elevator v0.1.0</title>
+    <title>StateMachine — Elevator v1.0.0</title>
     <link rel="stylesheet" href="dist/html-399e30b9b028e3059575.css" />
-    <script src="dist/sidebar_items-84484ac33b.js"></script>
+    <script src="dist/sidebar_items-d1c0933379.js"></script>
     <script async src="dist/html-399e30b9b028e3059575.js"></script>
     
   </head>
@@ -24,12 +24,12 @@
 </button>
 <section class="sidebar">
 
-  <a href="README.md.html" class="sidebar-projectLink">
+  <a href="api-reference.html" class="sidebar-projectLink">
     <div class="sidebar-projectDetails">
       <h1 class="sidebar-projectName">
 Elevator      </h1>
       <h2 class="sidebar-projectVersion">
-        v0.1.0
+        v1.0.0
       </h2>
     </div>
   </a>
@@ -58,7 +58,7 @@ Elevator      </h1>
 
 
       <h1>
-        <small class="visible-xs">Elevator v0.1.0</small>
+        <small class="visible-xs">Elevator v1.0.0</small>
 StateMachine              </h1>
 
 
@@ -72,7 +72,8 @@ ensures own backup and makes sure lights are correct</p>
 
 <ul>
 <li>A struct consisting of a floor (the last floor), a direction (:up, :down, :stop) 
-and a list of active orders it has accepted
+and a list of active orders it has accepted:
+<code class="inline">%State{active_orders: [], direction: :stop, floor: 1}</code>
 </li>
 </ul>
 <h3 id="module-tasks" class="section-heading">
@@ -81,7 +82,7 @@ and a list of active orders it has accepted
 </h3>
 
 <ul>
-<li>Controlling the elevator
+<li>Controlling the elevator motor
 </li>
 <li>Executing orders
 </li>
@@ -134,66 +135,37 @@ and a list of active orders it has accepted
 </div>
 <div class="summary-row">
   <div class="summary-signature">
-    <a href="#direction_to_int/1">direction_to_int(elevator_state)</a>
+    <a href="#handle_call/3">handle_call(msg, from, state)</a>
   </div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#execute_order/1">execute_order(state)</a>
-  </div>
-    <div class="summary-synopsis"><p>function for controlling elevator direction</p>
-</div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#execute_order_on_floor/1">execute_order_on_floor(state)</a>
-  </div>
-    <div class="summary-synopsis"><p>When on a floor, execute the order if the elevator should stop</p>
+    <div class="summary-synopsis"><p>Update the direction state</p>
 </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#handle_cast/2">handle_cast(msg, state)</a>
   </div>
-    <div class="summary-synopsis"><p>update the direction state</p>
+    <div class="summary-synopsis"><p>Update the direction state</p>
 </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#init/1">init(direction)</a>
   </div>
-    <div class="summary-synopsis"><p>drive downwards to closest floor and initialize the state</p>
+    <div class="summary-synopsis"><p>Drive downwards to closest floor and initialize the state</p>
 </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#initialize_to_floor/0">initialize_to_floor()</a>
   </div>
-    <div class="summary-synopsis"><p>Drive downwards until it hits a floor</p>
+    <div class="summary-synopsis"><p>Loops and drives downwards until it hits a floor</p>
 </div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#open_doors/1">open_doors(state)</a>
-  </div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#order_type_to_int/1">order_type_to_int(elevator_order)</a>
-  </div>
 </div>
 <div class="summary-row">
   <div class="summary-signature">
     <a href="#reset_motor_timer/0">reset_motor_timer()</a>
   </div>
     <div class="summary-synopsis"><p>Reset the timer</p>
-</div>
-</div>
-<div class="summary-row">
-  <div class="summary-signature">
-    <a href="#should_stop?/1">should_stop?(state)</a>
-  </div>
-    <div class="summary-synopsis"><p>Logic for deciding whether the elevator should stop at that specific floor</p>
 </div>
 </div>
 <div class="summary-row">
@@ -277,39 +249,16 @@ Functions          </h1>
 <p>Delete an executed order in OrderHandler and StateMachine</p>
   </section>
 </section>
-<section class="detail" id="direction_to_int/1">
+<section class="detail" id="handle_call/3">
     <div class="detail-header">
-    <a href="#direction_to_int/1" class="detail-link" title="Link to this function">
+    <a href="#handle_call/3" class="detail-link" title="Link to this function">
       <span class="icon-link" aria-hidden="true"></span>
       <span class="sr-only">Link to this function</span>
     </a>
-    <h1 class="signature">direction_to_int(elevator_state)</span>
+    <h1 class="signature">handle_call(msg, from, state)</span>
           </div>
   <section class="docstring">
-  </section>
-</section>
-<section class="detail" id="execute_order/1">
-    <div class="detail-header">
-    <a href="#execute_order/1" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature">execute_order(state)</span>
-          </div>
-  <section class="docstring">
-<p>function for controlling elevator direction</p>
-  </section>
-</section>
-<section class="detail" id="execute_order_on_floor/1">
-    <div class="detail-header">
-    <a href="#execute_order_on_floor/1" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature">execute_order_on_floor(state)</span>
-          </div>
-  <section class="docstring">
-<p>When on a floor, execute the order if the elevator should stop</p>
+<p>Update the direction state</p>
   </section>
 </section>
 <section class="detail" id="handle_cast/2">
@@ -321,7 +270,7 @@ Functions          </h1>
     <h1 class="signature">handle_cast(msg, state)</span>
           </div>
   <section class="docstring">
-<p>update the direction state</p>
+<p>Update the direction state</p>
   </section>
 </section>
 <section class="detail" id="init/1">
@@ -333,7 +282,7 @@ Functions          </h1>
     <h1 class="signature">init(direction)</span>
           </div>
   <section class="docstring">
-<p>drive downwards to closest floor and initialize the state</p>
+<p>Drive downwards to closest floor and initialize the state</p>
   </section>
 </section>
 <section class="detail" id="initialize_to_floor/0">
@@ -345,29 +294,7 @@ Functions          </h1>
     <h1 class="signature">initialize_to_floor()</span>
           </div>
   <section class="docstring">
-<p>Drive downwards until it hits a floor</p>
-  </section>
-</section>
-<section class="detail" id="open_doors/1">
-    <div class="detail-header">
-    <a href="#open_doors/1" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature">open_doors(state)</span>
-          </div>
-  <section class="docstring">
-  </section>
-</section>
-<section class="detail" id="order_type_to_int/1">
-    <div class="detail-header">
-    <a href="#order_type_to_int/1" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature">order_type_to_int(elevator_order)</span>
-          </div>
-  <section class="docstring">
+<p>Loops and drives downwards until it hits a floor</p>
   </section>
 </section>
 <section class="detail" id="reset_motor_timer/0">
@@ -380,18 +307,6 @@ Functions          </h1>
           </div>
   <section class="docstring">
 <p>Reset the timer</p>
-  </section>
-</section>
-<section class="detail" id="should_stop?/1">
-    <div class="detail-header">
-    <a href="#should_stop?/1" class="detail-link" title="Link to this function">
-      <span class="icon-link" aria-hidden="true"></span>
-      <span class="sr-only">Link to this function</span>
-    </a>
-    <h1 class="signature">should_stop?(state)</span>
-          </div>
-  <section class="docstring">
-<p>Logic for deciding whether the elevator should stop at that specific floor</p>
   </section>
 </section>
 <section class="detail" id="start_link/1">

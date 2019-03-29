@@ -38,7 +38,7 @@ defmodule WatchDog do
   Will send an error message to NetworkHandler if it is initialized and receives no sign of life
   within a set time
   """
-  def watchdog_loop do
+  defp watchdog_loop do
     receive do
       {:elev_going_inactive} ->
         Process.exit(self(), :normal)
@@ -107,6 +107,9 @@ defmodule WatchDog do
     GenServer.cast NetworkHandler, {:send_state_backup, backup}
   end
 
+  @doc """
+  Sends message about motor stop to NetworkHandler
+  """
   def send_motorstop do
     GenServer.cast NetworkHandler, {:error}
   end

@@ -1,5 +1,7 @@
 #!/bin/bash
-epmd -daemon # fix erlang issue
 
+# Fixes Erlang issue
+epmd -daemon 
 
-iex -S mix run -e Overseer.main
+# Runs from entry point Overseer.main
+iex -S mix run -e Overseer.main 

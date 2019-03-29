@@ -5,10 +5,11 @@ defmodule StateMachine do
   
   ### State: 
   * A struct consisting of a floor (the last floor), a direction (:up, :down, :stop) 
-  and a list of active orders it has accepted
+  and a list of active orders it has accepted:
+  `%State{active_orders: [], direction: :stop, floor: 1}`
   
   ### Tasks:
-  * Controlling the elevator
+  * Controlling the elevator motor
   * Executing orders
 
   ### Communication:
@@ -16,15 +17,15 @@ defmodule StateMachine do
   * Receives from: OrderHandler, Poller
   """
   use GenServer
-
-  #--------------------------------INITIALIZATION---------------------------------#
   @door_open_timer 1000
+  #--------------------------------INITIALIZATION---------------------------------#
+  
   def start_link(_init_args) do
     GenServer.start_link(__MODULE__, :down, [{:name, __MODULE__}])
   end
 
   @doc """
-  drive downwards to closest floor and initialize the state
+  Drive downwards to closest floor and initialize the state
   """
   def init(direction) do
     start_motor_timer()
@@ -37,7 +38,7 @@ defmodule StateMachine do
   end
 
   @doc """
-  Drive downwards until it hits a floor
+  Loops and drives downwards until it hits a floor
   """
   def initialize_to_floor do
     cond do
@@ -127,7 +128,7 @@ defmodule StateMachine do
   def handle_cast({:at_floor, floor}, state) do
     state = %{state | floor: floor}
     backup_state(state)
-    reset_motor_timer() ## WHAT?
+    reset_motor_timer()
     execute_order_on_floor(state)
     {:noreply, state}
   end
@@ -145,7 +146,7 @@ defmodule StateMachine do
   end
 
   @doc """
-  update the direction state
+  Update the direction state
   """
   def handle_cast({:update_direction, direction}, state) do
     state = %{state | direction: direction}
@@ -153,6 +154,9 @@ defmodule StateMachine do
     {:noreply, state}
   end
 
+  @doc """
+  Update the direction state
+  """
   def handle_call({:request_backup},_from, state) do
     {:reply, state, state}
   end
@@ -161,9 +165,9 @@ defmodule StateMachine do
   #-------------------------------HELPER FUNCTIONS--------------------------------#
 
   @doc """
-  function for controlling elevator direction
+  Function for controlling elevator direction, executed when a floor is reached
   """
-  def execute_order(state) do ## TOO COMPLICATED, WHY FIRST?
+  defp execute_order(state) do
     order = List.first(state.active_orders)
     if order != nil  do
       direction = cond do
@@ -188,7 +192,7 @@ defmodule StateMachine do
   @doc """
   When on a floor, execute the order if the elevator should stop
   """
-  def execute_order_on_floor(state) do
+  defp execute_order_on_floor(state) do
     if should_stop?(state) do
       DriverInterface.set_motor_direction(DriverInterface, :stop)
       update_state_direction(:stop)
@@ -204,7 +208,7 @@ defmodule StateMachine do
   @doc """
   Logic for deciding whether the elevator should stop at that specific floor
   """
-  def should_stop?(state) do ## CLEANUP REQUIRED
+  defp should_stop?(state) do
     cond do
       state.direction == :stop ->
         true
@@ -224,17 +228,30 @@ defmodule StateMachine do
     end
   end
 
-  def open_doors() do
+  @doc """
+  Logic for deciding whether the elevator should stop at that specific floor
+  """
+  defp open_doors() do
     DriverInterface.set_door_open_light DriverInterface, :on
-    :timer.sleep(1000)
+    Process.send_after(self(), :close_doors, @door_open_timer)
+    receive do
+      :close_doors ->
+        :continue
+    end
     DriverInterface.set_door_open_light DriverInterface, :off
-end
+  end
 
-  def order_type_to_int(elevator_order) do
+  @doc """
+  Turns an order type to an int
+  """
+  defp order_type_to_int(elevator_order) do
     %{hall_up: 1, cab: 0, hall_down: -1}[elevator_order.type]
   end
 
-  def direction_to_int(elevator_state) do
+  @doc """
+  Turns a direction into an int
+  """
+  defp direction_to_int(elevator_state) do
     %{up: 1, stop: 0, down: -1}[elevator_state.direction]
   end
 

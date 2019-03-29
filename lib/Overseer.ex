@@ -1,4 +1,3 @@
-
 defmodule Overseer do
     @moduledoc """
     A Supervisor that keeps track and restarts entire program upon request or crash, using the one_for_all
@@ -31,7 +30,7 @@ defmodule Overseer do
     @doc """
     Entry point for running entire program, starts Overseer which subsequently starts all other modules
     """
-    def main do
+    defp main do
       Overseer.start_link()
       loop()
     end
@@ -39,7 +38,7 @@ defmodule Overseer do
     @doc """
     loop to keep executable running
     """
-    def loop do
+    defp loop do
       :timer.sleep(10000)
       loop
     end

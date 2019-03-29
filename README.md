@@ -13,7 +13,7 @@ The elevator project, specified in the [specification](SPECIFICATION.md), is to 
 How to run
 ---
 
-Relies on Elixir 1.8.1 and Erlang/OTP 20. Clone the repo and run the bash scripts [./run_elevator.sh](run_elevator.sh) and [./sim_run_elevator](sim_run_elevator.sh). Changes in NetworkHandler for IP-adresses etc. may be needed. can also be run directly with
+Relies on Elixir 1.8.1 and Erlang/OTP 20. Clone the repository and run the bash scripts [./run_elevator.sh](run_elevator.sh) and [./sim_run_elevator](sim_run_elevator.sh). Changes in NetworkHandler for IP-adresses etc. may be needed for your system. The code can also be run directly with the command
 
 `iex -S mix run -e Overseer.main`
 
@@ -21,13 +21,16 @@ Relies on Elixir 1.8.1 and Erlang/OTP 20. Clone the repo and run the bash script
 Design
 ---
 
-The code is written in Elixir and uses prominently the Node and GenServer libraries to communicate between the network and modules, respectively. The network is peer-to-peer based, and uses UDP for connecting to nodes and TCP for passing messages. The system consists of the modules DriverInterface, Poller, StateMachine, OrderHandler, WatchDog, Overseer and NetworkHandler. All communication between nodes is executed in the NetworkHandler.
+The code is written in Elixir and uses prominently the Node and GenServer libraries to communicate between the network and modules, respectively, as well as a Supervisor. The supervisor utilizes the :one_for_all strategy, restarting every module upon crash. The network is peer-to-peer based, and uses UDP for connecting to nodes and TCP for passing messages. The system consists of the modules DriverInterface, Poller, StateMachine, OrderHandler, WatchDog, Overseer and NetworkHandler. All communication between nodes is executed between their respective NetworkHandler modules.
 
 
 Documentation
 ---
 
-Documentation is compiled using HexDocs, you can use a browser to read it, starting from the [main page](/doc/index.html)
+Documentation is compiled using HexDocs, and can be read on the following webpage:
+
+`https://sandbergo.github.io/elevator-docs` 
+
 
 Contributors
 ---
