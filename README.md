@@ -29,7 +29,7 @@ Documentation
 
 Documentation is compiled using HexDocs, and can be read on the following webpage:
 
-`https://sandbergo.github.io/elevator-docs` 
+`https://elevator-docs.github.io/doc/readme.html#content` 
 
 
 Contributors
